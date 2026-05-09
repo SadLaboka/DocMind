@@ -31,4 +31,3 @@ app = FastAPI(
 @app.get("/")
 def root():
     return Response(status_code=200)
-    
