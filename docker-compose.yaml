@@ -18,9 +18,9 @@ services:
     image: postgres:18.3-bookworm
     restart: always
     environment:
-      - POSTGRES_USER=${DBUSER:-postgres}
-      - POSTGRES_PASSWORD=${DBPASSWORD:-postgres}
-      - POSTGRES_DB=${DBNAME:-postgres}
+      - POSTGRES_USER=${DB_USER:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
+      - POSTGRES_DB=${DB_NAME:-postgres}
     ports:
       - "5432:5432"
     networks:
