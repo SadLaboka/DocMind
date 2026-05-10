@@ -1,0 +1,38 @@
+services:
+  application:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    command: uvicorn main:app --host 0.0.0.0
+    networks:
+      - DocMind_network
+    ports:
+      - "8000:8000"
+    depends_on:
+      main_db:
+        condition: service_healthy
+
+  main_db:
+    image: postgres:18.3-bookworm
+    restart: always
+    environment:
+      - POSTGRES_USER=${DBUSER:-postgres}
+      - POSTGRES_PASSWORD=${DBPASSWORD:-postgres}
+      - POSTGRES_DB=${DBNAME:-postgres}
+    ports:
+      - "5432:5432"
+    networks:
+      - DocMind_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d postgres -U postgres" ]
+      interval: 5s
+      timeout: 20s
+      start_period: 10s
+      retries: 10
+
+
+networks:
+  DocMind_network:
+    driver: bridge
