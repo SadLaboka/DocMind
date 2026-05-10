@@ -5,8 +5,8 @@ from fastapi.responses import Response
 from src.core.config import settings
 
 app = FastAPI(
-    title=settings.title_name,
-    version=settings.title_version,
+    title=settings.app_name,
+    version=settings.app_version,
 )
 
 
