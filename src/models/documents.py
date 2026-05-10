@@ -2,7 +2,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy import String, ForeignKey, Enum, Text
 import enum
 
-from base import Base
+from src.models.base import Base
 
 
 class DocumentStatus(enum.Enum):

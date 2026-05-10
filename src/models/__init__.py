@@ -1,2 +1,2 @@
-from documents import Documents
-from users import User
+from .documents import Documents
+from .users import User
