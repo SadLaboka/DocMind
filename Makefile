@@ -1,6 +1,6 @@
 .PHONY: up down logs migrate-up migrate-down migrate-new
 
-# 🐳 Docker
+# Docker
 up:
 	docker compose up -d --build
 
@@ -10,7 +10,7 @@ down:
 logs:
 	docker compose logs -f
 
-# 🗄️ Migrations
+# Migrations
 migrate-up:
 	poetry run alembic upgrade head
 
@@ -19,3 +19,11 @@ migrate-down:
 
 migrate-new:
 	poetry run alembic revision --autogenerate -m "$(m)"
+
+# Development
+lint:
+	poetry run ruff check src/
+format:
+	poetry run ruff format src/
+typecheck:
+	poetry run mypy src/
