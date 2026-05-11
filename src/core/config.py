@@ -13,6 +13,7 @@ except importlib.metadata.PackageNotFoundError:
 
 ENV_FILE = ".env"
 
+
 class SettingsBase(BaseSettings):
     model_config = SettingsConfigDict(env_file=ENV_FILE, extra="ignore")
 
@@ -30,8 +31,7 @@ class DatabaseSettings(SettingsBase):
     def url(self) -> str:
         """Returns a ready URL for connecting to PostgreSQL."""
         return (
-            f"postgresql+asyncpg://{self.user}:{self.password}"
-            f"@{self.host}:{self.port}/{self.name}"
+            f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
         )
 
 
