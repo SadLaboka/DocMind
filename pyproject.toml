@@ -28,3 +28,28 @@ dev = [
     "ruff (>=0.15.12,<0.16.0)",
     "mypy (>=2.0.0,<3.0.0)"
 ]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
+ignore = ["E501"]  # Длину строки контролирует форматтер
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+plugins = ["pydantic.mypy", "sqlalchemy.ext.mypy.plugin"]
+exclude = ["tests/", "alembic/"]
