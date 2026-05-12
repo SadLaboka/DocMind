@@ -1,6 +1,7 @@
-from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, ForeignKey, Enum, Text
 import enum
+
+from sqlalchemy import Enum, ForeignKey, String, Text
+from sqlalchemy.orm import Mapped, mapped_column
 
 from src.models.base import Base
 
