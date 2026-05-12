@@ -24,6 +24,7 @@ migrate-new:
 lint:
 	poetry run ruff check src/
 format:
+	poetry run ruff check src/ --fix
 	poetry run ruff format src/
 typecheck:
 	poetry run mypy src/
