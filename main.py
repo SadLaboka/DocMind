@@ -3,11 +3,14 @@ from fastapi import FastAPI
 from fastapi.responses import Response
 
 from src.core.config import settings
+from src.api.documents import router as documents_router
 
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
 )
+
+app.include_router(documents_router)
 
 
 @app.get("/")
