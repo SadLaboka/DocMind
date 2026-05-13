@@ -8,6 +8,9 @@ from src.api.documents import router as documents_router
 app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
+    docs_url="/openapi",
+    openapi_url="/openapi.json",
+    redoc_url="/redoc",
 )
 
 app.include_router(documents_router)
