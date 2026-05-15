@@ -14,7 +14,6 @@ router = APIRouter(prefix="/documents", tags=["documents"])
 )
 async def get_all_documents(
     user_id: int | None = Query(None, description="Filter by user id"),
-
 ) -> DocumentListResponse:
     return {"documents": "documents by user_id"} if user_id else {"documents": "list of documents"}
 
