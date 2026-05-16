@@ -1,30 +1,26 @@
 from datetime import datetime
-from enum import Enum
 
 from pydantic import BaseModel, ConfigDict, Field
 
-
-class MimeType(Enum):
-    txt = "text/plain"
-    docx = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    xlsx = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    pdf = "application/pdf"
+from src.core.enums import MimeType
+from src.models.documents import DocumentStatus
 
 
 class DocumentBase(BaseModel):
+    user_id: int
+    filename: str = Field(min_length=5, max_length=255)
     description: str | None = Field(max_length=300, default=None)
+    mime_type: MimeType
+    file_size: int
 
 
-class DocumentUpload(DocumentBase):
+class DocumentCreatedResponse(DocumentBase):
     pass
 
 
 class DocumentResponse(DocumentBase):
     id: int
-    user_id: int
-    filename: str = Field(min_length=5, max_length=255)
-    mime_type: MimeType
-    status: str | None
+    status: DocumentStatus
     document_text: str | None
     analysis: str | None
     created_at: datetime
@@ -33,9 +29,13 @@ class DocumentResponse(DocumentBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-class DocumentData(DocumentResponse):
+class DocumentData(DocumentBase):
     temp_filename: str
 
 
 class DocumentListResponse(BaseModel):
     items: list[DocumentResponse]
+    total: int
+    page: int
+    limit: int
+    has_next: bool

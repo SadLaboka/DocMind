@@ -1,18 +1,8 @@
-import enum
-
 from sqlalchemy import Enum, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
+from src.core.enums import DocumentStatus
 from src.models.base import Base
-
-
-class DocumentStatus(enum.Enum):
-    created = "created"
-    queued = "queued"
-    processing = "processing"
-    success = "success"
-    failed = "failed"
-    cancelled = "cancelled"
 
 
 class Document(Base):

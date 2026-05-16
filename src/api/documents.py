@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Query
 from starlette import status
 
-from src.schemas.documents import DocumentListResponse, DocumentResponse, DocumentUpload
+from src.schemas.documents import DocumentCreatedResponse, DocumentListResponse, DocumentResponse
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
@@ -32,7 +32,7 @@ async def get_document(document_id: int) -> DocumentResponse:
     path="/",
     summary="Load document",
     status_code=status.HTTP_201_CREATED,
-    response_model=DocumentUpload,
+    response_model=DocumentCreatedResponse,
 )
-async def upload_document() -> DocumentUpload:
+async def upload_document() -> DocumentCreatedResponse:
     return {"status": "loaded", "id": "document_id"}
