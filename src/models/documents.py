@@ -1,6 +1,6 @@
 import enum
 
-from sqlalchemy import Enum, ForeignKey, String, Text
+from sqlalchemy import Enum, ForeignKey, String, Text, VARCHAR, Integer
 from sqlalchemy.orm import Mapped, mapped_column
 
 from src.models.base import Base
@@ -15,18 +15,20 @@ class DocumentStatus(enum.Enum):
     cancelled = "cancelled"
 
 
-class Documents(Base):
+class Document(Base):
     __tablename__ = "documents"
 
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    description: Mapped[str] = mapped_column(String(300), nullable=True, default=None)
     filename: Mapped[str] = mapped_column(String(255))
-    mime_type: Mapped[str]
-    file_size: Mapped[str]
-    file_hash: Mapped[str]
-    task_id: Mapped[int]
-    document_text: Mapped[str]
+    mime_type: Mapped[str] = mapped_column(String(100), nullable=True, default=None)
+    file_size: Mapped[int] = mapped_column(Integer)
+    file_hash: Mapped[str] = mapped_column(String(64), nullable=True, default=None)
+    task_id: Mapped[int] = mapped_column(Integer, nullable=True, default=None)
+    temp_filename: Mapped[str] = mapped_column(String(64), nullable=True, default=None)
+    document_text: Mapped[str] = mapped_column(Text, nullable=True, default=None)
     document_status: Mapped[DocumentStatus] = mapped_column(
-        Enum(DocumentStatus), default=DocumentStatus.created
+        Enum(DocumentStatus, name="document_status"), default=DocumentStatus.created
     )
     error_trace: Mapped[str] = mapped_column(Text, nullable=True, default=None)
-    analyse: Mapped[str] = mapped_column(Text, nullable=True, default=None)
+    analysis: Mapped[str] = mapped_column(Text, nullable=True, default=None)

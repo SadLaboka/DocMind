@@ -1,8 +1,8 @@
-"""init_users_and_documents
+"""add fixed models
 
-Revision ID: e19c7fdbf793
+Revision ID: 677262530e15
 Revises: 
-Create Date: 2026-05-10 23:21:37.716048
+Create Date: 2026-05-16 12:53:11.722545
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'e19c7fdbf793'
+revision: str = '677262530e15'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -29,7 +29,7 @@ def upgrade() -> None:
     sa.Column('is_admin', sa.Boolean(), nullable=False),
     sa.Column('is_active', sa.Boolean(), nullable=False),
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), server_default=sa.text("TIMEZONE('utc', now()"), nullable=False),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text("TIMEZONE('utc', now())"), nullable=False),
     sa.Column('updated_at', sa.DateTime(), server_default=sa.text("TIMEZONE('utc', now())"), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email'),
@@ -37,17 +37,19 @@ def upgrade() -> None:
     )
     op.create_table('documents',
     sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('description', sa.String(length=300), nullable=True),
     sa.Column('filename', sa.String(length=255), nullable=False),
-    sa.Column('mime_type', sa.String(), nullable=False),
-    sa.Column('file_size', sa.String(), nullable=False),
-    sa.Column('file_hash', sa.String(), nullable=False),
-    sa.Column('task_id', sa.Integer(), nullable=False),
-    sa.Column('document_text', sa.String(), nullable=False),
-    sa.Column('document_status', sa.Enum('created', 'queued', 'processing', 'success', 'failed', 'cancelled', name='documentstatus'), nullable=False),
+    sa.Column('mime_type', sa.String(length=100), nullable=True),
+    sa.Column('file_size', sa.Integer(), nullable=False),
+    sa.Column('file_hash', sa.String(length=64), nullable=True),
+    sa.Column('task_id', sa.Integer(), nullable=True),
+    sa.Column('temp_filename', sa.String(length=64), nullable=True),
+    sa.Column('document_text', sa.Text(), nullable=True),
+    sa.Column('document_status', sa.Enum('created', 'queued', 'processing', 'success', 'failed', 'cancelled', name='document_status'), nullable=False),
     sa.Column('error_trace', sa.Text(), nullable=True),
-    sa.Column('analyse', sa.Text(), nullable=True),
+    sa.Column('analysis', sa.Text(), nullable=True),
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), server_default=sa.text("TIMEZONE('utc', now()"), nullable=False),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text("TIMEZONE('utc', now())"), nullable=False),
     sa.Column('updated_at', sa.DateTime(), server_default=sa.text("TIMEZONE('utc', now())"), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
