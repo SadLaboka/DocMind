@@ -5,7 +5,10 @@ services:
       dockerfile: Dockerfile
     env_file:
       - .env
-    command: uvicorn main:app --host 0.0.0.0
+    environment:
+      - PYTHONPATH=/usr/src/app
+      - DB_HOST=main_db
+    command: ["poetry", "run", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
     networks:
       - DocMind_network
     ports:
@@ -32,6 +35,21 @@ services:
       start_period: 10s
       retries: 10
 
+  db-migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      - PYTHONPATH=/usr/src/app
+      - DB_HOST=main_db
+    command: [ "poetry", "run", "alembic", "upgrade", "head" ]
+    depends_on:
+      main_db:
+        condition: service_healthy
+    networks:
+      - DocMind_network
 
 networks:
   DocMind_network:

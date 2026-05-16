@@ -6,11 +6,11 @@ RUN adduser SadLaboka --system --no-create-home --disabled-password --allow-bad-
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
+ENV POETRY_VIRTUALENVS_CREATE false
 
 COPY ./poetry.lock .
 COPY ./pyproject.toml .
 RUN pip install --upgrade pip && pip install poetry
-RUN poetry config virtualenvs.create false
 RUN poetry install --only=main --no-interaction --no-ansi --no-root
 
 COPY . .
