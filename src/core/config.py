@@ -14,7 +14,7 @@ except importlib.metadata.PackageNotFoundError:
     APP_VERSION = "0.0.0"
 
 ENV_FILE = ".env"
-BASE_DIR = Path(__file__).parent.parent
+BASE_DIR = str(Path(__file__).parent.parent)
 
 
 class SettingsBase(BaseSettings):
