@@ -12,7 +12,7 @@ class MimeType(Enum):
 
 
 class DocumentBase(BaseModel):
-    pass
+    description: str | None = Field(max_length=300, default=None)
 
 
 class DocumentUpload(DocumentBase):
@@ -31,6 +31,10 @@ class DocumentResponse(DocumentBase):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class DocumentData(DocumentResponse):
+    temp_filename: str
 
 
 class DocumentListResponse(BaseModel):
