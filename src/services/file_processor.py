@@ -70,5 +70,5 @@ def _save_to_temp():
     pass
 
 
-def _delete_from_temp():
+def remove_from_temp():
     pass
