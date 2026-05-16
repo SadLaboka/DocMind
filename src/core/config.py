@@ -2,6 +2,7 @@ import importlib.metadata
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pathlib import Path
 
 _PACKAGE_NAME = "docmind"
 
@@ -13,6 +14,7 @@ except importlib.metadata.PackageNotFoundError:
     APP_VERSION = "0.0.0"
 
 ENV_FILE = ".env"
+BASE_DIR = Path(__file__).parent.parent
 
 
 class SettingsBase(BaseSettings):
@@ -41,6 +43,7 @@ class Settings(BaseSettings):
 
     app_name: str = APP_NAME
     app_version: str = APP_VERSION
+    base_dir: str = BASE_DIR
 
 
 settings = Settings()
