@@ -1,10 +1,10 @@
-from fastapi.routing import APIRouter
+from DependencyInjection.users import get_user_service
 from fastapi import Depends
+from fastapi.routing import APIRouter
 from starlette import status
 
-from DependencyInjection.users import get_user_service
+from src.schemas.users import UserRegisterRequest, UserRegisterResponse
 from src.services.users import UserService
-from src.schemas.users import UserRegisterResponse, UserRegisterRequest
 
 router = APIRouter(prefix="/users", tags=["users"])
 

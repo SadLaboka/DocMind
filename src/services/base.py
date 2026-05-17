@@ -1,4 +1,5 @@
 from typing import Generic, TypeVar
+
 from src.repositories.base import BaseRepository
 
 T = TypeVar('T', bound=BaseRepository)
