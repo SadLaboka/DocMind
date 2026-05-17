@@ -4,6 +4,7 @@ from fastapi.responses import Response
 
 from src.core.config import settings
 from src.api.documents import router as documents_router
+from src.api.users import router as users_router
 
 app = FastAPI(
     title=settings.app_name,
@@ -14,6 +15,7 @@ app = FastAPI(
 )
 
 app.include_router(documents_router)
+app.include_router(users_router)
 
 
 @app.get("/")
