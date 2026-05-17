@@ -10,5 +10,6 @@ async_session_factory = async_sessionmaker(engine, expire_on_commit=False, class
 
 
 async def get_session() -> AsyncGenerator:
-    async with async_session_factory() as session:
+
+    async with async_session_factory().begin() as session:
         yield session
