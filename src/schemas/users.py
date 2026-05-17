@@ -1,0 +1,20 @@
+from pydantic import BaseModel, Field, EmailStr, ConfigDict
+
+
+class UserBase(BaseModel):
+    login: str = Field(min_length=8, max_length=25)
+    email: EmailStr
+
+
+class UserRegisterRequest(UserBase):
+    password: str = Field(min_length=8, max_length=64)
+
+
+class UserRegisterResponse(UserBase):
+    id: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class UserData(UserBase):
+    password_hash: str
