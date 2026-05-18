@@ -1,6 +1,6 @@
-from passlib.context import CryptContext
+from argon2 import PasswordHasher
 
-password_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+password_context = PasswordHasher()
 
 
 def get_password_hash(password: str) -> str:
@@ -8,4 +8,4 @@ def get_password_hash(password: str) -> str:
 
 
 def check_password(password: str, hashed_password: str) -> bool:
-    return password_context.verify(password, hashed_password)
+    return password_context.verify(hashed_password, password)
