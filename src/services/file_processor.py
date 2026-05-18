@@ -9,6 +9,7 @@ from services.base import BaseService
 from src.core.config import settings
 from src.core.enums import MimeType
 from src.schemas.documents import DocumentCreatedResponse, DocumentData
+from src.repositories.documents import DocumentRepository
 
 ALPHABET_RU = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя"
 ALPHABET_RU_UPPER = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
