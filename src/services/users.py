@@ -1,8 +1,8 @@
 from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
 
-from core.security import get_password_hash
-from schemas.users import UserRegisterResponse, UserRegisterRequest, UserData
+from src.core.security import get_password_hash
+from src.schemas.users import UserRegisterResponse, UserRegisterRequest, UserData
 from src.repositories.users import UserRepository
 from src.services.base import BaseService
 
