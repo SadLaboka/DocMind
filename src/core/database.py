@@ -9,7 +9,14 @@ engine = create_async_engine(settings.db.url, future=True, echo=True)
 async_session_factory = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
 
-async def get_session() -> AsyncGenerator:
+async def get_session() -> AsyncGenerator[AsyncSession, None]:
 
-    async with async_session_factory().begin() as session:
-        yield session
+    async with async_session_factory() as session:
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
