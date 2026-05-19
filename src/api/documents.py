@@ -1,7 +1,9 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, UploadFile, File
 from starlette import status
 
-from src.schemas.documents import DocumentCreatedResponse, DocumentListResponse, DocumentResponse
+from src.DependencyInjection.documents import get_upload_service
+from src.services.file_processor import UploadService
+from src.schemas.documents import DocumentListResponse, DocumentResponse
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
@@ -13,7 +15,7 @@ router = APIRouter(prefix="/documents", tags=["documents"])
     response_model=DocumentListResponse,
 )
 async def get_all_documents(
-    user_id: int | None = Query(None, description="Filter by user id"),
+    user_id: int | None,
 ) -> DocumentListResponse:
     return {"documents": "documents by user_id"} if user_id else {"documents": "list of documents"}
 
@@ -32,7 +34,13 @@ async def get_document(document_id: int) -> DocumentResponse:
     path="/",
     summary="Load document",
     status_code=status.HTTP_201_CREATED,
-    response_model=DocumentCreatedResponse,
+    response_model=DocumentResponse,
 )
-async def upload_document() -> DocumentCreatedResponse:
-    return {"status": "loaded", "id": "document_id"}
+async def upload_document(
+        file: UploadFile = File(...),
+        service: UploadService = Depends(get_upload_service),
+) -> DocumentResponse:
+    user_id = 1
+    description = "mock"
+    response = await service.process_upload(file, user_id, description)
+    return response
