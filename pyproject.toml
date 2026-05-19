@@ -20,6 +20,7 @@ dependencies = [
     "filetype (>=1.2.0,<2.0.0)",
     "email-validator (>=2.3.0,<3.0.0)",
     "argon2-cffi (>=25.1.0,<26.0.0)",
+    "python-multipart (>=0.0.29,<0.0.30)",
 ]
 
 [tool.poetry]
