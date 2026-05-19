@@ -5,10 +5,11 @@ from uuid import uuid4
 import filetype
 from fastapi import HTTPException, UploadFile
 
-from services.base import BaseService
+from src.schemas.documents import DocumentResponse
+from src.services.base import BaseService
 from src.core.config import settings
 from src.core.enums import MimeType
-from src.schemas.documents import DocumentCreatedResponse, DocumentData
+from src.schemas.documents import DocumentData
 from src.repositories.documents import DocumentRepository
 
 ALPHABET_RU = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя"
@@ -49,11 +50,11 @@ ALLOWED_MIME_VALUES = {m.value for m in MimeType}
 class UploadService(BaseService[DocumentRepository]):
 
 
-    def process_upload(
+    async def process_upload(
         self,
         uploaded_file: UploadFile,
         user_id: int, description: str | None
-    ) -> DocumentCreatedResponse:
+    ) -> DocumentResponse:
         """An orchestrator that validates the parameters of the received file,
         saves it to the database and disk, and then returns a response in the form of a Paydantic schema."""
         if not uploaded_file.filename:
@@ -87,15 +88,9 @@ class UploadService(BaseService[DocumentRepository]):
             temp_filename=temp_filename,
         )
 
-        # save_to_db(data)
+        document = await self.repository.create_document(data)
 
-        return DocumentCreatedResponse(
-            filename=data.filename,
-            user_id=data.user_id,
-            mime_type=data.mime_type,
-            description=data.description,
-            file_size=data.file_size,
-        )
+        return DocumentResponse.model_validate(document)
 
     @staticmethod
     def _detect_mime(uploaded_file: UploadFile) -> str | None:
@@ -125,6 +120,7 @@ class UploadService(BaseService[DocumentRepository]):
     @staticmethod
     def _sanitize_filename(filename: str) -> str:
         """Converts a file name to a safe form"""
+        filename = filename.replace(" ", "_")
         sanitized_filename = "".join(char for char in filename[:200] if char in PERMITTED_CHARS)
 
         if not sanitized_filename:
@@ -139,8 +135,9 @@ class UploadService(BaseService[DocumentRepository]):
     @staticmethod
     def _save_to_temp(file: UploadFile, temp_name: str) -> None:
         """Saves the uploaded file to the temp folder on disk by chunks"""
-        path = settings.base_dir / "temp" / temp_name
-        Path(settings.base_dir / "temp").mkdir(exist_ok=True, parents=True)
+        path = Path(settings.base_dir).parent / "temp" / temp_name
+        Path(Path(settings.base_dir).parent / "temp").mkdir(exist_ok=True, parents=True)
+
         with open(path, "wb") as temp_file:
             while chunk := file.file.read(CHUNK_SIZE):
                 temp_file.write(chunk)
