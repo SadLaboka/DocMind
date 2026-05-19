@@ -14,13 +14,13 @@ class DocumentBase(BaseModel):
     file_size: int
 
 
-class DocumentCreatedResponse(DocumentBase):
-    pass
+# class DocumentCreatedResponse(DocumentBase):
+#     pass
 
 
 class DocumentResponse(DocumentBase):
     id: int
-    status: DocumentStatus
+    status: DocumentStatus = Field(alias="document_status")
     document_text: str | None
     analysis: str | None
     created_at: datetime
