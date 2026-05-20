@@ -22,7 +22,6 @@ class JWTManager:
 
     @cached_property
     def private_key(self) -> bytes:
-        print(f"\n\n\n\n\n\n\n\n{self._private_key_path}\n\n\n\n\n\n\n")
         return self._private_key_path.read_bytes()
 
     @cached_property
