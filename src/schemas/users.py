@@ -18,3 +18,11 @@ class UserRegisterResponse(UserBase):
 
 class UserData(UserBase):
     password_hash: str
+
+
+class User(BaseModel):
+    id: int
+    login: str
+    is_admin: bool
+
+    model_config = ConfigDict(from_attributes=True)
