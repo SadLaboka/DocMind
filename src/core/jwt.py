@@ -45,7 +45,7 @@ class JWTManager:
 
     def _create_refresh_token(self, user_id: int)  -> str:
         refresh_token = self._create_jwt(
-            payload={"sub": user_id},
+            payload={"sub": str(user_id)},
             token_type=REFRESH_TOKEN_TYPE,
             time_delta=timedelta(days=settings.jwt.refresh_timedelta)
         )
@@ -59,13 +59,23 @@ class JWTManager:
         return jwt.encode(to_encode, self.private_key, algorithm=self.algorithm)
 
 
+    def get_sub_from_refresh_token(self, refresh_token: str) -> int:
+        payload = self.verify_token(refresh_token, REFRESH_TOKEN_TYPE)
+        return payload["sub"]
+
     def verify_token(self, token: str, token_type: str) -> dict:
         try:
-            data = jwt.decode(token, self.public_key, algorithms=[self.algorithm])
-            if data.get("type") != token_type:
+            payload = jwt.decode(token, self.public_key, algorithms=[self.algorithm])
+            if payload.get("type") != token_type:
                 raise jwt.InvalidTokenError(f"Invalid token_type: expected {token_type}")
-            return data
-        except jwt.ExpiredSignatureError:
+            return payload
+        except jwt.ExpiredSignatureError as raw_error:
             raise HTTPException(status_code=401, detail="Token expired")
-        except jwt.InvalidTokenError:
+        except jwt.InvalidSignatureError as raw_error:
+            raise HTTPException(status_code=401, detail="Invalid signature")
+        except jwt.DecodeError as raw_error:
+            raise HTTPException(status_code=401, detail="Decode error")
+        except jwt.InvalidAlgorithmError as raw_error:
+            raise HTTPException(status_code=401, detail="Invalid algorithm")
+        except jwt.InvalidTokenError as raw_error:
             raise HTTPException(status_code=401, detail="Invalid token")
