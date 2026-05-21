@@ -1,8 +1,7 @@
 from sqlalchemy import Enum, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src.core.enums import MimeType
-from src.core.enums import DocumentStatus
+from src.core.enums import DocumentStatus, MimeType
 from src.models.base import Base
 
 

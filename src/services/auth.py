@@ -1,9 +1,10 @@
 from fastapi import HTTPException
 
 from src.core.security import check_password
-from src.services.base import BaseService
 from src.repositories.users import UserRepository
 from src.schemas.users import User
+from src.services.base import BaseService
+
 
 class AuthService(BaseService[UserRepository]):
     async def authenticate(self, username: str, password: str) -> User:

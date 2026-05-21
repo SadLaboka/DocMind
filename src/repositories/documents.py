@@ -1,6 +1,6 @@
+from src.models.documents import Document
 from src.repositories.base import BaseRepository
 from src.schemas.documents import DocumentData
-from src.models.documents import Document
 
 
 class DocumentRepository(BaseRepository):

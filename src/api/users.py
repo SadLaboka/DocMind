@@ -1,8 +1,8 @@
-from src.DependencyInjection.users import get_user_service
 from fastapi import Depends
 from fastapi.routing import APIRouter
 from starlette import status
 
+from src.DependencyInjection.users import get_user_service
 from src.schemas.users import UserRegisterRequest, UserRegisterResponse
 from src.services.users import UserService
 

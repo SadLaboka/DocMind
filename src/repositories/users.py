@@ -1,8 +1,8 @@
-from src.schemas.users import UserData
-from src.repositories.base import BaseRepository
-from src.models.users import User
-
 from sqlalchemy import select
+
+from src.models.users import User
+from src.repositories.base import BaseRepository
+from src.schemas.users import UserData
 
 
 class UserRepository(BaseRepository):

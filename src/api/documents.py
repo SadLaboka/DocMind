@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, UploadFile, File
+from fastapi import APIRouter, Depends, File, UploadFile
 from starlette import status
 
 from src.DependencyInjection.documents import get_upload_service
-from src.services.file_processor import UploadService
 from src.schemas.documents import DocumentListResponse, DocumentResponse
+from src.services.file_processor import UploadService
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 

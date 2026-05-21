@@ -2,10 +2,9 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_session
+from src.core.jwt import JWTManager
 from src.repositories.users import UserRepository
 from src.services.auth import AuthService
-
-from src.core.jwt import JWTManager
 
 
 def get_jwt_manager():

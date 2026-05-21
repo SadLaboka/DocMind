@@ -5,12 +5,11 @@ from uuid import uuid4
 import filetype
 from fastapi import HTTPException, UploadFile
 
-from src.schemas.documents import DocumentResponse
-from src.services.base import BaseService
 from src.core.config import settings
 from src.core.enums import MimeType
-from src.schemas.documents import DocumentData
 from src.repositories.documents import DocumentRepository
+from src.schemas.documents import DocumentData, DocumentResponse
+from src.services.base import BaseService
 
 ALPHABET_RU = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя"
 ALPHABET_RU_UPPER = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
