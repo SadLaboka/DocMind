@@ -1,12 +1,14 @@
-import jwt
-
-from datetime import datetime, timedelta, UTC
+from datetime import UTC, datetime, timedelta
 from functools import cached_property
 from pathlib import Path
 
+import jwt
 from fastapi import HTTPException
 
 from src.core.config import settings
+
+ACCESS_TOKEN_TYPE = "access"
+REFRESH_TOKEN_TYPE = "refresh"
 
 
 class JWTManager:
@@ -28,18 +30,32 @@ class JWTManager:
     def public_key(self) -> bytes:
         return self._public_key_path.read_bytes()
 
+    def get_tokens(self, payload: dict) -> dict:
+        return {"access_token": self._create_access_token(payload),
+                "refresh_token": self._create_refresh_token(payload["sub"]),
+                "token_type": "Bearer"}
 
-    def create_access_token(self, data: dict, time_delta: float = settings.jwt.timedelta) -> str:
-        to_encode = data.copy()
-        expire = datetime.now(UTC) + timedelta(minutes=time_delta)
-        to_encode.update({"exp": expire, "type": "access"})
-        return jwt.encode(to_encode, self.private_key, algorithm=self.algorithm)
+    def _create_access_token(self, payload: dict) -> str:
+        access_token = self._create_jwt(
+            payload=payload,
+            token_type=ACCESS_TOKEN_TYPE,
+            time_delta=timedelta(minutes=settings.jwt.timedelta)
+        )
+        return access_token
 
+    def _create_refresh_token(self, user_id: int)  -> str:
+        refresh_token = self._create_jwt(
+            payload={"sub": user_id},
+            token_type=REFRESH_TOKEN_TYPE,
+            time_delta=timedelta(days=settings.jwt.refresh_timedelta)
+        )
+        return refresh_token
 
-    def create_refresh_token(self, data: dict)  -> str:
-        expire = datetime.now(UTC) + timedelta(days=settings.jwt.refresh_timedelta)
-        to_encode = data.copy()
-        to_encode.update({"exp": expire, "type": "refresh"})
+    def _create_jwt(self, payload: dict, token_type: str, time_delta: timedelta) -> str:
+        to_encode = payload.copy()
+        iat = datetime.now(UTC)
+        expire = iat + time_delta
+        to_encode.update({"exp": expire, "iat": iat, "type": token_type})
         return jwt.encode(to_encode, self.private_key, algorithm=self.algorithm)
 
 

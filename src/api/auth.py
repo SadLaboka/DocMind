@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Depends
 
-from src.DependencyInjection.auth import get_auth_service
-from src.services.auth import AuthService
-from src.DependencyInjection.auth import get_jwt_manager
 from src.core.jwt import JWTManager
-from src.schemas.auth import TokenResponse, LoginRequest
+from src.DependencyInjection.auth import get_auth_service, get_jwt_manager
+from src.schemas.auth import LoginRequest, TokenResponse
+from src.services.auth import AuthService
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -17,9 +16,8 @@ async def login(
 ) -> TokenResponse:
     user = await auth_service.authenticate(username=data.login, password=data.password)
 
-    access_token = jwt_manager.create_access_token(
-        {"sub": user.id, "login": data.login, "is_admin": user.is_admin}
-    )
-    refresh_token = jwt_manager.create_refresh_token({"sub": user.id})
-    response = TokenResponse(access_token=access_token, refresh_token=refresh_token, token_type="bearer")
+    response = TokenResponse(**jwt_manager.get_tokens(
+        {"sub": user.id,
+         "login": user.login,
+         "is_admin": user.is_admin}))
     return response
