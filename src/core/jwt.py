@@ -58,6 +58,9 @@ class JWTManager:
         to_encode.update({"exp": expire, "iat": iat, "type": token_type})
         return jwt.encode(to_encode, self.private_key, algorithm=self.algorithm)
 
+    def get_payload_from_access_token(self, access_token: str) -> dict:
+        payload = self.verify_token(token=access_token, token_type=ACCESS_TOKEN_TYPE)
+        return payload
 
     def get_sub_from_refresh_token(self, refresh_token: str) -> int:
         payload = self.verify_token(refresh_token, REFRESH_TOKEN_TYPE)
