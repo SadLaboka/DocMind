@@ -14,10 +14,6 @@ class DocumentBase(BaseModel):
     file_size: int
 
 
-# class DocumentCreatedResponse(DocumentBase):
-#     pass
-
-
 class DocumentResponse(DocumentBase):
     id: int
     status: DocumentStatus = Field(alias="document_status")
