@@ -1,9 +1,9 @@
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.services.documents import DocumentService
 from src.core.database import get_session
 from src.repositories.documents import DocumentRepository
+from src.services.documents import DocumentService
 from src.services.file_processor import UploadService
 
 

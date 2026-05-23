@@ -1,4 +1,4 @@
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 
 from src.models.documents import Document
 from src.repositories.base import BaseRepository

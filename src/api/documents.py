@@ -1,14 +1,15 @@
-from fastapi import APIRouter, Depends, File, UploadFile, Query, Form
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from starlette import status
-from typing import Annotated, Callable
+from typing import Annotated
 
-from src.DependencyInjection.documents import get_upload_service, get_document_service
+from fastapi import APIRouter, Depends, File, Form, Query, UploadFile
+from fastapi.security import HTTPBearer
+from starlette import status
+
 from src.DependencyInjection.auth import get_current_user
+from src.DependencyInjection.documents import get_document_service, get_upload_service
 from src.schemas.documents import DocumentListResponse, DocumentResponse
 from src.schemas.users import User
-from src.services.file_processor import UploadService
 from src.services.documents import DocumentService
+from src.services.file_processor import UploadService
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 http_bearer = HTTPBearer(auto_error=False)

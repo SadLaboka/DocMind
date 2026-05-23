@@ -73,13 +73,13 @@ class JWTManager:
             if payload.get("type") != token_type:
                 raise jwt.InvalidTokenError(f"Invalid token_type: expected {token_type}")
             return payload
-        except jwt.ExpiredSignatureError as raw_error:
+        except jwt.ExpiredSignatureError:
             raise HTTPException(status_code=401, detail="Token expired")
-        except jwt.InvalidSignatureError as raw_error:
+        except jwt.InvalidSignatureError:
             raise HTTPException(status_code=401, detail="Invalid signature")
-        except jwt.DecodeError as raw_error:
+        except jwt.DecodeError:
             raise HTTPException(status_code=401, detail="Decode error")
-        except jwt.InvalidAlgorithmError as raw_error:
+        except jwt.InvalidAlgorithmError:
             raise HTTPException(status_code=401, detail="Invalid algorithm")
         except jwt.InvalidTokenError as raw_error:
             raise HTTPException(status_code=401, detail=str(raw_error))

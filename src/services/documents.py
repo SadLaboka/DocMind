@@ -1,9 +1,9 @@
 from fastapi import HTTPException
 
-from src.services.base import BaseService
 from src.repositories.documents import DocumentRepository
-from src.schemas.documents import DocumentResponse, DocumentListResponse
+from src.schemas.documents import DocumentListResponse, DocumentResponse
 from src.schemas.users import User
+from src.services.base import BaseService
 
 
 class DocumentService(BaseService[DocumentRepository]):
