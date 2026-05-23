@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import select, func
 
 from src.models.documents import Document
 from src.repositories.base import BaseRepository
@@ -26,7 +26,20 @@ class DocumentRepository(BaseRepository):
         document = result.scalar_one_or_none()
         return document
 
-    async def get_documents_list(self, user_id: int) -> list[Document]:
-        result = await self.session.execute(select(Document).where(Document.user_id == user_id))
+    async def get_documents_list(self, user_id: int, offset: int, limit: int) -> list[Document]:
+        stmt =  (select(Document)
+                 .where(Document.user_id == user_id)
+                 .offset(offset).limit(limit)
+                 .order_by(Document.id.desc()))
+        result = await self.session.execute(stmt)
         documents = result.scalars().all()
+
         return list(documents)
+
+    async def get_documents_count(self, user_id: int) -> int:
+        stmt = (
+            select(func.count(Document.id))
+            .select_from(Document)
+            .where(Document.user_id == user_id)
+        )
+        return await self.session.scalar(stmt) or 0
