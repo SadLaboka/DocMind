@@ -36,6 +36,7 @@ class JWTManager:
                 "token_type": "Bearer"}
 
     def _create_access_token(self, payload: dict) -> str:
+        payload["sub"] = str(payload["sub"])
         access_token = self._create_jwt(
             payload=payload,
             token_type=ACCESS_TOKEN_TYPE,
@@ -64,7 +65,7 @@ class JWTManager:
 
     def get_sub_from_refresh_token(self, refresh_token: str) -> int:
         payload = self.verify_token(refresh_token, REFRESH_TOKEN_TYPE)
-        return payload["sub"]
+        return int(payload["sub"])
 
     def verify_token(self, token: str, token_type: str) -> dict:
         try:
@@ -81,4 +82,4 @@ class JWTManager:
         except jwt.InvalidAlgorithmError as raw_error:
             raise HTTPException(status_code=401, detail="Invalid algorithm")
         except jwt.InvalidTokenError as raw_error:
-            raise HTTPException(status_code=401, detail="Invalid token")
+            raise HTTPException(status_code=401, detail=str(raw_error))
