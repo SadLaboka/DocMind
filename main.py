@@ -2,6 +2,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.responses import Response
 
+from src.core.middleware import Middleware
 from src.core.config import settings
 from src.api.documents import router as documents_router
 from src.api.users import router as users_router
@@ -15,6 +16,7 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
+app.add_middleware(Middleware)
 app.include_router(documents_router)
 app.include_router(users_router)
 app.include_router(auth_router)
