@@ -7,7 +7,7 @@ from fastapi import FastAPI
 
 class Middleware:
     """ASGI middleware for FastAPI"""
-    def __init__(self, app: FastAPI) -> None:
+    def __init__(self, app: Any) -> None:
         self.app = app
 
     async def __call__(self, scope: dict, receive: Any, send: Any) -> None:
