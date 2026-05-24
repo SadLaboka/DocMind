@@ -1,12 +1,14 @@
 import string
+from datetime import datetime, UTC
 from pathlib import Path
 from uuid import uuid4
 
 import filetype
-from fastapi import HTTPException, UploadFile
+from fastapi import UploadFile
 
 from src.core.config import settings
 from src.core.enums import MimeType
+from src.core.exceptions import BadRequestError
 from src.repositories.documents import DocumentRepository
 from src.schemas.documents import DocumentData, DocumentResponse
 from src.services.base import BaseService
@@ -57,9 +59,37 @@ class UploadService(BaseService[DocumentRepository]):
         """An orchestrator that validates the parameters of the received file,
         saves it to the database and disk, and then returns a response in the form of a Paydantic schema."""
         if not uploaded_file.filename:
-            raise HTTPException(status_code=400, detail="Filename is required")
+            raise BadRequestError(
+                error_code="filename_is_missing",
+                message="The uploaded file is missing a filename",
+                log_context={
+                    "user_id": user_id,
+                    "is_filename_missing": True,
+                    "checked_at": datetime.now(UTC).isoformat(),
+                }
+            )
 
         file_size = self._validate_size(uploaded_file)
+        if file_size is None:
+            raise BadRequestError(
+                error_code="file_size_is_invalid",
+                message="The uploaded file is too big",
+                log_context={
+                    "user_id": user_id,
+                    "file_size": file_size,
+                    "checked_at": datetime.now(UTC).isoformat()
+                }
+            )
+        elif file_size == 0:
+            raise BadRequestError(
+                error_code="file_size_is_invalid",
+                message="The uploaded file is empty",
+                log_context={
+                    "user_id": user_id,
+                    "file_size": file_size,
+                    "checked_at": datetime.now(UTC).isoformat()
+                }
+            )
 
         file_extension = Path(uploaded_file.filename).suffix.lower()
         filename = Path(uploaded_file.filename).stem
@@ -70,11 +100,27 @@ class UploadService(BaseService[DocumentRepository]):
         if mime_type is not None and mime_type in ALLOWED_MIME_VALUES:
             mime_type = MimeType(mime_type)
         elif mime_type is not None:
-            raise HTTPException(status_code=415, detail="Wrong file type")
+            raise BadRequestError(
+                error_code="mime_type_is_invalid",
+                message="The has invalid type",
+                log_context={
+                    "user_id": user_id,
+                    "mime_type": mime_type,
+                    "checked_at": datetime.now(UTC).isoformat()
+                }
+            )
         elif mime_type is None and file_extension == ".txt":
             mime_type = MimeType.txt
         else:
-            raise HTTPException(status_code=415, detail="Wrong file type")
+            raise BadRequestError(
+                error_code="mime_type_is_invalid",
+                message="The has invalid type",
+                log_context={
+                    "user_id": user_id,
+                    "mime_type": mime_type,
+                    "checked_at": datetime.now(UTC).isoformat()
+                }
+            )
 
         self._save_to_temp(file=uploaded_file, temp_name=temp_filename)
 
@@ -99,7 +145,7 @@ class UploadService(BaseService[DocumentRepository]):
         return file_type.mime if file_type else None
 
     @staticmethod
-    def _validate_size(uploaded_file: UploadFile) -> int:
+    def _validate_size(uploaded_file: UploadFile) -> int | None:
         """Validates the size of the uploaded file"""
         max_bytes = 1024 * 1024 * 50
         uploaded_file.file.seek(0, 2)
@@ -107,7 +153,7 @@ class UploadService(BaseService[DocumentRepository]):
         uploaded_file.file.seek(0)
 
         if file_size > max_bytes:
-            raise HTTPException(status_code=413, detail="File too big")
+            return None
 
         return file_size
 
@@ -136,7 +182,10 @@ class UploadService(BaseService[DocumentRepository]):
         """Saves the uploaded file to the temp folder on disk by chunks"""
         path = Path(settings.base_dir).parent / "temp" / temp_name
         Path(Path(settings.base_dir).parent / "temp").mkdir(exist_ok=True, parents=True)
-
-        with open(path, "wb") as temp_file:
-            while chunk := file.file.read(CHUNK_SIZE):
-                temp_file.write(chunk)
+        try:
+            with open(path, "wb") as temp_file:
+                while chunk := file.file.read(CHUNK_SIZE):
+                    temp_file.write(chunk)
+        except OSError:
+            if path.exists():
+                path.unlink(missing_ok=True)

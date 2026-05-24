@@ -1,4 +1,5 @@
 from starlette.status import (
+HTTP_400_BAD_REQUEST,
 HTTP_401_UNAUTHORIZED,
 HTTP_404_NOT_FOUND, HTTP_409_CONFLICT,
 HTTP_500_INTERNAL_SERVER_ERROR
@@ -34,3 +35,9 @@ class ConflictError(AppBaseError):
     status_code = HTTP_409_CONFLICT
     error_code = "conflict"
     message = "Resource already exists"
+
+
+class BadRequestError(AppBaseError):
+    status_code = HTTP_400_BAD_REQUEST
+    error_code = "bad_request"
+    message = "Bad request"
