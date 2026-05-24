@@ -44,7 +44,7 @@ class Middleware:
         """Gets client ip from scope"""
         headers = scope.get("headers", [])
         headers_dict = {
-            name.decode("latin-1").lowr(): value.decode("latin-1")
+            name.decode("latin-1").lower(): value.decode("latin-1")
             for name, value in headers
         }
 
