@@ -35,7 +35,7 @@ async def refresh(
         raise HTTPException(status_code=401, detail="Invalid token")
     token: str = credentials.credentials
     user_id = jwt_manager.get_sub_from_refresh_token(token)
-    user = await auth_service.get_current_user(user_id)
+    user = await auth_service.load_user_profile(user_id)
 
     response = TokenResponse(**jwt_manager.get_tokens(
         {"sub": user.id,
