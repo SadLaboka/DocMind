@@ -49,9 +49,17 @@ class JWTSettings(SettingsBase):
     algorithm: str = "RS256"
 
 
+class LogsSettings(SettingsBase):
+    model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="LOGS_")
+
+    dev: bool = True
+    level: int = 10
+
+
 class Settings(BaseSettings):
     db: DatabaseSettings = Field(default_factory=DatabaseSettings)
     jwt: JWTSettings = Field(default_factory=JWTSettings)
+    logs: LogsSettings = Field(default_factory=LogsSettings)
 
     app_name: str = APP_NAME
     app_version: str = APP_VERSION
