@@ -65,7 +65,6 @@ class UploadService(BaseService[DocumentRepository]):
                 log_context={
                     "user_id": user_id,
                     "is_filename_missing": True,
-                    "checked_at": datetime.now(UTC).isoformat(),
                 }
             )
 
@@ -77,7 +76,6 @@ class UploadService(BaseService[DocumentRepository]):
                 log_context={
                     "user_id": user_id,
                     "file_size": file_size,
-                    "checked_at": datetime.now(UTC).isoformat()
                 }
             )
         elif file_size == 0:
@@ -87,7 +85,6 @@ class UploadService(BaseService[DocumentRepository]):
                 log_context={
                     "user_id": user_id,
                     "file_size": file_size,
-                    "checked_at": datetime.now(UTC).isoformat()
                 }
             )
 
@@ -106,7 +103,6 @@ class UploadService(BaseService[DocumentRepository]):
                 log_context={
                     "user_id": user_id,
                     "mime_type": mime_type,
-                    "checked_at": datetime.now(UTC).isoformat()
                 }
             )
         elif mime_type is None and file_extension == ".txt":
@@ -118,7 +114,6 @@ class UploadService(BaseService[DocumentRepository]):
                 log_context={
                     "user_id": user_id,
                     "mime_type": mime_type,
-                    "checked_at": datetime.now(UTC).isoformat()
                 }
             )
 

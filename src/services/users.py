@@ -32,7 +32,6 @@ class UserService(BaseService[UserRepository]):
                     log_context = {
                         "username": data.login,
                         "email": data.email,
-                        "checked_at": datetime.now(UTC).isoformat(),
                         "library_hint": str(raw_error)
                     }
                 )

@@ -24,7 +24,6 @@ class DocumentService(BaseService[DocumentRepository]):
                     "user_id": user.id,
                     "is_admin": user.is_admin,
                     "document_id": document_id,
-                    "checked_at": datetime.now(UTC).isoformat()
                 }
             )
         return DocumentResponse.model_validate(document)

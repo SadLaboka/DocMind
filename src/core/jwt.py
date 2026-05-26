@@ -90,7 +90,6 @@ class JWTManager:
                         "received_token_type": received_token_type,
                         "token_prefix": token[:10],
                         "subject_id": payload["sub"],
-                        "checked_at": datetime.now(UTC).isoformat(),
                         "expired_at": datetime.fromtimestamp(payload["exp"], UTC).isoformat()
                     }
                 )
@@ -101,7 +100,6 @@ class JWTManager:
                 message="Token expired",
                 log_context={
                     "token_prefix": token[:10],
-                    "checked_at": datetime.now(UTC).isoformat(),
                     "library_hint": str(raw_error)
                 }
             )
@@ -111,7 +109,6 @@ class JWTManager:
                 message="Invalid token",
                 log_context={
                     "token_prefix": token[:10],
-                    "checked_at": datetime.now(UTC).isoformat(),
                     "library_hint": str(raw_error)
                 }
             )
@@ -121,7 +118,6 @@ class JWTManager:
                 message="Invalid token",
                 log_context={
                     "token_prefix": token[:10],
-                    "checked_at": datetime.now(UTC).isoformat(),
                     "library_hint": str(raw_error)
                 }
             )
@@ -132,7 +128,6 @@ class JWTManager:
                 log_context={
                     "token_prefix": token[:10],
                     "algorithm": self.algorithm,
-                    "checked_at": datetime.now(UTC).isoformat(),
                     "library_hint": str(raw_error)
                 }
             )
@@ -142,7 +137,6 @@ class JWTManager:
                 message="Invalid token",
                 log_context={
                     "token_prefix": token[:10],
-                    "checked_at": datetime.now(UTC).isoformat(),
                     "library_hint": str(raw_error)
                 }
             )

@@ -21,7 +21,6 @@ class AuthService(BaseService[UserRepository]):
                 log_context={
                     "username": username,
                     "user_found": user is not None,
-                    "checked_at": datetime.now(UTC).isoformat()
                 }
             )
         return User.model_validate(user)
@@ -36,7 +35,6 @@ class AuthService(BaseService[UserRepository]):
                 message="User not found",
                 log_context={
                     "user_id": user_id,
-                    "checked_at": datetime.now(UTC).isoformat(),
                 }
             )
         return User.model_validate(user)
