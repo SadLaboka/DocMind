@@ -11,7 +11,14 @@ from src.core.config import settings
 
 def get_renderer() -> ConsoleRenderer | JSONRenderer:
     """Returns a renderer depending on the environment specified in the settings"""
-    return ConsoleRenderer() if settings.logs.dev else JSONRenderer()
+    return ConsoleRenderer(pad_level=False) if settings.logs.dev else JSONRenderer()
+
+
+def _remove_record_metadata(logger, method_name, event_dict):
+    """Removes internal ProcessorFormatter metadata from foreign log records"""
+    event_dict.pop("_record", None)
+    event_dict.pop("_from_structlog", None)
+    return event_dict
 
 
 timestamper = structlog.processors.TimeStamper(fmt="iso", utc=True)
@@ -25,6 +32,7 @@ structlog_processors = [
 ]
 
 stdlib_processors = [
+    _remove_record_metadata,
     structlog.stdlib.add_log_level,
     timestamper,
     structlog.processors.ExceptionRenderer()
@@ -67,6 +75,11 @@ def setup_logging() -> None:
             },
             "uvicorn.access": {
                 "level": 20,
+                "handlers": ["default"],
+                "propagate": False,
+            },
+            "sqlalchemy.engine.Engine": {
+                "level": settings.logs.level,
                 "handlers": ["default"],
                 "propagate": False,
             },
