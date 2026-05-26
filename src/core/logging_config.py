@@ -9,9 +9,42 @@ from structlog.processors import JSONRenderer
 from src.core.config import settings
 
 
+class SqlNoiseFilter(logging.Filter):
+    """Filters out SQLAlchemy noise records, keeps only meaningful SQL"""
+
+    _MEANINGFUL_PREFIXES = (
+        "SELECT", "INSERT", "UPDATE", "DELETE",
+        "BEGIN", "COMMIT", "ROLLBACK",
+        "CREATE", "DROP", "ALTER",
+    )
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        if "sqlalchemy" not in record.name.lower():
+            return True
+
+        msg = record.getMessage().strip().upper()
+        return any(msg.startswith(prefix) for prefix in self._MEANINGFUL_PREFIXES)
+
+
+class MultipartDebugFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        if record.levelno < logging.INFO and "multipart" in record.name.lower():
+            return False
+        return True
+
+
 def get_renderer() -> ConsoleRenderer | JSONRenderer:
     """Returns a renderer depending on the environment specified in the settings"""
-    return ConsoleRenderer(pad_level=False) if settings.logs.dev else JSONRenderer()
+    return ConsoleRenderer(
+        pad_level=False,
+        pad_event=0,
+        timestamp_key="timestamp",
+    ) if settings.logs.dev else JSONRenderer()
+
+
+def get_processors() -> list:
+    """Return a list of processors depending on the environment specified in the settings"""
+    return structlog_processors if settings.logs.dev else structlog_processors_prod
 
 
 def _remove_record_metadata(logger, method_name, event_dict):
@@ -21,14 +54,20 @@ def _remove_record_metadata(logger, method_name, event_dict):
     return event_dict
 
 
-timestamper = structlog.processors.TimeStamper(fmt="iso", utc=True)
+timestamper = structlog.processors.TimeStamper(fmt="iso", utc=True, key="timestamp")
 
 structlog_processors = [
     structlog.contextvars.merge_contextvars,
-    structlog.stdlib.add_log_level,
-    timestamper,
     structlog.processors.StackInfoRenderer(),
     structlog.processors.ExceptionRenderer()
+]
+
+structlog_processors_prod = [
+    structlog.dev.ConsoleRenderer(pad_event=0),
+    structlog.contextvars.merge_contextvars,
+    timestamper,
+    structlog.processors.StackInfoRenderer(),
+    structlog.processors.ExceptionRenderer(),
 ]
 
 stdlib_processors = [
@@ -41,7 +80,9 @@ stdlib_processors = [
 
 def setup_logging() -> None:
     """Configures standard logging and structlog with unified output format"""
+
     renderer = get_renderer()
+    processors = get_processors()
 
     logging.config.dictConfig({
         'version': 1,
@@ -83,11 +124,25 @@ def setup_logging() -> None:
                 "handlers": ["default"],
                 "propagate": False,
             },
+            "multipart": {
+                "level": 20,
+                "handlers": ["default"],
+                "propagate": False,
+            },
         },
     })
 
+    sql_filter = SqlNoiseFilter()
+    for handler in logging.root.handlers:
+        handler.addFilter(sql_filter)
+
+    logging.getLogger("multipart").addFilter(MultipartDebugFilter())
+
+    for handler in logging.root.handlers:
+        handler.addFilter(MultipartDebugFilter())
+
     structlog.configure(
-        processors=structlog_processors + [renderer],
+        processors=processors + [renderer],
         wrapper_class=structlog.stdlib.BoundLogger,
         context_class=dict,
         logger_factory=structlog.stdlib.LoggerFactory(),
