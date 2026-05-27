@@ -11,7 +11,7 @@ from src.services.auth import AuthService
 http_bearer = HTTPBearer(auto_error=False)
 
 
-def get_jwt_manager():
+def get_jwt_manager() -> JWTManager:
     return JWTManager()
 
 
