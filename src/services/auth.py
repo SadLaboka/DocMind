@@ -1,7 +1,6 @@
-from datetime import datetime, UTC
 
-from src.core.security import check_password
 from src.core.exceptions import AuthenticationError
+from src.core.security import check_password
 from src.repositories.users import UserRepository
 from src.schemas.users import User
 from src.services.base import BaseService

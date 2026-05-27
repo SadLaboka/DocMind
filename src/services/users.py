@@ -1,4 +1,3 @@
-from datetime import datetime, UTC
 
 from sqlalchemy.exc import IntegrityError
 
