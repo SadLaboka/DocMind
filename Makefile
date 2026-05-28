@@ -28,3 +28,7 @@ format:
 	poetry run ruff format src/
 typecheck:
 	poetry run mypy src/
+
+#Tests
+test:
+	docker compose -f docker-compose.test.yml up --build --abort-on-container-exit

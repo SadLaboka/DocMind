@@ -1,0 +1,36 @@
+services:
+  db-test:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_pass
+      POSTGRES_DB: test_db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test_user -d test_db"]
+      interval: 2s
+      timeout: 3s
+      retries: 5
+    networks: [test_net]
+
+  app-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://test_user:test_pass@db-test:5432/test_db
+      - ENVIRONMENT=test
+      - LOG_LEVEL=WARNING
+    depends_on:
+      db-test:
+        condition: service_healthy
+    working_dir: /app
+    command: >
+      sh -c "
+        alembic upgrade head &&
+        pytest -v --tb=short -x --color=yes
+      "
+    networks: [test_net]
+
+networks:
+  test_net:
+    driver: bridge
