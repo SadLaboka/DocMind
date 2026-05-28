@@ -110,12 +110,12 @@ def setup_logging() -> None:
                 "handlers": ["default"],
             },
             "uvicorn.error": {
-                "level": 20,
+                "level": settings.logs.level,
                 "handlers": ["default"],
                 "propagate": False,
             },
             "uvicorn.access": {
-                "level": 20,
+                "level": settings.logs.level,
                 "handlers": ["default"],
                 "propagate": False,
             },
@@ -125,7 +125,7 @@ def setup_logging() -> None:
                 "propagate": False,
             },
             "multipart": {
-                "level": 20,
+                "level": settings.logs.level,
                 "handlers": ["default"],
                 "propagate": False,
             },
