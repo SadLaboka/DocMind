@@ -63,7 +63,6 @@ structlog_processors = [
 ]
 
 structlog_processors_prod = [
-    structlog.dev.ConsoleRenderer(pad_event=0),
     structlog.contextvars.merge_contextvars,
     timestamper,
     structlog.processors.StackInfoRenderer(),
