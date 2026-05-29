@@ -1,5 +1,6 @@
 import pytest
 import pytest_asyncio
+from pathlib import Path
 
 from httpx import AsyncClient, ASGITransport
 
@@ -8,13 +9,16 @@ from sqlalchemy.ext.asyncio import (
     AsyncSession,
 )
 
+from src.core.jwt import JWTManager
 from main import app
 from src.core.database import get_session
 from src.core.config import settings
 from src.core.security import get_password_hash
+from src.DependencyInjection.auth import get_jwt_manager
 
 
 TEST_DB_URL = settings.db.url
+FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 
 @pytest_asyncio.fixture(scope="function")
@@ -53,6 +57,7 @@ async def client(test_db_session):
         yield test_db_session
 
     app.dependency_overrides[get_session] = override_get_session
+    app.dependency_overrides[get_jwt_manager] = test_jwt_manager
 
     async with AsyncClient(
         transport=ASGITransport(app=app),
@@ -94,6 +99,59 @@ async def create_user():
             "email": user.email,
         }
 
+    return _create
+
+
+def test_jwt_manager(
+        private_key_path: str = str(FIXTURES_DIR / "test_private.pem"),
+        public_key_path: str = str(FIXTURES_DIR / "test_public.pem"),
+        algorithm: str = "RS256",
+) -> JWTManager:
+    return JWTManager(
+        private_key_path=private_key_path,
+        public_key_path=public_key_path,
+        algorithm=algorithm
+    )
+
+
+@pytest.fixture
+def create_token_pair(create_user, test_db_session):
+    async def _create(
+        login: str,
+        email: str,
+        password_hash: str,
+        expired: bool = False,
+    ):
+        import jwt
+        from datetime import datetime, timedelta, timezone
+
+        jwt_mgr = test_jwt_manager()
+
+        user_data = await create_user(test_db_session, login, email, password_hash)
+
+        now = datetime.now(timezone.utc)
+        payload = {
+            "sub": user_data["id"],
+            "login": user_data["login"],
+            "is_admin": False,
+        }
+
+        if expired:
+            refresh_payload = {**payload, "type": "refresh", "exp": now - timedelta(hours=1)}
+            refresh_token = jwt.encode(refresh_payload, jwt_mgr.private_key, algorithm=jwt_mgr.algorithm)
+            access_payload = {**payload, "type": "access", "exp": now - timedelta(hours=1)}
+            access_token = jwt.encode(access_payload, jwt_mgr.private_key, algorithm=jwt_mgr.algorithm)
+        else:
+            tokens = jwt_mgr.get_tokens(payload)
+            access_token = tokens["access_token"]
+            refresh_token = tokens["refresh_token"]
+
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "user_id": user_data["id"],
+            "login": user_data["login"],
+        }
     return _create
 
 
