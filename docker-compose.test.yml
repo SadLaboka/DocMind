@@ -1,6 +1,6 @@
 services:
   db-test:
-    image: postgres:16-alpine
+    image: postgres:18.3-bookworm
     environment:
       POSTGRES_USER: test_user
       POSTGRES_PASSWORD: test_pass
@@ -16,19 +16,30 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        INSTALL_MODE: test
     environment:
-      - DATABASE_URL=postgresql+asyncpg://test_user:test_pass@db-test:5432/test_db
+      - DB_USER=test_user
+      - DB_PASSWORD=test_pass
+      - DB_NAME=test_db
+      - DB_HOST=db-test
+      - DB_PORT=5432
       - ENVIRONMENT=test
-      - LOG_LEVEL=WARNING
+      - LOGS_DEV=false
+      - LOGS_LEVEL=30
     depends_on:
       db-test:
         condition: service_healthy
-    working_dir: /app
+    working_dir: /usr/src/app
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     command: >
       sh -c "
-        alembic upgrade head &&
-        pytest -v --tb=short -x --color=yes
-      "
+          poetry install --no-interaction --no-ansi --no-root &&
+          alembic upgrade head &&
+          pytest -v --tb=short -x --color=yes
+        "
     networks: [test_net]
 
 networks:
