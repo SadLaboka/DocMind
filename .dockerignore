@@ -20,7 +20,6 @@ coverage.xml
 .hypothesis
 .env.env.*
 .venv/
-tests/
 .idea/
 .vscode/
 dist/
