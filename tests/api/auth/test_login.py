@@ -59,8 +59,3 @@ async def test_login_validation_errors(client: AsyncClient, payload, expected_fi
     assert data["code"] == "validation_error"
     assert isinstance(data["detail"], list)
     assert any(err["field"] == expected_field for err in data["detail"])
-
-
-@pytest.mark.asyncio
-async def test_refresh_success(client: AsyncClient, create_user, test_db_session, test_password):
-    pass
