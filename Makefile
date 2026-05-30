@@ -39,12 +39,13 @@ typecheck:
 test:
 	docker compose -f docker-compose.test.yml up --build --abort-on-container-exit
 cov:
-	@python -c "import pathlib; pathlib.Path('coverage').mkdir(exist_ok=True)"
+	@python -c "import pathlib, os; p = pathlib.Path('coverage'); p.mkdir(exist_ok=True); os.chmod(p, 0o777)"
 	docker compose -f docker-compose.test.yml -f docker-compose.cov.yml up --build --abort-on-container-exit
 	@echo ""
 	@echo "Coverage report: ./coverage/coverage.xml"
 cov-html:
-	@powershell -Command "Start-Process 'coverage\html\index.html'"
+	@docker compose -f docker-compose.test.yml -f docker-compose.cov.yml run --rm -e COVERAGE_FILE=/usr/src/app/coverage/.coverage app-test coverage html -d /usr/src/app/coverage/html
+	@powershell -Command "if (Test-Path 'coverage\html\index.html') { Start-Process 'coverage\html\index.html' } else { Write-Host 'HTML report not found. Run `make cov` first.'; exit 1 }"
 clean-cov:
 	@python -c "import shutil, pathlib; [shutil.rmtree(p) for p in ['coverage', '.coverage', 'htmlcov'] if pathlib.Path(p).exists()]"
 	@echo "Coverage artifacts cleaned"
