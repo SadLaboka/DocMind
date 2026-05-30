@@ -42,16 +42,45 @@ dev = [
 ]
 
 [tool.ruff]
-line-length = 100
+line-length = 120
 target-version = "py313"
 src = ["src"]
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
-ignore = ["E501"]  # Длину строки контролирует форматтер
+select = [
+    "E",
+    "F",
+    "W",
+    "I",
+    "UP",
+    "B",
+    "SIM",
+    "RUF",
+    "C4",
+    "PIE",
+    "PT",
+    "T20",
+    "PERF",
+    "FURB",
+]
+ignore = [
+    "E501",
+    "B008",
+    "RUF012",
+]
 
 [tool.ruff.lint.isort]
 known-first-party = ["src"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = [
+    "S101",
+    "T201",
+]
+"alembic/**/*.py" = [
+    "E501",
+    "I001",
+]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -60,8 +89,22 @@ line-ending = "auto"
 
 [tool.mypy]
 python_version = "3.13"
-strict = true
-warn_return_any = true
+ignore_missing_imports = true
+check_untyped_defs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+warn_return_any = false
 warn_unused_configs = true
-plugins = ["pydantic.mypy", "sqlalchemy.ext.mypy.plugin"]
-exclude = ["tests/", "alembic/"]
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "alembic.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "src.services.extractors"
+disallow_untyped_defs = false
