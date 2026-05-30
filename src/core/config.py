@@ -18,6 +18,14 @@ BASE_DIR = str(Path(__file__).parent.parent)
 KEYS_DIR = Path(BASE_DIR).parent / "keys"
 
 
+class ServerSettings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="SERVER_", extra="ignore")
+
+    host: str = "127.0.0.1"
+    port: int = 8000
+    reload: bool = False
+
+
 class SettingsBase(BaseSettings):
     model_config = SettingsConfigDict(env_file=ENV_FILE, extra="ignore")
 
@@ -58,6 +66,7 @@ class Settings(BaseSettings):
     db: DatabaseSettings = Field(default_factory=DatabaseSettings)
     jwt: JWTSettings = Field(default_factory=JWTSettings)
     logs: LogsSettings = Field(default_factory=LogsSettings)
+    server: ServerSettings = Field(default_factory=ServerSettings)
 
     app_name: str = APP_NAME
     app_version: str = APP_VERSION
