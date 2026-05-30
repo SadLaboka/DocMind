@@ -1,4 +1,4 @@
-.PHONY: up down logs migrate-up migrate-down migrate-new lint test
+.PHONY: up down logs migrate-up migrate-down migrate-new lint test test-cov
 
 # Docker
 up:
@@ -38,3 +38,11 @@ typecheck:
 #Tests
 test:
 	docker compose -f docker-compose.test.yml up --build --abort-on-container-exit
+cov:
+	@python -c "import pathlib; pathlib.Path('coverage').mkdir(exist_ok=True)"
+	docker compose -f docker-compose.test.yml -f docker-compose.cov.yml up --build --abort-on-container-exit
+	@echo ""
+	@echo "Coverage report: ./coverage/coverage.xml"
+clean-cov:
+	@python -c "import shutil, pathlib; [shutil.rmtree(p) for p in ['coverage', '.coverage', 'htmlcov'] if pathlib.Path(p).exists()]"
+	@echo "Coverage artifacts cleaned"

@@ -1,0 +1,6 @@
+services:
+  app-test:
+    environment:
+      - PYTEST_ADDOPTS=--cov=src --cov-branch --cov-report=xml:coverage/coverage.xml --cov-report=html:coverage/html --cov-report=term-missing
+    volumes:
+      - ./coverage:/usr/src/app/coverage
