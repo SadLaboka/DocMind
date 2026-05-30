@@ -13,11 +13,12 @@ REFRESH_TOKEN_TYPE = "refresh"
 
 class JWTManager:
     """Manager for managing the creation and processing of JWT-tokens"""
+
     def __init__(
-            self,
-            private_key_path: str = settings.jwt.private_key_path,
-            public_key_path: str = settings.jwt.public_key_path,
-            algorithm: str = settings.jwt.algorithm,
+        self,
+        private_key_path: str = settings.jwt.private_key_path,
+        public_key_path: str = settings.jwt.public_key_path,
+        algorithm: str = settings.jwt.algorithm,
     ):
         self._private_key_path = Path(private_key_path)
         self._public_key_path = Path(public_key_path)
@@ -34,25 +35,25 @@ class JWTManager:
     def get_tokens(self, payload: dict) -> dict:
         """Entry point for creating a token pair.
         Splits the payload for assembling tokens and returns the resulting dictionary."""
-        return {"access_token": self._create_access_token(payload),
-                "refresh_token": self._create_refresh_token(payload["sub"]),
-                "token_type": "Bearer"}
+        return {
+            "access_token": self._create_access_token(payload),
+            "refresh_token": self._create_refresh_token(payload["sub"]),
+            "token_type": "Bearer",
+        }
 
     def _create_access_token(self, payload: dict) -> str:
         """Submits a payload for gathering access token"""
         access_token = self._create_jwt(
-            payload=payload,
-            token_type=ACCESS_TOKEN_TYPE,
-            time_delta=timedelta(minutes=settings.jwt.timedelta)
+            payload=payload, token_type=ACCESS_TOKEN_TYPE, time_delta=timedelta(minutes=settings.jwt.timedelta)
         )
         return access_token
 
-    def _create_refresh_token(self, user_id: int)  -> str:
+    def _create_refresh_token(self, user_id: int) -> str:
         """Submits a payload for gathering refresh token"""
         refresh_token = self._create_jwt(
             payload={"sub": str(user_id)},
             token_type=REFRESH_TOKEN_TYPE,
-            time_delta=timedelta(days=settings.jwt.refresh_timedelta)
+            time_delta=timedelta(days=settings.jwt.refresh_timedelta),
         )
         return refresh_token
 
@@ -90,53 +91,37 @@ class JWTManager:
                         "received_token_type": received_token_type,
                         "token_prefix": token[:10],
                         "subject_id": payload["sub"],
-                        "expired_at": datetime.fromtimestamp(payload["exp"], UTC).isoformat()
-                    }
+                        "expired_at": datetime.fromtimestamp(payload["exp"], UTC).isoformat(),
+                    },
                 )
             return payload
         except jwt.ExpiredSignatureError as raw_error:
             raise AuthenticationError(
                 error_code="token_expired",
                 message="Token expired",
-                log_context={
-                    "token_prefix": token[:10],
-                    "library_hint": str(raw_error)
-                }
-            )
+                log_context={"token_prefix": token[:10], "library_hint": str(raw_error)},
+            ) from raw_error
         except jwt.InvalidSignatureError as raw_error:
             raise AuthenticationError(
                 error_code="invalid_signature",
                 message="Invalid token",
-                log_context={
-                    "token_prefix": token[:10],
-                    "library_hint": str(raw_error)
-                }
-            )
+                log_context={"token_prefix": token[:10], "library_hint": str(raw_error)},
+            ) from raw_error
         except jwt.DecodeError as raw_error:
             raise AuthenticationError(
                 error_code="decode_error",
                 message="Invalid token",
-                log_context={
-                    "token_prefix": token[:10],
-                    "library_hint": str(raw_error)
-                }
-            )
+                log_context={"token_prefix": token[:10], "library_hint": str(raw_error)},
+            ) from raw_error
         except jwt.InvalidAlgorithmError as raw_error:
             raise AuthenticationError(
                 error_code="invalid_algorithm",
                 message="Invalid token",
-                log_context={
-                    "token_prefix": token[:10],
-                    "algorithm": self.algorithm,
-                    "library_hint": str(raw_error)
-                }
-            )
+                log_context={"token_prefix": token[:10], "algorithm": self.algorithm, "library_hint": str(raw_error)},
+            ) from raw_error
         except jwt.InvalidTokenError as raw_error:
             raise AuthenticationError(
                 error_code="token_error",
                 message="Invalid token",
-                log_context={
-                    "token_prefix": token[:10],
-                    "library_hint": str(raw_error)
-                }
-            )
+                log_context={"token_prefix": token[:10], "library_hint": str(raw_error)},
+            ) from raw_error

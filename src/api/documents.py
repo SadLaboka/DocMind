@@ -22,16 +22,12 @@ http_bearer = HTTPBearer(auto_error=False)
     response_model=DocumentListResponse,
 )
 async def get_all_documents(
-        page:  Annotated[int, Query(ge=1)] = 1,
-        limit: Annotated[int, Query(ge=1, le=50)] = 20,
-        current_user: User = Depends(get_current_user),
-        document_service: DocumentService = Depends(get_document_service)
+    page: Annotated[int, Query(ge=1)] = 1,
+    limit: Annotated[int, Query(ge=1, le=50)] = 20,
+    current_user: User = Depends(get_current_user),
+    document_service: DocumentService = Depends(get_document_service),
 ) -> DocumentListResponse:
-    response = await document_service.get_document_list(
-        current_user,
-        page,
-        limit
-    )
+    response = await document_service.get_document_list(current_user, page, limit)
 
     return response
 
@@ -43,9 +39,9 @@ async def get_all_documents(
     response_model=DocumentResponse,
 )
 async def get_document(
-        document_id: int,
-        current_user: User = Depends(get_current_user),
-        document_service: DocumentService = Depends(get_document_service)
+    document_id: int,
+    current_user: User = Depends(get_current_user),
+    document_service: DocumentService = Depends(get_document_service),
 ) -> DocumentResponse:
     return await document_service.get_document_by_id(document_id, current_user)
 
@@ -57,10 +53,10 @@ async def get_document(
     response_model=DocumentResponse,
 )
 async def upload_document(
-        description: Annotated[str, Form(max_length=300)],
-        file: UploadFile = File(...),
-        service: UploadService = Depends(get_upload_service),
-        current_user: User = Depends(get_current_user),
+    description: Annotated[str, Form(max_length=300)],
+    file: UploadFile = File(...),
+    service: UploadService = Depends(get_upload_service),
+    current_user: User = Depends(get_current_user),
 ) -> DocumentResponse:
 
     return await service.process_upload(file, current_user.id, description)

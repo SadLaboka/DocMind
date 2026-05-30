@@ -22,16 +22,10 @@ async def app_base_error_handler(request: Request, exc: AppBaseError) -> JSONRes
         client_ip=getattr(request.state, "client_ip", None),
         method=request.method,
         path=request.url.path,
-        **exc.log_context
+        **exc.log_context,
     )
 
-    return JSONResponse(
-        content={
-            "code": exc.error_code,
-            "detail": exc.message
-        },
-        status_code=exc.status_code
-    )
+    return JSONResponse(content={"code": exc.error_code, "detail": exc.message}, status_code=exc.status_code)
 
 
 async def request_validation_error_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
@@ -42,10 +36,7 @@ async def request_validation_error_handler(request: Request, exc: RequestValidat
         field_parts = [str(part) for part in loc if part not in ("body", "query", "path")]
         field = ".".join(field_parts) if field_parts else "request"
 
-        errors.append({
-            "field": field,
-            "message": error.get("msg", "Invalid value")
-        })
+        errors.append({"field": field, "message": error.get("msg", "Invalid value")})
 
     log.warning(
         "validation_error",
@@ -53,13 +44,12 @@ async def request_validation_error_handler(request: Request, exc: RequestValidat
         client_ip=getattr(request.state, "client_ip", None),
         method=request.method,
         path=request.url.path,
-        errors=errors
+        errors=errors,
     )
 
     return JSONResponse(
-        status_code=HTTP_422_UNPROCESSABLE_CONTENT,
-        content=({"code": "validation_error",
-                  "detail": errors}))
+        status_code=HTTP_422_UNPROCESSABLE_CONTENT, content=({"code": "validation_error", "detail": errors})
+    )
 
 
 async def exception_handler(request: Request, exc: Exception) -> JSONResponse:
@@ -70,10 +60,7 @@ async def exception_handler(request: Request, exc: Exception) -> JSONResponse:
         client_ip=getattr(request.state, "client_ip", None),
         method=request.method,
         path=request.url.path,
-        exc_info=True
+        exc_info=True,
     )
 
-    return JSONResponse(
-        status_code=HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"detail": "Internal Server Error"}
-    )
+    return JSONResponse(status_code=HTTP_500_INTERNAL_SERVER_ERROR, content={"detail": "Internal Server Error"})

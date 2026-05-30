@@ -1,4 +1,3 @@
-
 from src.core.exceptions import AuthenticationError
 from src.core.security import check_password
 from src.repositories.users import UserRepository
@@ -8,9 +7,10 @@ from src.services.base import BaseService
 
 class AuthService(BaseService[UserRepository]):
     """Service for authentication"""
+
     async def authenticate(self, username: str, password: str) -> User:
         """Gets a user from the database by login
-         and compares the hash of the passed password with the hash from the database"""
+        and compares the hash of the passed password with the hash from the database"""
         user = await self.repository.get_user_by_username(username)
 
         if not user or not check_password(password, user.password_hash):
@@ -20,7 +20,7 @@ class AuthService(BaseService[UserRepository]):
                 log_context={
                     "username": username,
                     "user_found": user is not None,
-                }
+                },
             )
         return User.model_validate(user)
 
@@ -34,6 +34,6 @@ class AuthService(BaseService[UserRepository]):
                 message="User not found",
                 log_context={
                     "user_id": user_id,
-                }
+                },
             )
         return User.model_validate(user)

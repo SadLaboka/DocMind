@@ -13,9 +13,16 @@ class SqlNoiseFilter(logging.Filter):
     """Filters out SQLAlchemy noise records, keeps only meaningful SQL"""
 
     _MEANINGFUL_PREFIXES = (
-        "SELECT", "INSERT", "UPDATE", "DELETE",
-        "BEGIN", "COMMIT", "ROLLBACK",
-        "CREATE", "DROP", "ALTER",
+        "SELECT",
+        "INSERT",
+        "UPDATE",
+        "DELETE",
+        "BEGIN",
+        "COMMIT",
+        "ROLLBACK",
+        "CREATE",
+        "DROP",
+        "ALTER",
     )
 
     def filter(self, record: logging.LogRecord) -> bool:
@@ -28,18 +35,20 @@ class SqlNoiseFilter(logging.Filter):
 
 class MultipartDebugFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
-        if record.levelno < logging.INFO and "multipart" in record.name.lower():
-            return False
-        return True
+        return not (record.levelno < logging.INFO and "multipart" in record.name.lower())
 
 
 def get_renderer() -> ConsoleRenderer | JSONRenderer:
     """Returns a renderer depending on the environment specified in the settings"""
-    return ConsoleRenderer(
-        pad_level=False,
-        pad_event=0,
-        timestamp_key="timestamp",
-    ) if settings.logs.dev else JSONRenderer()
+    return (
+        ConsoleRenderer(
+            pad_level=False,
+            pad_event=0,
+            timestamp_key="timestamp",
+        )
+        if settings.logs.dev
+        else JSONRenderer()
+    )
 
 
 def get_processors() -> list:
@@ -59,7 +68,7 @@ timestamper = structlog.processors.TimeStamper(fmt="iso", utc=True, key="timesta
 structlog_processors = [
     structlog.contextvars.merge_contextvars,
     structlog.processors.StackInfoRenderer(),
-    structlog.processors.ExceptionRenderer()
+    structlog.processors.ExceptionRenderer(),
 ]
 
 structlog_processors_prod = [
@@ -73,7 +82,7 @@ stdlib_processors = [
     _remove_record_metadata,
     structlog.stdlib.add_log_level,
     timestamper,
-    structlog.processors.ExceptionRenderer()
+    structlog.processors.ExceptionRenderer(),
 ]
 
 
@@ -83,53 +92,52 @@ def setup_logging() -> None:
     renderer = get_renderer()
     processors = get_processors()
 
-    logging.config.dictConfig({
-        'version': 1,
-        'disable_existing_loggers': False,
-        'formatters': {
-            "structlog_formatter": {
-                "()": structlog.stdlib.ProcessorFormatter,
-                "processors": stdlib_processors + [renderer],
-                "foreign_pre_chain": [
-                    structlog.stdlib.add_log_level,
-                    timestamper
-                ],
+    logging.config.dictConfig(
+        {
+            "version": 1,
+            "disable_existing_loggers": False,
+            "formatters": {
+                "structlog_formatter": {
+                    "()": structlog.stdlib.ProcessorFormatter,
+                    "processors": [*stdlib_processors, renderer],
+                    "foreign_pre_chain": [structlog.stdlib.add_log_level, timestamper],
+                },
             },
-        },
-        'handlers': {
-            "default": {
-                "class": "logging.StreamHandler",
-                "stream": sys.stdout,
-                "formatter": "structlog_formatter",
+            "handlers": {
+                "default": {
+                    "class": "logging.StreamHandler",
+                    "stream": sys.stdout,
+                    "formatter": "structlog_formatter",
+                },
             },
-        },
-        'loggers': {
-            "root": {
-                "level": settings.logs.level,
-                "handlers": ["default"],
+            "loggers": {
+                "root": {
+                    "level": settings.logs.level,
+                    "handlers": ["default"],
+                },
+                "uvicorn.error": {
+                    "level": settings.logs.level,
+                    "handlers": ["default"],
+                    "propagate": False,
+                },
+                "uvicorn.access": {
+                    "level": settings.logs.level,
+                    "handlers": ["default"],
+                    "propagate": False,
+                },
+                "sqlalchemy.engine.Engine": {
+                    "level": settings.logs.level,
+                    "handlers": ["default"],
+                    "propagate": False,
+                },
+                "multipart": {
+                    "level": settings.logs.level,
+                    "handlers": ["default"],
+                    "propagate": False,
+                },
             },
-            "uvicorn.error": {
-                "level": settings.logs.level,
-                "handlers": ["default"],
-                "propagate": False,
-            },
-            "uvicorn.access": {
-                "level": settings.logs.level,
-                "handlers": ["default"],
-                "propagate": False,
-            },
-            "sqlalchemy.engine.Engine": {
-                "level": settings.logs.level,
-                "handlers": ["default"],
-                "propagate": False,
-            },
-            "multipart": {
-                "level": settings.logs.level,
-                "handlers": ["default"],
-                "propagate": False,
-            },
-        },
-    })
+        }
+    )
 
     sql_filter = SqlNoiseFilter()
     for handler in logging.root.handlers:
@@ -141,9 +149,9 @@ def setup_logging() -> None:
         handler.addFilter(MultipartDebugFilter())
 
     structlog.configure(
-        processors=processors + [renderer],
+        processors=[*processors, renderer],
         wrapper_class=structlog.stdlib.BoundLogger,
         context_class=dict,
         logger_factory=structlog.stdlib.LoggerFactory(),
-        cache_logger_on_first_use=not settings.logs.dev
+        cache_logger_on_first_use=not settings.logs.dev,
     )

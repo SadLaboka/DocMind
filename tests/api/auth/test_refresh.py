@@ -21,7 +21,9 @@ async def test_refresh_token_success(client: AsyncClient, create_token_pair, tes
 @pytest.mark.asyncio
 async def test_refresh_token_expired(client: AsyncClient, create_token_pair, test_password):
     _, hashed_pw = test_password
-    tokens = await create_token_pair(login="expired_user", email="expired@test.com", password_hash=hashed_pw, expired=True)
+    tokens = await create_token_pair(
+        login="expired_user", email="expired@test.com", password_hash=hashed_pw, expired=True
+    )
 
     response = await client.post(
         "/auth/refresh",

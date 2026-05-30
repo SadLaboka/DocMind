@@ -34,9 +34,7 @@ class DatabaseSettings(SettingsBase):
     @property
     def url(self) -> str:
         """Returns a ready URL for connecting to PostgreSQL."""
-        return (
-            f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
-        )
+        return f"postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}"
 
 
 class JWTSettings(SettingsBase):

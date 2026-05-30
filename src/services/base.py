@@ -1,10 +1,10 @@
-from typing import Generic, TypeVar
+from typing import TypeVar
 
 from src.repositories.base import BaseRepository
 
-T = TypeVar('T', bound=BaseRepository)
+T = TypeVar("T", bound=BaseRepository)
 
 
-class BaseService(Generic[T]):
+class BaseService[T]:
     def __init__(self, repository: T):
         self.repository = repository

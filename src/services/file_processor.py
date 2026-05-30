@@ -14,9 +14,7 @@ from src.services.base import BaseService
 
 ALPHABET_RU = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя"
 ALPHABET_RU_UPPER = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
-PERMITTED_CHARS = set(
-    string.ascii_letters + string.digits + "._-" + ALPHABET_RU + ALPHABET_RU_UPPER
-)
+PERMITTED_CHARS = set(string.ascii_letters + string.digits + "._-" + ALPHABET_RU + ALPHABET_RU_UPPER)
 RESERVED_NAMES = {
     "CON",
     "PRN",
@@ -49,11 +47,8 @@ ALLOWED_MIME_VALUES = {m.value for m in MimeType}
 
 class UploadService(BaseService[DocumentRepository]):
 
-
     async def process_upload(
-        self,
-        uploaded_file: UploadFile,
-        user_id: int, description: str | None
+        self, uploaded_file: UploadFile, user_id: int, description: str | None
     ) -> DocumentResponse:
         """An orchestrator that validates the parameters of the received file,
         saves it to the database and disk, and then returns a response in the form of a Paydantic schema."""
@@ -64,7 +59,7 @@ class UploadService(BaseService[DocumentRepository]):
                 log_context={
                     "user_id": user_id,
                     "is_filename_missing": True,
-                }
+                },
             )
 
         file_size = self._validate_size(uploaded_file)
@@ -75,7 +70,7 @@ class UploadService(BaseService[DocumentRepository]):
                 log_context={
                     "user_id": user_id,
                     "file_size": file_size,
-                }
+                },
             )
         elif file_size == 0:
             raise BadRequestError(
@@ -84,7 +79,7 @@ class UploadService(BaseService[DocumentRepository]):
                 log_context={
                     "user_id": user_id,
                     "file_size": file_size,
-                }
+                },
             )
 
         file_extension = Path(uploaded_file.filename).suffix.lower()
@@ -92,19 +87,21 @@ class UploadService(BaseService[DocumentRepository]):
         temp_filename = self._get_temp_filename(file_extension)
         sanitized_filename = self._sanitize_filename(filename)
 
-        mime_type = self._detect_mime(uploaded_file)
-        if mime_type is not None and mime_type in ALLOWED_MIME_VALUES:
-            mime_type = MimeType(mime_type)
-        elif mime_type is not None:
+        detected_mime = self._detect_mime(uploaded_file)
+        mime_type: MimeType
+
+        if detected_mime is not None and detected_mime in ALLOWED_MIME_VALUES:
+            mime_type = MimeType(detected_mime)
+        elif detected_mime is not None:
             raise BadRequestError(
                 error_code="mime_type_is_invalid",
-                message="The has invalid type",
+                message="The has an invalid type",
                 log_context={
                     "user_id": user_id,
-                    "mime_type": mime_type,
-                }
+                    "mime_type": detected_mime,
+                },
             )
-        elif mime_type is None and file_extension == ".txt":
+        elif detected_mime is None and file_extension == ".txt":
             mime_type = MimeType.txt
         else:
             raise BadRequestError(
@@ -112,8 +109,8 @@ class UploadService(BaseService[DocumentRepository]):
                 message="The has invalid type",
                 log_context={
                     "user_id": user_id,
-                    "mime_type": mime_type,
-                }
+                    "mime_type": detected_mime,
+                },
             )
 
         self._save_to_temp(file=uploaded_file, temp_name=temp_filename)
@@ -165,11 +162,7 @@ class UploadService(BaseService[DocumentRepository]):
         if not sanitized_filename:
             sanitized_filename = "uploaded_file"
 
-        return (
-            sanitized_filename
-            if sanitized_filename.upper() not in RESERVED_NAMES
-            else "_" + sanitized_filename
-        )
+        return sanitized_filename if sanitized_filename.upper() not in RESERVED_NAMES else "_" + sanitized_filename
 
     @staticmethod
     def _save_to_temp(file: UploadFile, temp_name: str) -> None:

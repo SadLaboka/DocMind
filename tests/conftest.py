@@ -1,21 +1,20 @@
-import pytest
-import pytest_asyncio
+from datetime import UTC
 from pathlib import Path
 
-from httpx import AsyncClient, ASGITransport
-
+import pytest
+import pytest_asyncio
+from httpx import ASGITransport, AsyncClient
+from main import app
 from sqlalchemy.ext.asyncio import (
-    create_async_engine,
     AsyncSession,
+    create_async_engine,
 )
 
-from src.core.jwt import JWTManager
-from main import app
-from src.core.database import get_session
 from src.core.config import settings
+from src.core.database import get_session
+from src.core.jwt import JWTManager
 from src.core.security import get_password_hash
 from src.DependencyInjection.auth import get_jwt_manager
-
 
 TEST_DB_URL = settings.db.url
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
@@ -57,7 +56,7 @@ async def client(test_db_session):
         yield test_db_session
 
     app.dependency_overrides[get_session] = override_get_session
-    app.dependency_overrides[get_jwt_manager] = test_jwt_manager
+    app.dependency_overrides[get_jwt_manager] = get_test_jwt_manager
 
     async with AsyncClient(
         transport=ASGITransport(app=app),
@@ -102,16 +101,12 @@ async def create_user():
     return _create
 
 
-def test_jwt_manager(
-        private_key_path: str = str(FIXTURES_DIR / "test_private.pem"),
-        public_key_path: str = str(FIXTURES_DIR / "test_public.pem"),
-        algorithm: str = "RS256",
+def get_test_jwt_manager(
+    private_key_path: str = str(FIXTURES_DIR / "test_private.pem"),
+    public_key_path: str = str(FIXTURES_DIR / "test_public.pem"),
+    algorithm: str = "RS256",
 ) -> JWTManager:
-    return JWTManager(
-        private_key_path=private_key_path,
-        public_key_path=public_key_path,
-        algorithm=algorithm
-    )
+    return JWTManager(private_key_path=private_key_path, public_key_path=public_key_path, algorithm=algorithm)
 
 
 @pytest.fixture
@@ -122,14 +117,15 @@ def create_token_pair(create_user, test_db_session):
         password_hash: str,
         expired: bool = False,
     ):
-        import jwt
-        from datetime import datetime, timedelta, timezone
+        from datetime import datetime, timedelta
 
-        jwt_mgr = test_jwt_manager()
+        import jwt
+
+        jwt_mgr = get_test_jwt_manager()
 
         user_data = await create_user(test_db_session, login, email, password_hash)
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         payload = {
             "sub": user_data["id"],
             "login": user_data["login"],
@@ -152,6 +148,7 @@ def create_token_pair(create_user, test_db_session):
             "user_id": user_data["id"],
             "login": user_data["login"],
         }
+
     return _create
 
 

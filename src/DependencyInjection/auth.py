@@ -24,15 +24,10 @@ def get_auth_service(repository: UserRepository = Depends(get_user_repository)) 
 
 
 def get_current_user(
-        credentials: HTTPAuthorizationCredentials = Depends(http_bearer),
-        jwt_manager: JWTManager = Depends(get_jwt_manager)
+    credentials: HTTPAuthorizationCredentials = Depends(http_bearer), jwt_manager: JWTManager = Depends(get_jwt_manager)
 ) -> User:
     if credentials is None:
         raise HTTPException(status_code=401, detail="Invalid authentication credentials")
     token = credentials.credentials
     token_payload = jwt_manager.get_payload_from_access_token(token)
-    return User(
-        id=int(token_payload["sub"]),
-        login=token_payload["login"],
-        is_admin=token_payload["is_admin"]
-    )
+    return User(id=int(token_payload["sub"]), login=token_payload["login"], is_admin=token_payload["is_admin"])

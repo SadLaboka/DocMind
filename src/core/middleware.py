@@ -5,12 +5,13 @@ from uuid import uuid4
 
 class Middleware:
     """ASGI middleware for FastAPI"""
+
     def __init__(self, app: Any) -> None:
         self.app = app
 
     async def __call__(self, scope: dict, receive: Any, send: Any) -> None:
         """Fills the state with request ID and client IP data. Intercepts the start message and adds headers"""
-        if scope["type"] != "http": # processes only HTTP requests
+        if scope["type"] != "http":  # processes only HTTP requests
             await self.app(scope, receive, send)
             return
 
@@ -41,10 +42,7 @@ class Middleware:
     def _extract_client_ip(scope: dict) -> str:
         """Gets client ip from scope"""
         headers = scope.get("headers", [])
-        headers_dict = {
-            name.decode("latin-1").lower(): value.decode("latin-1")
-            for name, value in headers
-        }
+        headers_dict = {name.decode("latin-1").lower(): value.decode("latin-1") for name, value in headers}
 
         if "x-forwarded-for" in headers_dict:
             return headers_dict["x-forwarded-for"].split(",")[0].strip()

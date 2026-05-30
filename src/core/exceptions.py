@@ -14,15 +14,15 @@ class AppBaseError(Exception):
     log_context: dict
 
     def __init__(self, error_code: str | None = None, message: str | None = None, log_context: dict | None = None):
-        self.error_code = error_code if error_code else type(self).error_code
-        self.message = message if message else type(self).message
-        self.log_context = log_context if log_context else {}
+        self.error_code = error_code or type(self).error_code
+        self.message = message or type(self).message
+        self.log_context = log_context or {}
         super().__init__(self.message)
 
 
 class AuthenticationError(AppBaseError):
     status_code = HTTP_401_UNAUTHORIZED
-    error_code =  "unauthorized"
+    error_code = "unauthorized"
     message = "Invalid credentials"
 
 

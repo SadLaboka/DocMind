@@ -16,7 +16,7 @@ router = APIRouter(prefix="/users", tags=["users"])
     status_code=status.HTTP_201_CREATED,
 )
 async def register_user(
-        user: UserRegisterRequest,
-        service: UserService = Depends(get_user_service)) -> UserRegisterResponse:
+    user: UserRegisterRequest, service: UserService = Depends(get_user_service)
+) -> UserRegisterResponse:
     response = await service.register(user)
     return response
