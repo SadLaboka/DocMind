@@ -43,6 +43,8 @@ cov:
 	docker compose -f docker-compose.test.yml -f docker-compose.cov.yml up --build --abort-on-container-exit
 	@echo ""
 	@echo "Coverage report: ./coverage/coverage.xml"
+cov-html:
+	@powershell -Command "Start-Process 'coverage\html\index.html'"
 clean-cov:
 	@python -c "import shutil, pathlib; [shutil.rmtree(p) for p in ['coverage', '.coverage', 'htmlcov'] if pathlib.Path(p).exists()]"
 	@echo "Coverage artifacts cleaned"
