@@ -1,17 +1,15 @@
+from uuid import uuid4
+
 import pytest
 from httpx import AsyncClient
-from uuid import uuid4
 
 from src.core.enums import MimeType
 
 
 @pytest.mark.asyncio
 async def test_get_document_success(
-        client: AsyncClient,
-        test_password,
-        create_document,
-        create_token_pair,
-        test_db_session):
+    client: AsyncClient, test_password, create_document, create_token_pair, test_db_session
+):
     _, hashed_pw = test_password
 
     tokens = await create_token_pair(login="test_user", email="test@test.com", password_hash=hashed_pw)
@@ -23,12 +21,11 @@ async def test_get_document_success(
         description="total success",
         mime_type=MimeType.pdf,
         file_size=1024,
-        temp_filename=uuid4().hex
+        temp_filename=uuid4().hex,
     )
 
     response = await client.get(
-        f"/documents/{document['id']}",
-        headers={"Authorization": f"Bearer {tokens['access_token']}"}
+        f"/documents/{document['id']}", headers={"Authorization": f"Bearer {tokens['access_token']}"}
     )
 
     assert response.status_code == 200
@@ -52,15 +49,13 @@ async def test_get_document_success(
 
 @pytest.mark.asyncio
 async def test_get_document_success_admin(
-        client: AsyncClient,
-        test_password,
-        create_document,
-        create_user,
-        create_token_pair,
-        test_db_session):
+    client: AsyncClient, test_password, create_document, create_user, create_token_pair, test_db_session
+):
     _, hashed_pw = test_password
 
-    admins_tokens = await create_token_pair(login="admin", email="admin@test.com", is_admin=True, password_hash=hashed_pw)
+    admins_tokens = await create_token_pair(
+        login="admin", email="admin@test.com", is_admin=True, password_hash=hashed_pw
+    )
     document_owner = await create_user(
         session=test_db_session,
         login="documentOwner",
@@ -75,12 +70,11 @@ async def test_get_document_success_admin(
         description="total success",
         mime_type=MimeType.pdf,
         file_size=1024,
-        temp_filename=uuid4().hex
+        temp_filename=uuid4().hex,
     )
 
     response = await client.get(
-        f"/documents/{document['id']}",
-        headers={"Authorization": f"Bearer {admins_tokens['access_token']}"}
+        f"/documents/{document['id']}", headers={"Authorization": f"Bearer {admins_tokens['access_token']}"}
     )
 
     assert response.status_code == 200
@@ -110,11 +104,8 @@ async def test_get_document_unauthorized(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_get_document_forbidden(
-        client: AsyncClient,
-        create_document,
-        create_token_pair,
-        test_password,
-        test_db_session):
+    client: AsyncClient, create_document, create_token_pair, test_password, test_db_session
+):
     _, hashed_pw = test_password
 
     tokens1 = await create_token_pair(login="user1", email="user1@test.com", password_hash=hashed_pw)
@@ -125,13 +116,12 @@ async def test_get_document_forbidden(
         description="text for test",
         mime_type=MimeType.pdf,
         file_size=1024,
-        temp_filename=uuid4().hex
+        temp_filename=uuid4().hex,
     )
 
     tokens2 = await create_token_pair(login="user2", email="user2@test.com", password_hash=hashed_pw)
     response = await client.get(
-        f"/documents/{document['id']}",
-        headers={"Authorization": f"Bearer {tokens2['access_token']}"}
+        f"/documents/{document['id']}", headers={"Authorization": f"Bearer {tokens2['access_token']}"}
     )
     assert response.status_code == 404
 
@@ -141,8 +131,5 @@ async def test_get_document_not_found(client: AsyncClient, create_token_pair, te
     _, hashed_pw = test_password
     tokens = await create_token_pair(login="test_user", email="test@test.com", password_hash=hashed_pw)
 
-    response = await client.get(
-        "/documents/999999",
-        headers={"Authorization": f"Bearer {tokens['access_token']}"}
-    )
+    response = await client.get("/documents/999999", headers={"Authorization": f"Bearer {tokens['access_token']}"})
     assert response.status_code == 404
