@@ -29,8 +29,10 @@ lint:
 		-v "pip-cache:/root/.cache/pip" \
 		-e "PRE_COMMIT_HOME=/cache" \
 		-e "PIP_DEFAULT_TIMEOUT=300" \
+		-e "PIP_INDEX_URL=https://mirrors.aliyun.com/pypi/simple/" \
+		-e "PIP_TRUSTED_HOST=mirrors.aliyun.com" \
 		python:3.13 \
-		bash -c "apt-get update && apt-get install -y --no-install-recommends git ca-certificates && update-ca-certificates && pip install --no-cache-dir --timeout 300 --retries 5 --trusted-host pypi.org --trusted-host files.pythonhosted.org pre-commit && git config --global --add safe.directory /src && pre-commit run --all-files"
+		bash -c "apt-get update && apt-get install -y --no-install-recommends git ca-certificates && update-ca-certificates && pip install --no-cache-dir --timeout 300 --retries 5 pre-commit && git config --global --add safe.directory /src && pre-commit run --all-files"
 format:
 	poetry run ruff check src/ --fix
 	poetry run ruff format src/
