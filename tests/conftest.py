@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import (
 
 from src.core.config import settings
 from src.core.database import get_session
+from src.core.enums import MimeType
 from src.core.jwt import JWTManager
 from src.core.security import get_password_hash
 from src.DependencyInjection.auth import get_jwt_manager
@@ -74,6 +75,7 @@ async def create_user():
         login: str,
         email: str,
         password_hash: str,
+        is_admin: bool = False,
     ):
         from src.models.users import User
 
@@ -82,7 +84,7 @@ async def create_user():
             email=email,
             password_hash=password_hash,
             is_verified=False,
-            is_admin=False,
+            is_admin=is_admin,
             is_active=True,
             failed_login_attempts=0,
         )
@@ -96,6 +98,50 @@ async def create_user():
             "id": user.id,
             "login": user.login,
             "email": user.email,
+        }
+
+    return _create
+
+
+@pytest_asyncio.fixture(scope="function")
+async def create_document():
+    async def _create(
+        session: AsyncSession,
+        user_id: int,
+        filename: str,
+        description: str,
+        mime_type: MimeType,
+        file_size: int,
+        temp_filename: str,
+    ):
+        from src.models.documents import Document
+
+        document = Document(
+            user_id=user_id,
+            filename=filename,
+            description=description,
+            mime_type=mime_type,
+            file_size=file_size,
+            temp_filename=temp_filename,
+        )
+
+        session.add(document)
+
+        await session.flush()
+        await session.refresh(document)
+
+        return {
+            "id": document.id,
+            "user_id": document.user_id,
+            "filename": document.filename,
+            "description": document.description,
+            "mime_type": document.mime_type,
+            "file_size": document.file_size,
+            "document_status": document.document_status,
+            "document_text": document.document_text,
+            "analysis": document.analysis,
+            "created_at": document.created_at,
+            "updated_at": document.updated_at,
         }
 
     return _create
@@ -116,6 +162,7 @@ def create_token_pair(create_user, test_db_session):
         email: str,
         password_hash: str,
         expired: bool = False,
+        is_admin: bool = False,
     ):
         from datetime import datetime, timedelta
 
@@ -129,7 +176,7 @@ def create_token_pair(create_user, test_db_session):
         payload = {
             "sub": user_data["id"],
             "login": user_data["login"],
-            "is_admin": False,
+            "is_admin": is_admin,
         }
 
         if expired:
