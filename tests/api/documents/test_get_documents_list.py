@@ -1,17 +1,15 @@
+from uuid import uuid4
+
 import pytest
 from httpx import AsyncClient
-from uuid import uuid4
 
 from src.core.enums import MimeType
 
 
 @pytest.mark.asyncio
 async def test_get_documents_success(
-        client: AsyncClient,
-        test_password,
-        create_document,
-        create_token_pair,
-        test_db_session):
+    client: AsyncClient, test_password, create_document, create_token_pair, test_db_session
+):
     _, hashed_pw = test_password
 
     tokens = await create_token_pair(login="test_user", email="test@test.com", password_hash=hashed_pw)
@@ -27,10 +25,7 @@ async def test_get_documents_success(
             temp_filename=uuid4().hex,
         )
 
-    response = await client.get(
-        "/documents/",
-        headers={"Authorization": f"Bearer {tokens['access_token']}"}
-    )
+    response = await client.get("/documents/", headers={"Authorization": f"Bearer {tokens['access_token']}"})
 
     assert response.status_code == 200
     data = response.json()
@@ -62,11 +57,8 @@ async def test_get_documents_success(
 
 @pytest.mark.asyncio
 async def test_get_documents_pagination(
-        client: AsyncClient,
-        test_password,
-        create_document,
-        create_token_pair,
-        test_db_session):
+    client: AsyncClient, test_password, create_document, create_token_pair, test_db_session
+):
     _, hashed_pw = test_password
 
     tokens = await create_token_pair(login="test_user", email="test@test.com", password_hash=hashed_pw)
@@ -83,8 +75,7 @@ async def test_get_documents_pagination(
         )
 
     response = await client.get(
-        "/documents/?page=1&limit=10",
-        headers={"Authorization": f"Bearer {tokens['access_token']}"}
+        "/documents/?page=1&limit=10", headers={"Authorization": f"Bearer {tokens['access_token']}"}
     )
     assert response.status_code == 200
     data = response.json()
@@ -95,8 +86,7 @@ async def test_get_documents_pagination(
     assert data["has_next"] is True
 
     response = await client.get(
-        "/documents/?page=2&limit=10",
-        headers={"Authorization": f"Bearer {tokens['access_token']}"}
+        "/documents/?page=2&limit=10", headers={"Authorization": f"Bearer {tokens['access_token']}"}
     )
     assert response.status_code == 200
     data = response.json()
@@ -105,8 +95,7 @@ async def test_get_documents_pagination(
     assert data["has_next"] is True
 
     response = await client.get(
-        "/documents/?page=3&limit=10",
-        headers={"Authorization": f"Bearer {tokens['access_token']}"}
+        "/documents/?page=3&limit=10", headers={"Authorization": f"Bearer {tokens['access_token']}"}
     )
     assert response.status_code == 200
     data = response.json()
@@ -116,18 +105,12 @@ async def test_get_documents_pagination(
 
 
 @pytest.mark.asyncio
-async def test_get_documents_empty(
-        client: AsyncClient,
-        test_password,
-        create_token_pair):
+async def test_get_documents_empty(client: AsyncClient, test_password, create_token_pair):
     _, hashed_pw = test_password
 
     tokens = await create_token_pair(login="empty_user", email="empty@test.com", password_hash=hashed_pw)
 
-    response = await client.get(
-        "/documents/",
-        headers={"Authorization": f"Bearer {tokens['access_token']}"}
-    )
+    response = await client.get("/documents/", headers={"Authorization": f"Bearer {tokens['access_token']}"})
 
     assert response.status_code == 200
     data = response.json()
@@ -146,11 +129,8 @@ async def test_get_documents_unauthorized(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_get_documents_isolation(
-        client: AsyncClient,
-        test_password,
-        create_document,
-        create_token_pair,
-        test_db_session):
+    client: AsyncClient, test_password, create_document, create_token_pair, test_db_session
+):
     _, hashed_pw = test_password
 
     tokens1 = await create_token_pair(login="user1", email="user1@test.com", password_hash=hashed_pw)
@@ -178,19 +158,13 @@ async def test_get_documents_isolation(
             temp_filename=uuid4().hex,
         )
 
-    response = await client.get(
-        "/documents/",
-        headers={"Authorization": f"Bearer {tokens1['access_token']}"}
-    )
+    response = await client.get("/documents/", headers={"Authorization": f"Bearer {tokens1['access_token']}"})
     assert response.status_code == 200
     data = response.json()
     assert data["total"] == 3
     assert all(item["filename"].startswith("user1_doc_") for item in data["items"])
 
-    response = await client.get(
-        "/documents/",
-        headers={"Authorization": f"Bearer {tokens2['access_token']}"}
-    )
+    response = await client.get("/documents/", headers={"Authorization": f"Bearer {tokens2['access_token']}"})
     assert response.status_code == 200
     data = response.json()
     assert data["total"] == 2
@@ -198,66 +172,39 @@ async def test_get_documents_isolation(
 
 
 @pytest.mark.asyncio
-async def test_get_documents_validation_page(
-        client: AsyncClient,
-        test_password,
-        create_token_pair):
+async def test_get_documents_validation_page(client: AsyncClient, test_password, create_token_pair):
     _, hashed_pw = test_password
     tokens = await create_token_pair(login="test_user", email="test@test.com", password_hash=hashed_pw)
 
-    response = await client.get(
-        "/documents/?page=0",
-        headers={"Authorization": f"Bearer {tokens['access_token']}"}
-    )
+    response = await client.get("/documents/?page=0", headers={"Authorization": f"Bearer {tokens['access_token']}"})
     assert response.status_code == 422
 
-    response = await client.get(
-        "/documents/?page=-1",
-        headers={"Authorization": f"Bearer {tokens['access_token']}"}
-    )
+    response = await client.get("/documents/?page=-1", headers={"Authorization": f"Bearer {tokens['access_token']}"})
     assert response.status_code == 422
 
 
 @pytest.mark.asyncio
-async def test_get_documents_validation_limit(
-        client: AsyncClient,
-        test_password,
-        create_token_pair):
+async def test_get_documents_validation_limit(client: AsyncClient, test_password, create_token_pair):
     _, hashed_pw = test_password
     tokens = await create_token_pair(login="test_user", email="test@test.com", password_hash=hashed_pw)
 
-    response = await client.get(
-        "/documents/?limit=0",
-        headers={"Authorization": f"Bearer {tokens['access_token']}"}
-    )
+    response = await client.get("/documents/?limit=0", headers={"Authorization": f"Bearer {tokens['access_token']}"})
     assert response.status_code == 422
 
-    response = await client.get(
-        "/documents/?limit=51",
-        headers={"Authorization": f"Bearer {tokens['access_token']}"}
-    )
+    response = await client.get("/documents/?limit=51", headers={"Authorization": f"Bearer {tokens['access_token']}"})
     assert response.status_code == 422
 
-    response = await client.get(
-        "/documents/?limit=1",
-        headers={"Authorization": f"Bearer {tokens['access_token']}"}
-    )
+    response = await client.get("/documents/?limit=1", headers={"Authorization": f"Bearer {tokens['access_token']}"})
     assert response.status_code == 200
 
-    response = await client.get(
-        "/documents/?limit=50",
-        headers={"Authorization": f"Bearer {tokens['access_token']}"}
-    )
+    response = await client.get("/documents/?limit=50", headers={"Authorization": f"Bearer {tokens['access_token']}"})
     assert response.status_code == 200
 
 
 @pytest.mark.asyncio
 async def test_get_documents_field_values(
-        client: AsyncClient,
-        test_password,
-        create_document,
-        create_token_pair,
-        test_db_session):
+    client: AsyncClient, test_password, create_document, create_token_pair, test_db_session
+):
     _, hashed_pw = test_password
 
     tokens = await create_token_pair(login="test_user", email="test@test.com", password_hash=hashed_pw)
@@ -272,10 +219,7 @@ async def test_get_documents_field_values(
         temp_filename=uuid4().hex,
     )
 
-    response = await client.get(
-        "/documents/",
-        headers={"Authorization": f"Bearer {tokens['access_token']}"}
-    )
+    response = await client.get("/documents/", headers={"Authorization": f"Bearer {tokens['access_token']}"})
     assert response.status_code == 200
     data = response.json()
 
