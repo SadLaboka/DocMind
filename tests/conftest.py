@@ -48,7 +48,8 @@ async def test_db_session(db_engine):
             yield session
         finally:
             await session.close()
-            await transaction.rollback()
+            if transaction.is_active:
+                await transaction.rollback()
 
 
 @pytest_asyncio.fixture(scope="function")
