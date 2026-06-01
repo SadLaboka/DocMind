@@ -1,3 +1,5 @@
+from typing import Any
+
 from starlette.status import (
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
@@ -11,7 +13,7 @@ class AppBaseError(Exception):
     status_code: int = HTTP_500_INTERNAL_SERVER_ERROR
     error_code: str = "Internal_error"
     message: str = "Internal server error"
-    log_context: dict
+    log_context: dict[str, Any]
 
     def __init__(self, error_code: str | None = None, message: str | None = None, log_context: dict | None = None):
         self.error_code = error_code or type(self).error_code
@@ -42,3 +44,13 @@ class BadRequestError(AppBaseError):
     status_code = HTTP_400_BAD_REQUEST
     error_code = "bad_request"
     message = "Bad request"
+
+
+class ExtractionError(ValueError):
+    error_code = "extraction_error"
+    log_context: dict[str, Any]
+
+    def __init__(self, error_code: str | None = None,  log_context: dict | None = None):
+        self.error_code = error_code or type(self).error_code
+        self.log_context = log_context or {}
+        super().__init__()
