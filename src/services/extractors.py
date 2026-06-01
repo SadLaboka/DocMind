@@ -1,11 +1,10 @@
+from collections.abc import Callable
 from io import BytesIO
 from pathlib import Path
-from collections.abc import Callable
-from typing import TypeAlias, Final
+from typing import Final, TypeAlias
 
-from src.schemas.documents import MimeType
 from src.core.exceptions import ExtractionError
-
+from src.schemas.documents import MimeType
 
 ExtractorFunc: TypeAlias = Callable[[BytesIO], str]
 
@@ -45,14 +44,12 @@ class TextExtractor:
                 error_code="file_not_found",
                 log_context={"path": path},
             )
-        pass
 
     def _extract_txt(self, file: BytesIO) -> str:
         pass
 
     def _extract_docx(self, file: BytesIO) -> str:
         pass
-
 
     def _extract_xlsx(self, file: BytesIO) -> str:
         pass
