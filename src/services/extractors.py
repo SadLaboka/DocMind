@@ -55,6 +55,7 @@ class TextExtractor:
         """Extracts the text from bytesio if file has docx mimetype"""
         from docx import Document
         from docx.opc.exceptions import PackageNotFoundError
+
         try:
             document = Document(file)
         except PackageNotFoundError as err:
