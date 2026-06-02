@@ -52,7 +52,34 @@ class TextExtractor:
         return file.getvalue().decode("utf-8", errors="replace")
 
     def _extract_docx(self, file: BytesIO) -> str:
-        pass
+        """Extracts the text from bytesio if file has docx mimetype"""
+        from docx import Document
+        from docx.opc.exceptions import PackageNotFoundError
+        try:
+            document = Document(file)
+        except PackageNotFoundError as err:
+            raise ExtractionError(
+                error_code="invalid_file",
+                log_context={"detail": str(err)},
+            )
+        text = "\n".join(paragraph.text for paragraph in document.paragraphs)
+
+        if document.tables:
+            for table_num, table in enumerate(document.tables):
+                table_parts = [f"--- Table {table_num} ---"]
+                for row_num, row in enumerate(table.rows):
+                    row_parts = []
+                    for cell_num, cell in enumerate(row.cells):
+                        cell_text = "\n".join(p.text for p in cell.paragraphs).strip()
+                        if cell_text:
+                            row_parts.append(f"[Cell {cell_num}]: {cell_text}")
+
+                    if row_parts:
+                        table_parts.append(" | ".join(row_parts))
+
+                text += "\n" + "\n".join(table_parts)
+
+        return text
 
     def _extract_xlsx(self, file: BytesIO) -> str:
         pass
