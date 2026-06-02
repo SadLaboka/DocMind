@@ -53,4 +53,4 @@ class ExtractionError(ValueError):
     def __init__(self, error_code: str | None = None, log_context: dict | None = None):
         self.error_code = error_code or type(self).error_code
         self.log_context = log_context or {}
-        super().__init__()
+        super().__init__(f"Extraction error: {self.error_code}")
