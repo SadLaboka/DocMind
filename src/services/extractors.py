@@ -36,7 +36,8 @@ class TextExtractor:
                 file.close()
         return text
 
-    def _get_file_data(self, temp_filename: Path | str) -> BytesIO:
+    @staticmethod
+    def _get_file_data(temp_filename: Path | str) -> BytesIO:
         """Reads the uploaded file and returns the data"""
         path = Path(temp_filename)
         if not path.is_file():
@@ -44,9 +45,11 @@ class TextExtractor:
                 error_code="file_not_found",
                 log_context={"path": path},
             )
+        return BytesIO(path.read_bytes())
 
     def _extract_txt(self, file: BytesIO) -> str:
-        pass
+        """Extracts the text from bytesio if file has txt mimetype"""
+        return file.getvalue().decode("utf-8", errors="replace")
 
     def _extract_docx(self, file: BytesIO) -> str:
         pass
