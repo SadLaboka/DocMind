@@ -83,7 +83,28 @@ class TextExtractor:
         return text
 
     def _extract_xlsx(self, file: BytesIO) -> str:
-        pass
+        """Extracts the text from bytesio if file has xlsx mimetype"""
+        from openpyxl import load_workbook
+
+        text_parts = []
+        try:
+            workbook = load_workbook(filename=file, read_only=True, data_only=True)
+
+            for sheet in workbook.worksheets:
+                text_parts.append(f"--- Sheet: {sheet.title} ---")
+
+                for row in sheet.iter_rows(values_only=True):
+                    if any(cell is not None and str(cell).strip() for cell in row):
+                        row_text = " | ".join(str(cell) if cell is not None else "" for cell in row)
+                        text_parts.append(row_text)
+
+        except Exception as err:
+            raise ExtractionError(
+                error_code="invalid_file",
+                log_context={"detail": str(err)},
+            )
+
+        return "\n".join(text_parts)
 
     def _extract_pdf(self, file: BytesIO) -> str:
         pass
