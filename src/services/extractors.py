@@ -107,4 +107,35 @@ class TextExtractor:
         return "\n".join(text_parts)
 
     def _extract_pdf(self, file: BytesIO) -> str:
-        pass
+        """Extracts the text from bytesio if file has PDF mimetype"""
+        import pdfplumber
+        from pdfminer.pdfparser import PDFSyntaxError
+
+        text_parts = []
+        try:
+            with pdfplumber.open(file) as pdf:
+                for page_num, page in enumerate(pdf.pages):
+                    page_text = page.extract_text()
+
+                    if page_text:
+                        text_parts.append(f"--- Page {page_num} ---")
+                        text_parts.append(page_text.strip())
+
+                    tables = page.extract_tables()
+                    if tables:
+
+                        for table_num, table in enumerate(tables):
+                            text_parts.append(f"--- Page {page_num}, Table {table_num} ---")
+
+                            for row_num, row in enumerate(table):
+                                text_parts.append(f"--- Row {row_num} ---")
+                                if any(cell is not None and str(cell).strip() for cell in row):
+                                    row_text = " | ".join(str(cell) if cell is not None else "" for cell in row)
+                                    text_parts.append(row_text)
+        except (PDFSyntaxError, Exception) as err:
+            raise ExtractionError(
+                error_code="invalid_file",
+                log_context={"detail": str(err)},
+            )
+
+        return "\n".join(text_parts)
