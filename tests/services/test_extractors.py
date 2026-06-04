@@ -1,6 +1,6 @@
-import pytest
 from io import BytesIO
-from pathlib import Path
+
+import pytest
 
 from src.core.exceptions import ExtractionError
 from src.schemas.documents import MimeType

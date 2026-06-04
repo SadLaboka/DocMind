@@ -53,9 +53,10 @@ class TextExtractor:
 
     def _extract_docx(self, file: BytesIO) -> str:
         """Extracts the text from bytesio if file has docx mimetype"""
+        from zipfile import BadZipFile
+
         from docx import Document
         from docx.opc.exceptions import PackageNotFoundError
-        from zipfile import BadZipFile
 
         try:
             document = Document(file)
@@ -85,9 +86,10 @@ class TextExtractor:
 
     def _extract_xlsx(self, file: BytesIO) -> str:
         """Extracts the text from bytesio if file has xlsx mimetype"""
+        from zipfile import BadZipFile
+
         from openpyxl import load_workbook
         from openpyxl.utils.exceptions import InvalidFileException
-        from zipfile import BadZipFile
 
         text_parts = []
         try:
