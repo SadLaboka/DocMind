@@ -55,10 +55,11 @@ class TextExtractor:
         """Extracts the text from bytesio if file has docx mimetype"""
         from docx import Document
         from docx.opc.exceptions import PackageNotFoundError
+        from zipfile import BadZipFile
 
         try:
             document = Document(file)
-        except PackageNotFoundError as err:
+        except (PackageNotFoundError, BadZipFile) as err:
             raise ExtractionError(
                 error_code="invalid_file",
                 log_context={"detail": str(err)},
@@ -85,6 +86,8 @@ class TextExtractor:
     def _extract_xlsx(self, file: BytesIO) -> str:
         """Extracts the text from bytesio if file has xlsx mimetype"""
         from openpyxl import load_workbook
+        from openpyxl.utils.exceptions import InvalidFileException
+        from zipfile import BadZipFile
 
         text_parts = []
         try:
@@ -98,7 +101,7 @@ class TextExtractor:
                         row_text = " | ".join(str(cell) if cell is not None else "" for cell in row)
                         text_parts.append(row_text)
 
-        except Exception as err:
+        except (InvalidFileException, BadZipFile, Exception) as err:
             raise ExtractionError(
                 error_code="invalid_file",
                 log_context={"detail": str(err)},
