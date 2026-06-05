@@ -38,3 +38,15 @@ class DocumentRepository(BaseRepository):
     async def get_documents_count(self, user_id: int) -> int:
         stmt = select(func.count(Document.id)).select_from(Document).where(Document.user_id == user_id)
         return await self.session.scalar(stmt) or 0
+
+    async def update_document_fields(self, document_id: int, **data) -> Document | None:
+        document = await self.get_document_by_id(document_id)
+        if document is None:
+            return None
+
+        for key, value in data.items():
+            setattr(document, key, value)
+
+        await self.session.commit()
+        await self.session.refresh(document)
+        return document
