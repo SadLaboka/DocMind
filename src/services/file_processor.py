@@ -7,10 +7,12 @@ from fastapi import UploadFile
 
 from src.core.config import settings
 from src.core.enums import MimeType
-from src.core.exceptions import BadRequestError
+from src.core.exceptions import BadRequestError, ExtractionError
+from src.models.documents import DocumentStatus
 from src.repositories.documents import DocumentRepository
 from src.schemas.documents import DocumentData, DocumentResponse
 from src.services.base import BaseService
+from src.services.extractors import TextExtractor
 
 ALPHABET_RU = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя"
 ALPHABET_RU_UPPER = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
@@ -113,7 +115,7 @@ class UploadService(BaseService[DocumentRepository]):
                 },
             )
 
-        self._save_to_temp(file=uploaded_file, temp_name=temp_filename)
+        temp_path = self._save_to_temp(file=uploaded_file, temp_name=temp_filename)
 
         data = DocumentData(
             filename=sanitized_filename,
@@ -125,13 +127,34 @@ class UploadService(BaseService[DocumentRepository]):
         )
 
         document = await self.repository.create_document(data)
+        extractor = TextExtractor()
 
-        return DocumentResponse.model_validate(document)
+        try:
+            text = extractor.extract(temp_path, mime_type)
+            updated_document = await self.repository.update_document_fields(
+                document_id=document.id, document_text=text, document_status=DocumentStatus.success, temp_filename=None
+            )
+        except ExtractionError as err:
+            await self.repository.update_document_fields(
+                document_id=document.id,
+                document_status=DocumentStatus.failed,
+                error_trace=str(err.log_context),
+            )
+            raise BadRequestError(
+                error_code="extraction_failed",
+                message="Failed to extract text from the file",
+                log_context={"detail": err.log_context},
+            ) from err
+        finally:
+            if temp_path.exists():
+                temp_path.unlink(missing_ok=True)
+
+        return DocumentResponse.model_validate(updated_document)
 
     @staticmethod
     def _detect_mime(uploaded_file: UploadFile) -> str | None:
         """Determines the mime type by the magic bytes at the beginning"""
-        file_type = filetype.guess(uploaded_file.file.read(64))
+        file_type = filetype.guess(uploaded_file.file.read(2048))
         uploaded_file.file.seek(0)
         return file_type.mime if file_type else None
 
@@ -165,7 +188,7 @@ class UploadService(BaseService[DocumentRepository]):
         return sanitized_filename if sanitized_filename.upper() not in RESERVED_NAMES else "_" + sanitized_filename
 
     @staticmethod
-    def _save_to_temp(file: UploadFile, temp_name: str) -> None:
+    def _save_to_temp(file: UploadFile, temp_name: str) -> Path:
         """Saves the uploaded file to the temp folder on disk by chunks"""
         path = Path(settings.base_dir).parent / "temp" / temp_name
         Path(Path(settings.base_dir).parent / "temp").mkdir(exist_ok=True, parents=True)
@@ -176,3 +199,5 @@ class UploadService(BaseService[DocumentRepository]):
         except OSError:
             if path.exists():
                 path.unlink(missing_ok=True)
+
+        return path
