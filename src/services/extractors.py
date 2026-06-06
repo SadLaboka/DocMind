@@ -113,31 +113,35 @@ class TextExtractor:
 
     def _extract_pdf(self, file: BytesIO) -> str:
         """Extracts the text from bytesio if file has PDF mimetype"""
-        import pdfplumber
-        from pdfminer.pdfparser import PDFSyntaxError
+        import fitz
 
         text_parts = []
         try:
-            with pdfplumber.open(file) as pdf:
-                for page_num, page in enumerate(pdf.pages):
-                    page_text = page.extract_text()
+            pdf_bytes = file.read()
+            doc = fitz.open(stream=pdf_bytes, filetype="pdf")
 
-                    if page_text:
-                        text_parts.append(f"--- Page {page_num} ---")
-                        text_parts.append(page_text.strip())
+            for page_num in range(len(doc)):
+                page = doc[page_num]
+                page_parts = [f"--- Page {page_num + 1} ---"]
 
-                    tables = page.extract_tables()
-                    if tables:
+                text = page.get_text("text").strip()
+                if text:
+                    page_parts.append(text)
 
-                        for table_num, table in enumerate(tables):
-                            text_parts.append(f"--- Page {page_num}, Table {table_num} ---")
+                tables = page.find_tables()
+                if tables.tables:
+                    for table_num, table in enumerate(tables.tables):
+                        page_parts.append(f"--- Page {page_num + 1}, Table {table_num} ---")
+                        for row in table.extract():
+                            clean_row = [str(cell).strip() if cell else "" for cell in row]
+                            if any(clean_row):
+                                page_parts.append(" | ".join(clean_row))
 
-                            for row_num, row in enumerate(table):
-                                text_parts.append(f"--- Row {row_num} ---")
-                                if any(cell is not None and str(cell).strip() for cell in row):
-                                    row_text = " | ".join(str(cell) if cell is not None else "" for cell in row)
-                                    text_parts.append(row_text)
-        except (PDFSyntaxError, Exception) as err:
+                text_parts.append("\n".join(page_parts))
+
+            doc.close()
+
+        except Exception as err:
             raise ExtractionError(
                 error_code="invalid_file",
                 log_context={"detail": str(err)},
