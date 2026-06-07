@@ -62,11 +62,27 @@ class LogsSettings(SettingsBase):
     level: int = 10
 
 
+class RabbitSettings(SettingsBase):
+    model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="RABBITMQ_")
+
+    host: str = "localhost"
+    port: int = 5672
+    panel_port: int = 15671
+    user: str = "guest"
+    password: str = ""
+
+    @property
+    def url(self) -> str:
+        """Returns a ready URL for connecting to RabbitMQ"""
+        return f"amqp://{self.user}:{self.password}@{self.host}:{self.port}"
+
+
 class Settings(BaseSettings):
     db: DatabaseSettings = Field(default_factory=DatabaseSettings)
     jwt: JWTSettings = Field(default_factory=JWTSettings)
     logs: LogsSettings = Field(default_factory=LogsSettings)
     server: ServerSettings = Field(default_factory=ServerSettings)
+    rabbit: RabbitSettings = Field(default_factory=RabbitSettings)
 
     app_name: str = APP_NAME
     app_version: str = APP_VERSION
