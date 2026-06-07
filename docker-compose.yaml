@@ -1,13 +1,19 @@
 services:
   rabbitmq:
     image: rabbitmq:3-management
-    env_file:
-      - .env
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-guest}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:-guest}
     ports:
-      - "5672:5672"
-      - "15672:15672"
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_PANEL_PORT:-15672}:15672"
     networks:
       - DocMind_network
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "check_port_connectivity" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   application:
     build:
@@ -28,7 +34,7 @@ services:
       - "8000:8000"
     depends_on:
       rabbitmq:
-        condition: service_started
+        condition: service_healthy
       main_db:
         condition: service_healthy
 
