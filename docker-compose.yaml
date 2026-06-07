@@ -32,11 +32,28 @@ services:
       - DocMind_network
     ports:
       - "8000:8000"
+    volumes:
+      - temp_data:/usr/src/app/temp
     depends_on:
       rabbitmq:
         condition: service_healthy
       main_db:
         condition: service_healthy
+
+  worker:
+    build: .
+    command: celery -A src.worker.celery_app worker --loglevel=info
+    volumes:
+      - temp_data:/usr/src/app/temp
+    env_file:
+      - .env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      main_db:
+        condition: service_healthy
+    networks:
+      - DocMind_network
 
   main_db:
     image: postgres:18.3-bookworm
@@ -75,3 +92,6 @@ services:
 networks:
   DocMind_network:
     driver: bridge
+
+volumes:
+  temp_data:

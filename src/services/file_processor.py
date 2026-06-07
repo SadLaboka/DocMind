@@ -1,4 +1,5 @@
 import string
+import asyncio
 from pathlib import Path
 from uuid import uuid4
 
@@ -7,12 +8,11 @@ from fastapi import UploadFile
 
 from src.core.config import settings
 from src.core.enums import MimeType
-from src.core.exceptions import BadRequestError, ExtractionError
-from src.models.documents import DocumentStatus
+from src.core.exceptions import BadRequestError
 from src.repositories.documents import DocumentRepository
 from src.schemas.documents import DocumentData, DocumentResponse
 from src.services.base import BaseService
-from src.services.extractors import TextExtractor
+from src.worker.tasks import extract_text_task
 
 ALPHABET_RU = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя"
 ALPHABET_RU_UPPER = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
@@ -127,29 +127,28 @@ class UploadService(BaseService[DocumentRepository]):
         )
 
         document = await self.repository.create_document(data)
-        extractor = TextExtractor()
 
-        try:
-            text = extractor.extract(temp_path, mime_type)
-            updated_document = await self.repository.update_document_fields(
-                document_id=document.id, document_text=text, document_status=DocumentStatus.success, temp_filename=None
-            )
-        except ExtractionError as err:
-            await self.repository.update_document_fields(
-                document_id=document.id,
-                document_status=DocumentStatus.failed,
-                error_trace=str(err.log_context),
-            )
-            raise BadRequestError(
-                error_code="extraction_failed",
-                message="Failed to extract text from the file",
-                log_context={"detail": err.log_context},
-            ) from err
-        finally:
-            if temp_path.exists():
-                temp_path.unlink(missing_ok=True)
+        await self._send_to_queue(
+            document_id=document.id,
+            temp_path=temp_path,
+            mime_type=mime_type.value,
+        )
 
-        return DocumentResponse.model_validate(updated_document)
+        return DocumentResponse.model_validate(document)
+
+    @staticmethod
+    async def _send_to_queue(
+            document_id: int,
+            temp_path: Path,
+            mime_type: str,
+    ) -> None:
+        """Adds a text extraction task to the queue"""
+        await asyncio.to_thread(
+            extract_text_task.delay,
+            document_id=document_id,
+            temp_path=str(temp_path),
+            mime_type=mime_type,
+        )
 
     @staticmethod
     def _detect_mime(uploaded_file: UploadFile) -> str | None:
