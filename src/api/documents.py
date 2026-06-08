@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, Form, Query, UploadFile
+from fastapi import APIRouter, Depends, File, Form, Query, UploadFile, Request
 from fastapi.security import HTTPBearer
 from starlette import status
 
@@ -54,9 +54,10 @@ async def get_document(
 )
 async def upload_document(
     description: Annotated[str, Form(max_length=300)],
+    request: Request,
     file: UploadFile = File(...),
     service: UploadService = Depends(get_upload_service),
     current_user: User = Depends(get_current_user),
 ) -> DocumentResponse:
 
-    return await service.process_upload(file, current_user.id, description)
+    return await service.process_upload(file, current_user.id, description, request.state.request_id)

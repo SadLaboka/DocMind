@@ -1,7 +1,15 @@
 from celery import Celery
+from celery.signals import worker_init
 
 from src.core.config import settings
+from src.core.logging_config import setup_logging
 
-app = Celery('worker', broker=settings.rabbit.url)
+app = Celery('worker', broker=settings.rabbit.url, worker_max_tasks_per_child=50, task_time_limit=240)
 
 app.autodiscover_tasks(["src.worker"])
+
+
+@worker_init.connect
+def configure_logging(**kwargs):
+    """Configure logging for the worker"""
+    setup_logging()

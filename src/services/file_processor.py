@@ -50,7 +50,7 @@ ALLOWED_MIME_VALUES = {m.value for m in MimeType}
 class UploadService(BaseService[DocumentRepository]):
 
     async def process_upload(
-        self, uploaded_file: UploadFile, user_id: int, description: str | None
+        self, uploaded_file: UploadFile, user_id: int, description: str | None, request_id: str
     ) -> DocumentResponse:
         """An orchestrator that validates the parameters of the received file,
         saves it to the database and disk, and then returns a response in the form of a Paydantic schema."""
@@ -132,6 +132,7 @@ class UploadService(BaseService[DocumentRepository]):
             document_id=document.id,
             temp_path=temp_path,
             mime_type=mime_type.value,
+            request_id=request_id,
         )
 
         return DocumentResponse.model_validate(document)
@@ -141,6 +142,7 @@ class UploadService(BaseService[DocumentRepository]):
             document_id: int,
             temp_path: Path,
             mime_type: str,
+            request_id: str
     ) -> None:
         """Adds a text extraction task to the queue"""
         await asyncio.to_thread(
@@ -148,6 +150,7 @@ class UploadService(BaseService[DocumentRepository]):
             document_id=document_id,
             temp_path=str(temp_path),
             mime_type=mime_type,
+            request_id=request_id,
         )
 
     @staticmethod

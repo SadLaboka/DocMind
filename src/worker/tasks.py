@@ -7,20 +7,29 @@ from src.worker.celery_app import app as celery_app
 from src.services.extractors import TextExtractor
 from src.repositories.documents import DocumentRepository
 from src.models.documents import DocumentStatus, MimeType
-from src.core.database import get_session
+from src.core.database import celery_session_factory
 from src.core.exceptions import ExtractionError
 
 logger = structlog.get_logger(__name__)
 
 
-@celery_app.task
-def extract_text_task(document_id: int, temp_path: str, mime_type: str) -> None:
+@celery_app.task(
+    autoretry_for=(Exception,),
+    retry_backoff=True,
+    retry_backoff_max=60,
+    max_retries=3,
+    exclude_exceptions=(ExtractionError, ValueError),
+    task_acks_late=True,
+)
+def extract_text_task(document_id: int, temp_path: str, mime_type: str, request_id: str) -> None:
     """Celery task wrapper that runs async extraction logic"""
-    asyncio.run(_async_extract(document_id, temp_path, mime_type))
+    asyncio.run(_async_extract(document_id, temp_path, mime_type, request_id))
 
 
-async def _async_extract(document_id: int, temp_path: str, mime_type: str) -> None:
+async def _async_extract(document_id: int, temp_path: str, mime_type: str, request_id: str) -> None:
     """Async implementation of text extraction"""
+    structlog.contextvars.bind_contextvars(request_id=request_id)
+
     path = Path(temp_path)
 
     if not mime_type:
@@ -39,7 +48,7 @@ async def _async_extract(document_id: int, temp_path: str, mime_type: str) -> No
 
     extractor = TextExtractor()
 
-    async for session in get_session():
+    async with celery_session_factory() as session:
         repo = DocumentRepository(session)
 
         try:
@@ -52,6 +61,9 @@ async def _async_extract(document_id: int, temp_path: str, mime_type: str) -> No
             )
             logger.info(f"Successfully extracted text for document {document_id}")
 
+            if path.exists():
+                path.unlink(missing_ok=True)
+
         except ExtractionError as err:
             await repo.update_document_fields(
                 document_id=document_id,
@@ -60,6 +72,14 @@ async def _async_extract(document_id: int, temp_path: str, mime_type: str) -> No
             )
             logger.error(f"Extraction failed for document {document_id}: {err.log_context}")
 
-        finally:
             if path.exists():
                 path.unlink(missing_ok=True)
+
+        except Exception as err:
+            await repo.update_document_fields(
+                document_id=document_id,
+                document_status=DocumentStatus.failed,
+                error_trace=str(err)
+            )
+            logger.error(f"Extraction failed for document {document_id}: {str(err)}")
+            raise err
