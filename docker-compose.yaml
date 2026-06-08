@@ -47,6 +47,15 @@ services:
       - temp_data:/usr/src/app/temp
     env_file:
       - .env
+    environment:
+      - PYTHONPATH=/usr/src/app
+    restart: always
+    healthcheck:
+      test: [ "CMD", "celery", "-A", "src.worker.celery_app", "inspect", "ping", "--timeout", "10" ]
+      interval: 30s
+      timeout: 15s
+      retries: 3
+      start_period: 30s
     depends_on:
       rabbitmq:
         condition: service_healthy
