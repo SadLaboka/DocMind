@@ -23,4 +23,16 @@
   width="58"
   height="58"
 />
+<img
+  src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/rabbitmq/default.svg"
+  alt="RabbitMQ"
+  width="58"
+  height="58"
+/>
+<img
+  src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/celery/default.svg"
+  alt="Celery"
+  width="58"
+  height="58"
+/>
 [![SonarQube Cloud](https://sonarcloud.io/images/project_badges/sonarcloud-dark.svg)](https://sonarcloud.io/summary/new_code?id=SadLaboka_DocMind)
