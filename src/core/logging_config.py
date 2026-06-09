@@ -135,6 +135,16 @@ def setup_logging() -> None:
                     "handlers": ["default"],
                     "propagate": False,
                 },
+                "amqp": {
+                    "level": 40,
+                    "handlers": ["default"],
+                    "propagate": False,
+                },
+                "kombu": {
+                    "level": 40,
+                    "handlers": ["default"],
+                    "propagate": False,
+                },
             },
         }
     )

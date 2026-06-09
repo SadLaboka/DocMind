@@ -1,3 +1,5 @@
+import logging
+
 from celery import Celery
 from celery.signals import worker_init
 
@@ -13,3 +15,9 @@ app.autodiscover_tasks(["src.worker"])
 def configure_logging(**kwargs):
     """Configure logging for the worker"""
     setup_logging()
+
+    logging.getLogger("kombu").setLevel(logging.WARNING)
+    logging.getLogger("amqp").setLevel(logging.WARNING)
+    logging.getLogger("celery.worker.heartbeat").setLevel(logging.WARNING)
+
+    logging.getLogger("celery").setLevel(logging.INFO)

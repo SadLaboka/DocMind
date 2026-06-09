@@ -16,6 +16,9 @@ logs-worker:
 logs-all:
 	docker compose logs -f --no-log-prefix
 
+logs-app:
+	docker compose logs -f --no-log-prefix application worker
+
 # Migrations
 migrate-up:
 	poetry run alembic upgrade head
