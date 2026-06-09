@@ -1,5 +1,5 @@
-import string
 import asyncio
+import string
 from pathlib import Path
 from uuid import uuid4
 
@@ -138,12 +138,7 @@ class UploadService(BaseService[DocumentRepository]):
         return DocumentResponse.model_validate(document)
 
     @staticmethod
-    async def _send_to_queue(
-            document_id: int,
-            temp_path: Path,
-            mime_type: str,
-            request_id: str
-    ) -> None:
+    async def _send_to_queue(document_id: int, temp_path: Path, mime_type: str, request_id: str) -> None:
         """Adds a text extraction task to the queue"""
         await asyncio.to_thread(
             extract_text_task.delay,

@@ -9,13 +9,9 @@ engine = create_async_engine(settings.db.url, future=True, echo=settings.logs.de
 
 async_session_factory = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
-celery_engine = create_async_engine(
-    settings.db.url,
-    future=True,
-    echo=settings.logs.dev,
-    poolclass=NullPool
-)
+celery_engine = create_async_engine(settings.db.url, future=True, echo=settings.logs.dev, poolclass=NullPool)
 celery_session_factory = async_sessionmaker(celery_engine, expire_on_commit=False, class_=AsyncSession)
+
 
 async def get_session() -> AsyncGenerator[AsyncSession]:
 
