@@ -18,8 +18,6 @@ async def app_base_error_handler(request: Request, exc: AppBaseError) -> JSONRes
         "service_error",
         error_code=exc.error_code,
         status_code=exc.status_code,
-        request_id=getattr(request.state, "request_id", None),
-        client_ip=getattr(request.state, "client_ip", None),
         method=request.method,
         path=request.url.path,
         **exc.log_context,
@@ -40,8 +38,6 @@ async def request_validation_error_handler(request: Request, exc: RequestValidat
 
     log.warning(
         "validation_error",
-        request_id=getattr(request.state, "request_id", None),
-        client_ip=getattr(request.state, "client_ip", None),
         method=request.method,
         path=request.url.path,
         errors=errors,
@@ -56,8 +52,6 @@ async def exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Handler for unhandled exceptions"""
     log.critical(
         "unhandled_exception",
-        request_id=getattr(request.state, "request_id", None),
-        client_ip=getattr(request.state, "client_ip", None),
         method=request.method,
         path=request.url.path,
         exc_info=True,
