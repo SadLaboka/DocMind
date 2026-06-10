@@ -14,8 +14,10 @@ async def app_base_error_handler(request: Request, exc: AppBaseError) -> JSONRes
 
     log_method = log.warning if exc.status_code < 500 else log.error
 
+    event_name = exc.log_context.pop("event_name", "server_error")
+
     log_method(
-        "service_error",
+        event_name,
         error_code=exc.error_code,
         status_code=exc.status_code,
         method=request.method,
