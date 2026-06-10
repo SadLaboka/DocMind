@@ -39,7 +39,7 @@ class UserService(BaseService[UserRepository]):
                         "event_name": "user_registration_conflict",
                         "username": data.login,
                         "email": data.email,
-                        "library_hint": str(raw_error)
+                        "library_hint": str(raw_error),
                     },
                 ) from raw_error
             raise

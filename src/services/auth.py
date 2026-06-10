@@ -1,4 +1,5 @@
 import structlog
+
 from src.core.exceptions import AuthenticationError
 from src.core.security import check_password
 from src.repositories.users import UserRepository

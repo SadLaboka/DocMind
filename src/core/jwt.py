@@ -105,7 +105,7 @@ class JWTManager:
                     "event_name": "token_verification_failed",
                     "reason": "token expired",
                     "token_prefix": token[:10],
-                    "library_hint": str(raw_error)
+                    "library_hint": str(raw_error),
                 },
             ) from raw_error
         except jwt.InvalidSignatureError as raw_error:
@@ -116,7 +116,7 @@ class JWTManager:
                     "event_name": "token_verification_failed",
                     "reason": "invalid signature",
                     "token_prefix": token[:10],
-                    "library_hint": str(raw_error)
+                    "library_hint": str(raw_error),
                 },
             ) from raw_error
         except jwt.DecodeError as raw_error:
@@ -127,7 +127,7 @@ class JWTManager:
                     "event_name": "token_verification_failed",
                     "reason": "decode error",
                     "token_prefix": token[:10],
-                    "library_hint": str(raw_error)
+                    "library_hint": str(raw_error),
                 },
             ) from raw_error
         except jwt.InvalidAlgorithmError as raw_error:
@@ -139,7 +139,7 @@ class JWTManager:
                     "reason": "invalid algorithm",
                     "token_prefix": token[:10],
                     "algorithm": self.algorithm,
-                    "library_hint": str(raw_error)
+                    "library_hint": str(raw_error),
                 },
             ) from raw_error
         except jwt.InvalidTokenError as raw_error:
@@ -150,6 +150,6 @@ class JWTManager:
                     "event_name": "token_verification_failed",
                     "reason": "invalid token",
                     "token_prefix": token[:10],
-                    "library_hint": str(raw_error)
+                    "library_hint": str(raw_error),
                 },
             ) from raw_error

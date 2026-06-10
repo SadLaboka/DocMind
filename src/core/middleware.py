@@ -1,7 +1,8 @@
 import time
-import structlog
 from typing import Any
 from uuid import uuid4
+
+import structlog
 
 
 class Middleware:
@@ -20,10 +21,7 @@ class Middleware:
         state["request_id"] = str(uuid4())
         state["client_ip"] = self._extract_client_ip(scope)
 
-        structlog.contextvars.bind_contextvars(
-            request_id=state["request_id"],
-            client_ip=state["client_ip"]
-        )
+        structlog.contextvars.bind_contextvars(request_id=state["request_id"], client_ip=state["client_ip"])
         try:
             start_time = time.perf_counter()
             initial_headers_sent = False
