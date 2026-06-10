@@ -1,3 +1,4 @@
+import structlog
 from sqlalchemy.exc import IntegrityError
 
 from src.core.exceptions import ConflictError
@@ -6,12 +7,20 @@ from src.repositories.users import UserRepository
 from src.schemas.users import UserData, UserRegisterRequest, UserRegisterResponse
 from src.services.base import BaseService
 
+logger = structlog.get_logger(__name__)
+
 
 class UserService(BaseService[UserRepository]):
     """Service for user registration"""
 
     async def register(self, data: UserRegisterRequest) -> UserRegisterResponse:
         """Register a new user"""
+        logger.info(
+            "user_registration_initiated",
+            login=data.login,
+            email=data.email,
+        )
+
         password_hash = get_password_hash(data.password)
 
         used_data = UserData(login=data.login, email=data.email, password_hash=password_hash)
@@ -26,8 +35,19 @@ class UserService(BaseService[UserRepository]):
                 raise ConflictError(
                     error_code="user_already_exists",
                     message="Username or email already exists",
-                    log_context={"username": data.login, "email": data.email, "library_hint": str(raw_error)},
+                    log_context={
+                        "event_name": "user_registration_conflict",
+                        "username": data.login,
+                        "email": data.email,
+                        "library_hint": str(raw_error)
+                    },
                 ) from raw_error
             raise
+
+        logger.info(
+            "user_registration_success",
+            user_id=created_user.id,
+            login=created_user.login,
+        )
 
         return UserRegisterResponse.model_validate(created_user)
