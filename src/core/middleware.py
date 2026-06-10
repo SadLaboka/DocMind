@@ -1,4 +1,5 @@
 import time
+import structlog
 from typing import Any
 from uuid import uuid4
 
@@ -19,24 +20,31 @@ class Middleware:
         state["request_id"] = str(uuid4())
         state["client_ip"] = self._extract_client_ip(scope)
 
-        start_time = time.perf_counter()
-        initial_headers_sent = False
+        structlog.contextvars.bind_contextvars(
+            request_id=state["request_id"],
+            client_ip=state["client_ip"]
+        )
+        try:
+            start_time = time.perf_counter()
+            initial_headers_sent = False
 
-        async def wrapped_send(message: dict) -> None:
-            nonlocal initial_headers_sent
+            async def wrapped_send(message: dict) -> None:
+                nonlocal initial_headers_sent
 
-            if message["type"] == "http.response.start" and not initial_headers_sent:
-                initial_headers_sent = True
-                process_time = time.perf_counter() - start_time
+                if message["type"] == "http.response.start" and not initial_headers_sent:
+                    initial_headers_sent = True
+                    process_time = time.perf_counter() - start_time
 
-                headers = list(message.get("headers", []))
-                headers.append((b"x-request-id", state["request_id"].encode("latin-1")))
-                headers.append((b"x-process-time", f"{process_time:.4f}".encode("latin-1")))
-                message["headers"] = headers
+                    headers = list(message.get("headers", []))
+                    headers.append((b"x-request-id", state["request_id"].encode("latin-1")))
+                    headers.append((b"x-process-time", f"{process_time:.4f}".encode("latin-1")))
+                    message["headers"] = headers
 
-            await send(message)
+                await send(message)
 
-        await self.app(scope, receive, wrapped_send)
+            await self.app(scope, receive, wrapped_send)
+        finally:
+            structlog.contextvars.clear_contextvars()
 
     @staticmethod
     def _extract_client_ip(scope: dict) -> str:
