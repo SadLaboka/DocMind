@@ -1,4 +1,5 @@
 import asyncio
+import time
 from pathlib import Path
 
 import structlog
@@ -32,8 +33,10 @@ async def _async_extract(document_id: int, temp_path: str, mime_type: str, reque
 
     path = Path(temp_path)
 
+    logger.info("task_received_by_worker", document_id=document_id, mime_type=mime_type)
+
     if not mime_type:
-        logger.error(f"Task received empty mime_type for document {document_id}")
+        logger.error("task_invalid_mime", document_id=document_id, reason="empty mime type")
         if path.exists():
             path.unlink(missing_ok=True)
         raise ValueError(f"mime_type is required for document {document_id}")
@@ -41,7 +44,7 @@ async def _async_extract(document_id: int, temp_path: str, mime_type: str, reque
     try:
         mime_enum = MimeType(mime_type)
     except ValueError:
-        logger.error(f"Unknown mime type '{mime_type}' for document {document_id}")
+        logger.error("task_invalid_mime", document_id=document_id, reason="unsupported mime", mime_type=mime_type)
         if path.exists():
             path.unlink(missing_ok=True)
         raise ValueError(f"Unsupported mime type: {mime_type}")
@@ -52,14 +55,25 @@ async def _async_extract(document_id: int, temp_path: str, mime_type: str, reque
         repo = DocumentRepository(session)
 
         try:
+            start_time = time.perf_counter()
+
             text = extractor.extract(path, mime_enum)
+
+            duration_ms = round((time.perf_counter() - start_time) * 1000, 2)
+
             await repo.update_document_fields(
                 document_id=document_id,
                 document_text=text,
                 document_status=DocumentStatus.success,
                 temp_filename=None,
             )
-            logger.info(f"Successfully extracted text for document {document_id}")
+
+            logger.info(
+                "text_extraction_completed",
+                document_id=document_id,
+                duration_ms=duration_ms,
+                text_length=len(text),
+            )
 
             if path.exists():
                 path.unlink(missing_ok=True)
@@ -70,7 +84,12 @@ async def _async_extract(document_id: int, temp_path: str, mime_type: str, reque
                 document_status=DocumentStatus.failed,
                 error_trace=str(err.log_context),
             )
-            logger.error(f"Extraction failed for document {document_id}: {err.log_context}")
+            logger.error(
+                "transient_extraction_error",
+                document_id=document_id,
+                error_detail=str(err),
+                exc_info=True,
+            )
 
             if path.exists():
                 path.unlink(missing_ok=True)
@@ -79,5 +98,15 @@ async def _async_extract(document_id: int, temp_path: str, mime_type: str, reque
             await repo.update_document_fields(
                 document_id=document_id, document_status=DocumentStatus.failed, error_trace=str(err)
             )
-            logger.error(f"Extraction failed for document {document_id}: {err!s}")
+            logger.error(
+                "transient_extraction_error",
+                document_id=document_id,
+                error_detail=str(err),
+                exc_info=True,
+            )
+
             raise err
+
+        finally:
+            if path.exists():
+                path.unlink(missing_ok=True)
