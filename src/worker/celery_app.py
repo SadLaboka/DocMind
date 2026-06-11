@@ -10,6 +10,13 @@ app = Celery("worker", broker=settings.rabbit.url, worker_max_tasks_per_child=50
 
 app.autodiscover_tasks(["src.worker"])
 
+app.conf.worker_hijack_root_logger = False
+
+logging.getLogger("kombu").setLevel(logging.WARNING)
+logging.getLogger("amqp").setLevel(logging.WARNING)
+logging.getLogger("celery.worker.heartbeat").setLevel(logging.WARNING)
+logging.getLogger("celery.app.trace").setLevel(logging.WARNING)
+logging.getLogger("celery.worker.job").setLevel(logging.WARNING)
 
 @worker_init.connect
 def configure_logging(**kwargs):
@@ -18,6 +25,5 @@ def configure_logging(**kwargs):
 
     logging.getLogger("kombu").setLevel(logging.WARNING)
     logging.getLogger("amqp").setLevel(logging.WARNING)
-    logging.getLogger("celery.worker.heartbeat").setLevel(logging.WARNING)
-
-    logging.getLogger("celery").setLevel(logging.INFO)
+    logging.getLogger("celery.app.trace").setLevel(logging.WARNING)
+    logging.getLogger("celery.worker.job").setLevel(logging.WARNING)

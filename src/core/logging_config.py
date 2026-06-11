@@ -126,7 +126,7 @@ def setup_logging() -> None:
                     "propagate": False,
                 },
                 "sqlalchemy.engine.Engine": {
-                    "level": settings.logs.level,
+                    "level": 40,
                     "handlers": ["default"],
                     "propagate": False,
                 },

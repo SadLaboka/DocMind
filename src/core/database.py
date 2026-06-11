@@ -5,11 +5,11 @@ from sqlalchemy.pool import NullPool
 
 from src.core.config import settings
 
-engine = create_async_engine(settings.db.url, future=True, echo=settings.logs.dev)
+engine = create_async_engine(settings.db.url, future=True, echo=False)
 
 async_session_factory = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
-celery_engine = create_async_engine(settings.db.url, future=True, echo=settings.logs.dev, poolclass=NullPool)
+celery_engine = create_async_engine(settings.db.url, future=True, echo=False, poolclass=NullPool)
 celery_session_factory = async_sessionmaker(celery_engine, expire_on_commit=False, class_=AsyncSession)
 
 

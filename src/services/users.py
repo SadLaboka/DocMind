@@ -32,6 +32,9 @@ class UserService(BaseService[UserRepository]):
             if orig is not None and (
                 getattr(orig, "pgcode", None) == "23505" or getattr(orig, "sqlstate", None) == "23505"
             ):
+                pgcode = getattr(orig, "pgcode", "unknown")
+                constraint_name = getattr(orig, "constraint_name", "unknown")
+
                 raise ConflictError(
                     error_code="user_already_exists",
                     message="Username or email already exists",
@@ -39,7 +42,8 @@ class UserService(BaseService[UserRepository]):
                         "event_name": "user_registration_conflict",
                         "username": data.login,
                         "email": data.email,
-                        "library_hint": str(raw_error),
+                        "pgcode": pgcode,
+                        "constraint_name": constraint_name,
                     },
                 ) from raw_error
             raise
