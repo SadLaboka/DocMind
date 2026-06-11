@@ -1,5 +1,7 @@
 import asyncio
+import structlog
 import string
+import time
 from pathlib import Path
 from uuid import uuid4
 
@@ -13,6 +15,8 @@ from src.repositories.documents import DocumentRepository
 from src.schemas.documents import DocumentData, DocumentResponse
 from src.services.base import BaseService
 from src.worker.tasks import extract_text_task
+
+logger = structlog.get_logger(__name__)
 
 ALPHABET_RU = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя"
 ALPHABET_RU_UPPER = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
@@ -54,13 +58,22 @@ class UploadService(BaseService[DocumentRepository]):
     ) -> DocumentResponse:
         """An orchestrator that validates the parameters of the received file,
         saves it to the database and disk, and then returns a response in the form of a Paydantic schema."""
+
+        filename = uploaded_file.filename or "unknown"
+        logger.info(
+            "document_upload_initiated",
+            filename=filename,
+            user_id=user_id,
+        )
+
         if not uploaded_file.filename:
             raise BadRequestError(
                 error_code="filename_is_missing",
                 message="The uploaded file is missing a filename",
                 log_context={
+                    "event_name": "document_upload_rejected",
+                    "reason": "filename missing",
                     "user_id": user_id,
-                    "is_filename_missing": True,
                 },
             )
 
@@ -70,6 +83,8 @@ class UploadService(BaseService[DocumentRepository]):
                 error_code="file_size_is_invalid",
                 message="The uploaded file is too big",
                 log_context={
+                    "event_name": "document_upload_rejected",
+                    "reason": "file too big",
                     "user_id": user_id,
                     "file_size": file_size,
                 },
@@ -79,6 +94,8 @@ class UploadService(BaseService[DocumentRepository]):
                 error_code="file_size_is_invalid",
                 message="The uploaded file is empty",
                 log_context={
+                    "event_name": "document_upload_rejected",
+                    "reason": "file is empty",
                     "user_id": user_id,
                     "file_size": file_size,
                 },
@@ -99,6 +116,8 @@ class UploadService(BaseService[DocumentRepository]):
                 error_code="mime_type_is_invalid",
                 message="The has an invalid type",
                 log_context={
+                    "event_name": "document_upload_rejected",
+                    "reason": "invalid mime type",
                     "user_id": user_id,
                     "mime_type": detected_mime,
                 },
@@ -110,12 +129,36 @@ class UploadService(BaseService[DocumentRepository]):
                 error_code="mime_type_is_invalid",
                 message="The has invalid type",
                 log_context={
+                    "event_name": "document_upload_rejected",
+                    "reason": "unknown mime type",
                     "user_id": user_id,
                     "mime_type": detected_mime,
                 },
             )
 
-        temp_path = self._save_to_temp(file=uploaded_file, temp_name=temp_filename)
+        try:
+            start_time = time.perf_counter()
+            temp_path = self._save_to_temp(file=uploaded_file, temp_name=temp_filename)
+            duration_ms = round((time.perf_counter() - start_time) * 1000, 2)
+
+            logger.info(
+                "file_saved_to_disk",
+                filename=sanitized_filename,
+                file_size=file_size,
+                duration_ms=duration_ms,
+            )
+        except OSError as err:
+            raise BadRequestError(
+                error_code="storage_error",
+                message="Failed to save the file to disk",
+                log_context={
+                    "event_name": "file_save_failed",
+                    "user_id": user_id,
+                    "filename": sanitized_filename,
+                    "file_size": file_size,
+                    "error_detail": str(err),
+                },
+            ) from err
 
         data = DocumentData(
             filename=sanitized_filename,
@@ -128,19 +171,31 @@ class UploadService(BaseService[DocumentRepository]):
 
         document = await self.repository.create_document(data)
 
-        await self._send_to_queue(
+        logger.info(
+            "document_saved_to_db",
+            document_id=document.id,
+            status="created",
+        )
+
+        celery_task = await self._send_to_queue(
             document_id=document.id,
             temp_path=temp_path,
             mime_type=mime_type.value,
             request_id=request_id,
         )
 
+        logger.info(
+            "task_dispatched_to_queue",
+            document_id=document.id,
+            celery_task_id=celery_task.id,
+        )
+
         return DocumentResponse.model_validate(document)
 
     @staticmethod
-    async def _send_to_queue(document_id: int, temp_path: Path, mime_type: str, request_id: str) -> None:
-        """Adds a text extraction task to the queue"""
-        await asyncio.to_thread(
+    async def _send_to_queue(document_id: int, temp_path: Path, mime_type: str, request_id: str) -> any:
+        """Adds a text extraction task to the queue and returns the task object"""
+        return await asyncio.to_thread(
             extract_text_task.delay,
             document_id=document_id,
             temp_path=str(temp_path),
@@ -193,8 +248,9 @@ class UploadService(BaseService[DocumentRepository]):
             with open(path, "wb") as temp_file:
                 while chunk := file.file.read(CHUNK_SIZE):
                     temp_file.write(chunk)
-        except OSError:
+        except OSError as err:
             if path.exists():
                 path.unlink(missing_ok=True)
+            raise err
 
         return path
