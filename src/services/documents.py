@@ -1,10 +1,14 @@
 import structlog
+from pathlib import Path
 
-from src.core.exceptions import ResourceNotFoundError
+from src.core.enums import DocumentStatus
+from src.core.exceptions import ResourceNotFoundError, ConflictError
 from src.repositories.documents import DocumentRepository
 from src.schemas.documents import DocumentListResponse, DocumentResponse
 from src.schemas.users import User
 from src.services.base import BaseService
+from src.models.documents import Document
+from src.core.config import settings
 
 logger = structlog.get_logger(__name__)
 
@@ -13,23 +17,9 @@ class DocumentService(BaseService[DocumentRepository]):
     """Service for documents"""
 
     async def get_document_by_id(self, document_id: int, user: User) -> DocumentResponse:
-        """Gets a document from the database by id, checks the document's ownership and returns it"""
-        if user.is_admin:
-            document = await self.repository.get_document_by_id(document_id)
-        else:
-            document = await self.repository.get_document_by_id_and_user(document_id, user.id)
+        """Gets document by document_id"""
 
-        if not document:
-            raise ResourceNotFoundError(
-                error_code="document_not_found",
-                message="Document not found",
-                log_context={
-                    "event_name": "document_not_found",
-                    "user_id": user.id,
-                    "is_admin": user.is_admin,
-                    "document_id": document_id,
-                },
-            )
+        document = await self._get_document(user, document_id)
 
         logger.info(
             "document_retrieved",
@@ -62,3 +52,71 @@ class DocumentService(BaseService[DocumentRepository]):
         return DocumentListResponse.model_validate(
             {"items": documents, "has_next": has_next, "page": page, "limit": limit, "total": documents_count}
         )
+
+    async def cancel_document_processing(self, user: User, document_id: int) -> DocumentResponse:
+        """Changes document status to canceled and removes it from temp directory if it needs"""
+
+        logger.info(
+            "document_canceling_initiation",
+            user_id=user.id,
+            document_id=document_id,
+        )
+
+        document = await self._get_document(user, document_id)
+
+        if document.document_status != DocumentStatus.cancelled:
+            updated_document = await self.repository.update_document_fields(
+                document_id=document_id,
+                document_status=DocumentStatus.cancelled,
+                temp_filename=None
+            )
+            if document.temp_filename:
+                path = Path(settings.base_dir).parent / "temp" / document.temp_filename
+
+                if path.exists():
+                    path.unlink(missing_ok=True)
+
+            if not updated_document:
+                raise ResourceNotFoundError(
+                    error_code="document_not_found",
+                    message="Document not found",
+                    log_context={
+                        "event_name": "document_not_found",
+                        "reason": "document was removed from database before cancelling",
+                        "user_id": user.id,
+                        "document_id": document_id,
+                    }
+                )
+
+        else:
+            logger.info("document_already_cancelled", document_id=document_id, user_id=user.id)
+            return DocumentResponse.model_validate(document)
+
+        logger.info(
+            "document_cancelled",
+            document_id=document_id,
+            user_id=user.id,
+        )
+
+        return DocumentResponse.model_validate(updated_document)
+
+    async def _get_document(self, user: User, document_id: int) -> Document:
+        """Gets a document from the database by id, checks the document's ownership and returns it"""
+        if user.is_admin:
+            document = await self.repository.get_document_by_id(document_id)
+        else:
+            document = await self.repository.get_document_by_id_and_user(document_id, user.id)
+
+        if not document:
+            raise ResourceNotFoundError(
+                error_code="document_not_found",
+                message="Document not found",
+                log_context={
+                    "event_name": "document_not_found",
+                    "user_id": user.id,
+                    "is_admin": user.is_admin,
+                    "document_id": document_id,
+                },
+            )
+
+        return document

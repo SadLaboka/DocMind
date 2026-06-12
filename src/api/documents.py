@@ -61,3 +61,17 @@ async def upload_document(
 ) -> DocumentResponse:
 
     return await service.process_upload(file, current_user.id, description, request.state.request_id)
+
+
+@router.delete(
+    path="/{document_id}",
+    summary="Cancel document processing",
+    status_code=status.HTTP_200_OK,
+    response_model=DocumentResponse,
+)
+async def cancel_document(
+    document_id: int,
+    current_user: User = Depends(get_current_user),
+    document_service: DocumentService = Depends(get_document_service),
+):
+    return await document_service.cancel_document_processing(current_user, document_id)
