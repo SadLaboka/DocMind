@@ -16,6 +16,7 @@ logger = structlog.get_logger(__name__)
 
 class DocumentExtractionTask:
     """Celery task to extract text from document"""
+
     def __init__(self, document_id: int, temp_path: str, mime_type: str, request_id: str) -> None:
         self.document_id = document_id
         self.temp_path = Path(temp_path)
