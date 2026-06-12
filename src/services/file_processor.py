@@ -177,7 +177,7 @@ class UploadService(BaseService[DocumentRepository]):
             status="created",
         )
 
-        celery_task = await self._send_to_queue(
+        celery_task = await self._send_to_queue_for_extraction(
             document_id=document.id,
             temp_path=temp_path,
             mime_type=mime_type.value,
@@ -193,7 +193,7 @@ class UploadService(BaseService[DocumentRepository]):
         return DocumentResponse.model_validate(document)
 
     @staticmethod
-    async def _send_to_queue(document_id: int, temp_path: Path, mime_type: str, request_id: str) -> any:
+    async def _send_to_queue_for_extraction(document_id: int, temp_path: Path, mime_type: str, request_id: str) -> any:
         """Adds a text extraction task to the queue and returns the task object"""
         return await asyncio.to_thread(
             extract_text_task.delay,
