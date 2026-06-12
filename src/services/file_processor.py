@@ -1,11 +1,11 @@
 import asyncio
-import structlog
 import string
 import time
 from pathlib import Path
 from uuid import uuid4
 
 import filetype
+import structlog
 from fastapi import UploadFile
 
 from src.core.config import settings

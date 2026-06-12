@@ -18,6 +18,7 @@ logging.getLogger("celery.worker.heartbeat").setLevel(logging.WARNING)
 logging.getLogger("celery.app.trace").setLevel(logging.WARNING)
 logging.getLogger("celery.worker.job").setLevel(logging.WARNING)
 
+
 @worker_init.connect
 def configure_logging(**kwargs):
     """Configure logging for the worker"""
