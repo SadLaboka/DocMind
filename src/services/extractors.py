@@ -1,12 +1,12 @@
 from collections.abc import Callable
 from io import BytesIO
 from pathlib import Path
-from typing import Final, TypeAlias
+from typing import Final
 
 from src.core.exceptions import ExtractionError
 from src.schemas.documents import MimeType
 
-ExtractorFunc: TypeAlias = Callable[[BytesIO], str]
+type ExtractorFunc = Callable[[BytesIO], str]
 
 
 class TextExtractor:
@@ -64,13 +64,13 @@ class TextExtractor:
             raise ExtractionError(
                 error_code="invalid_file",
                 log_context={"detail": str(err)},
-            )
+            ) from err
         text = "\n".join(paragraph.text for paragraph in document.paragraphs)
 
         if document.tables:
             for table_num, table in enumerate(document.tables):
                 table_parts = [f"--- Table {table_num} ---"]
-                for row_num, row in enumerate(table.rows):
+                for _, row in enumerate(table.rows):
                     row_parts = []
                     for cell_num, cell in enumerate(row.cells):
                         cell_text = "\n".join(p.text for p in cell.paragraphs).strip()
@@ -107,7 +107,7 @@ class TextExtractor:
             raise ExtractionError(
                 error_code="invalid_file",
                 log_context={"detail": str(err)},
-            )
+            ) from err
 
         return "\n".join(text_parts)
 
@@ -145,6 +145,6 @@ class TextExtractor:
             raise ExtractionError(
                 error_code="invalid_file",
                 log_context={"detail": str(err)},
-            )
+            ) from err
 
         return "\n".join(text_parts)

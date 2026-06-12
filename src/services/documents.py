@@ -1,14 +1,15 @@
-import structlog
 from pathlib import Path
 
+import structlog
+
+from src.core.config import settings
 from src.core.enums import DocumentStatus
-from src.core.exceptions import ResourceNotFoundError, ConflictError
+from src.core.exceptions import ResourceNotFoundError
+from src.models.documents import Document
 from src.repositories.documents import DocumentRepository
 from src.schemas.documents import DocumentListResponse, DocumentResponse
 from src.schemas.users import User
 from src.services.base import BaseService
-from src.models.documents import Document
-from src.core.config import settings
 
 logger = structlog.get_logger(__name__)
 
@@ -66,9 +67,7 @@ class DocumentService(BaseService[DocumentRepository]):
 
         if document.document_status != DocumentStatus.cancelled:
             updated_document = await self.repository.update_document_fields(
-                document_id=document_id,
-                document_status=DocumentStatus.cancelled,
-                temp_filename=None
+                document_id=document_id, document_status=DocumentStatus.cancelled, temp_filename=None
             )
             if document.temp_filename:
                 path = Path(settings.base_dir).parent / "temp" / document.temp_filename
@@ -85,7 +84,7 @@ class DocumentService(BaseService[DocumentRepository]):
                         "reason": "document was removed from database before cancelling",
                         "user_id": user.id,
                         "document_id": document_id,
-                    }
+                    },
                 )
 
         else:

@@ -99,7 +99,7 @@ class DocumentExtractionTask:
                 mime_type=self.mime_type,
             )
             self._cleanup_file()
-            raise ValueError(f"Unsupported mime type: {self.mime_type}")
+            raise ValueError(f"Unsupported mime type: {self.mime_type}") from None
 
     async def _is_document_cancelled(self, repo: DocumentRepository) -> bool:
         """Checks whether document processing has been canceled"""

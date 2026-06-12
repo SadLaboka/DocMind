@@ -6,6 +6,7 @@ from uuid import uuid4
 
 import filetype
 import structlog
+from celery.result import AsyncResult
 from fastapi import UploadFile
 
 from src.core.config import settings
@@ -193,7 +194,9 @@ class UploadService(BaseService[DocumentRepository]):
         return DocumentResponse.model_validate(document)
 
     @staticmethod
-    async def _send_to_queue_for_extraction(document_id: int, temp_path: Path, mime_type: str, request_id: str) -> any:
+    async def _send_to_queue_for_extraction(
+        document_id: int, temp_path: Path, mime_type: str, request_id: str
+    ) -> AsyncResult:
         """Adds a text extraction task to the queue and returns the task object"""
         return await asyncio.to_thread(
             extract_text_task.delay,
