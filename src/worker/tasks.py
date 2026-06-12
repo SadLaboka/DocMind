@@ -29,13 +29,25 @@ class DocumentExtractionTask:
         structlog.contextvars.bind_contextvars(request_id=self.request_id)
         logger.info("task_received_by_worker", document_id=self.document_id, mime_type=self.mime_type)
 
-        mime_enum = self._validate_mime_type()
+        try:
+            mime_enum = self._validate_mime_type()
+        except ValueError as err:
+            async with celery_session_factory() as session:
+                repo = DocumentRepository(session)
+                await repo.update_document_fields(
+                    document_id=self.document_id,
+                    document_status=DocumentStatus.failed,
+                    error_trace=str(err),
+                )
+            raise
 
         async with celery_session_factory() as session:
             repo = DocumentRepository(session)
 
             if await self._is_document_cancelled(repo):
                 return
+
+            await repo.update_document_fields(self.document_id, document_status=DocumentStatus.extracting)
 
             await self._process_extraction(repo, mime_enum)
 
@@ -61,11 +73,14 @@ class DocumentExtractionTask:
         """Updates document status after final failure"""
         async with celery_session_factory() as session:
             repo = DocumentRepository(session)
-            await repo.update_document_fields(
-                document_id=document_id,
-                document_status=DocumentStatus.failed,
-                error_trace=f"Task failed after all retries: {error_detail}",
-            )
+            current_doc = await repo.get_document_by_id(document_id)
+
+            if current_doc and current_doc.document_status != DocumentStatus.cancelled:
+                await repo.update_document_fields(
+                    document_id=document_id,
+                    document_status=DocumentStatus.failed,
+                    error_trace=f"Task failed after all retries: {error_detail}",
+                )
 
     def _validate_mime_type(self) -> MimeType:
         """Validates mime type"""
@@ -105,7 +120,7 @@ class DocumentExtractionTask:
             await repo.update_document_fields(
                 document_id=self.document_id,
                 document_text=text,
-                document_status=DocumentStatus.success,
+                document_status=DocumentStatus.extracted,
                 temp_filename=None,
             )
 
@@ -119,19 +134,33 @@ class DocumentExtractionTask:
             self._cleanup_file()
 
         except ExtractionError as err:
-            await repo.update_document_fields(
-                document_id=self.document_id,
-                document_status=DocumentStatus.failed,
-                error_trace=str(err.log_context),
-                temp_filename=None,
-            )
-            logger.error(
-                "text_extraction_failed",
-                document_id=self.document_id,
-                error_code=err.error_code,
-                error_detail=str(err.log_context),
-            )
-            self._cleanup_file()
+            if err.error_code == "file_not_found":
+                await repo.update_document_fields(
+                    document_id=self.document_id,
+                    document_status=DocumentStatus.cancelled,
+                    error_trace=str(err.log_context),
+                    temp_filename=None,
+                )
+                logger.error(
+                    "document_deleted_during_processing",
+                    document_id=self.document_id,
+                    error_code=err.error_code,
+                    error_detail=str(err.log_context),
+                )
+            else:
+                await repo.update_document_fields(
+                    document_id=self.document_id,
+                    document_status=DocumentStatus.failed,
+                    error_trace=str(err.log_context),
+                    temp_filename=None,
+                )
+                logger.error(
+                    "text_extraction_failed",
+                    document_id=self.document_id,
+                    error_code=err.error_code,
+                    error_detail=str(err.log_context),
+                )
+                self._cleanup_file()
 
         except Exception as err:
             logger.error(
