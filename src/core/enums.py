@@ -10,8 +10,9 @@ class MimeType(Enum):
 
 class DocumentStatus(Enum):
     created = "created"
-    queued = "queued"
-    processing = "processing"
+    extracting = "extracting"
+    extracted = "extracted"
+    analyzing = "analyzing"
     success = "success"
     failed = "failed"
     cancelled = "cancelled"
