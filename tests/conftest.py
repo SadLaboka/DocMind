@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import (
 
 from src.core.config import settings
 from src.core.database import get_session
-from src.core.enums import MimeType
+from src.core.enums import MimeType, DocumentStatus
 from src.core.jwt import JWTManager
 from src.core.security import get_password_hash
 from src.DependencyInjection.auth import get_jwt_manager
@@ -107,13 +107,18 @@ async def create_user():
 @pytest_asyncio.fixture(scope="function")
 async def create_document():
     async def _create(
-        session: AsyncSession,
-        user_id: int,
-        filename: str,
-        description: str,
-        mime_type: MimeType,
-        file_size: int,
-        temp_filename: str,
+            session: AsyncSession,
+            user_id: int,
+            filename: str,
+            description: str,
+            mime_type: MimeType,
+            file_size: int,
+            temp_filename: str | None = None,
+            document_status: DocumentStatus = DocumentStatus.created,
+            document_text: str | None = None,
+            analysis: str | None = None,
+            file_hash: str | None = None,
+            analysis_version: str | None = None,
     ):
         from src.models.documents import Document
 
@@ -124,10 +129,13 @@ async def create_document():
             mime_type=mime_type,
             file_size=file_size,
             temp_filename=temp_filename,
+            document_status=document_status,
+            document_text=document_text,
+            analysis=analysis,
+            file_hash=file_hash,
+            analysis_version=analysis_version,
         )
-
         session.add(document)
-
         await session.flush()
         await session.refresh(document)
 
@@ -141,6 +149,7 @@ async def create_document():
             "document_status": document.document_status,
             "document_text": document.document_text,
             "analysis": document.analysis,
+            "file_hash": document.file_hash,
             "created_at": document.created_at,
             "updated_at": document.updated_at,
         }
