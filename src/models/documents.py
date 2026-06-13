@@ -23,3 +23,4 @@ class Document(Base):
     )
     error_trace: Mapped[str] = mapped_column(Text, nullable=True, default=None)
     analysis: Mapped[str] = mapped_column(Text, nullable=True, default=None)
+    analysis_version: Mapped[str] = mapped_column(String(20), nullable=True, default=None)
