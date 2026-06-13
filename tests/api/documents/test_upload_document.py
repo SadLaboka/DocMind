@@ -1,17 +1,17 @@
 import hashlib
+from unittest.mock import AsyncMock, patch
+
 import pytest
 from httpx import AsyncClient
-from unittest.mock import patch, AsyncMock
+
 from src.core.enums import DocumentStatus, MimeType
 from tests.conftest import FIXTURES_DIR
 
-
 # SUCCESS CASES
 
+
 @pytest.mark.asyncio
-async def test_upload_document_success_new_file(
-        client: AsyncClient, create_token_pair, test_password, test_db_session
-):
+async def test_upload_document_success_new_file(client: AsyncClient, create_token_pair, test_password, test_db_session):
     _, hashed_pw = test_password
     tokens = await create_token_pair(login="uploader", email="up@test.com", password_hash=hashed_pw)
 
@@ -38,7 +38,7 @@ async def test_upload_document_success_new_file(
 
 @pytest.mark.asyncio
 async def test_upload_document_duplicate_fast_path(
-        client: AsyncClient, create_token_pair, create_document, test_password, test_db_session
+    client: AsyncClient, create_token_pair, create_document, test_password, test_db_session
 ):
     _, hashed_pw = test_password
     tokens = await create_token_pair(login="uploader", email="up@test.com", password_hash=hashed_pw)
@@ -82,6 +82,7 @@ async def test_upload_document_duplicate_fast_path(
 
 
 # AUTHORIZATION & VALIDATION CASES
+
 
 @pytest.mark.asyncio
 async def test_upload_document_unauthorized(client: AsyncClient):

@@ -7,12 +7,12 @@ from httpx import AsyncClient
 from src.core.config import settings
 from src.core.enums import DocumentStatus, MimeType
 
-
 # SUCCESS CASES
+
 
 @pytest.mark.asyncio
 async def test_cancel_document_by_owner(
-        client: AsyncClient, create_token_pair, create_document, test_password, test_db_session
+    client: AsyncClient, create_token_pair, create_document, test_password, test_db_session
 ):
     _, hashed_pw = test_password
     tokens = await create_token_pair(login="owner", email="owner@test.com", password_hash=hashed_pw)
@@ -48,7 +48,7 @@ async def test_cancel_document_by_owner(
 
 @pytest.mark.asyncio
 async def test_cancel_document_by_admin(
-        client: AsyncClient, create_token_pair, create_user, create_document, test_password, test_db_session
+    client: AsyncClient, create_token_pair, create_user, create_document, test_password, test_db_session
 ):
     _, hashed_pw = test_password
 
@@ -84,6 +84,7 @@ async def test_cancel_document_by_admin(
 
 # AUTHORIZATION & PERMISSION CASES
 
+
 @pytest.mark.asyncio
 async def test_cancel_document_unauthorized(client: AsyncClient):
     response = await client.delete("/documents/1")
@@ -94,7 +95,7 @@ async def test_cancel_document_unauthorized(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_cancel_document_forbidden(
-        client: AsyncClient, create_token_pair, create_document, test_password, test_db_session
+    client: AsyncClient, create_token_pair, create_document, test_password, test_db_session
 ):
     _, hashed_pw = test_password
 
@@ -121,6 +122,7 @@ async def test_cancel_document_forbidden(
 
 
 # EDGE CASES & IDEMPOTENCY
+
 
 @pytest.mark.asyncio
 async def test_cancel_document_idempotent(
@@ -156,9 +158,7 @@ async def test_cancel_document_idempotent(
 
 
 @pytest.mark.asyncio
-async def test_cancel_document_not_found(
-        client: AsyncClient, create_token_pair, test_password
-):
+async def test_cancel_document_not_found(client: AsyncClient, create_token_pair, test_password):
     _, hashed_pw = test_password
     tokens = await create_token_pair(login="user", email="user@test.com", password_hash=hashed_pw)
 
