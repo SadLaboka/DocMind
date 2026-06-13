@@ -1,5 +1,6 @@
-from sqlalchemy import func, select
+from sqlalchemy import func, select, and_
 
+from src.core.enums import DocumentStatus
 from src.models.documents import Document
 from src.repositories.base import BaseRepository
 from src.schemas.documents import DocumentData
@@ -50,3 +51,16 @@ class DocumentRepository(BaseRepository):
         await self.session.commit()
         await self.session.refresh(document)
         return document
+
+    async def get_document_by_hash_and_active_status(self, file_hash: str) -> Document | None:
+        stmt = (
+            select(Document)
+            .where(
+                and_(
+                    Document.file_hash == file_hash,
+                    Document.document_status.in_([DocumentStatus.success, DocumentStatus.extracted])
+                )
+            )
+        )
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()
