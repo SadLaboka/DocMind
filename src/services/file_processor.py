@@ -1,13 +1,16 @@
 import asyncio
+import hashlib
 import string
 import time
 from pathlib import Path
 from uuid import uuid4
+from typing import BinaryIO
 
 import filetype
 import structlog
 from celery.result import AsyncResult
 from fastapi import UploadFile
+from sqlalchemy.exc import IntegrityError
 
 from src.core.config import settings
 from src.core.enums import MimeType
@@ -16,6 +19,7 @@ from src.repositories.documents import DocumentRepository
 from src.schemas.documents import DocumentData, DocumentResponse
 from src.services.base import BaseService
 from src.worker.tasks import extract_text_task
+from src.models.documents import Document
 
 logger = structlog.get_logger(__name__)
 
@@ -48,8 +52,46 @@ RESERVED_NAMES = {
     "LPT9",
     "LPT10",
 }
-CHUNK_SIZE = 64 * 1024
 ALLOWED_MIME_VALUES = {m.value for m in MimeType}
+
+
+class HashingFileSaver:
+    """Context manager for saving an uploaded file to disk while calculating its hash"""
+
+    CHUNK_SIZE = 64 * 1024
+
+    def __init__(self, file_path: Path) -> None:
+        self._file_path = file_path
+        self._hasher = hashlib.sha256()
+        self._file: BinaryIO | None = None
+        self._cached_hash: str | None = None
+
+    def __enter__(self) -> "HashingFileSaver":
+        """Opens the file for binary writing upon entering the 'with' block"""
+        self._file = open(self._file_path, "wb")
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> bool:
+        """Guarantees the file is closed when exiting the 'with' block"""
+        if self._file is not None:
+            self._file.close()
+            self._cached_hash = self._hasher.hexdigest()
+        return False
+
+    def save_from_stream(self, stream: BinaryIO) -> None:
+        """Reads from the input stream in chunks, writes to file, and updates hash"""
+        if self._file is None:
+            raise RuntimeError("HashingFileSaver is not open. Use 'with' statement")
+
+        while chunk := stream.read(self.CHUNK_SIZE):
+            self._hasher.update(chunk)
+            self._file.write(chunk)
+
+    def get_hash(self) -> str:
+        """Returns the final SHA-256 hex digest of the written data"""
+        if self._cached_hash is None:
+            raise RuntimeError("HashingFileSaver is closed or not opened")
+        return self._cached_hash
 
 
 class UploadService(BaseService[DocumentRepository]):
@@ -57,16 +99,192 @@ class UploadService(BaseService[DocumentRepository]):
     async def process_upload(
         self, uploaded_file: UploadFile, user_id: int, description: str | None, request_id: str
     ) -> DocumentResponse:
-        """An orchestrator that validates the parameters of the received file,
-        saves it to the database and disk, and then returns a response in the form of a Paydantic schema."""
+        """Orchestrates file upload: validation, saving, deduplication, and queue dispatch"""
 
-        filename = uploaded_file.filename or "unknown"
-        logger.info(
-            "document_upload_initiated",
-            filename=filename,
+        sanitized_filename, mime_type, file_size, temp_filename = await self._validate_and_prepare_upload(
+            uploaded_file=uploaded_file,
             user_id=user_id,
         )
 
+        logger.info("document_upload_initiated", filename=uploaded_file.filename or "unknown", user_id=user_id)
+
+        temp_path = Path(settings.base_dir).parent / "temp" / temp_filename
+        Path(Path(settings.base_dir).parent / "temp").mkdir(exist_ok=True, parents=True)
+
+        try:
+            start_time = time.perf_counter()
+            with HashingFileSaver(temp_path) as saver:
+                saver.save_from_stream(uploaded_file.file)
+            file_hash = saver.get_hash()
+            duration_ms = round((time.perf_counter() - start_time) * 1000, 2)
+
+            logger.info(
+                "file_saved_to_disk",
+                filename=sanitized_filename,
+                file_size=file_size,
+                duration_ms=duration_ms,
+                file_hash=file_hash[:16],
+            )
+        except OSError as err:
+            raise BadRequestError(
+                error_code="storage_error",
+                message="Failed to save the file to disk",
+                log_context={
+                    "event_name": "file_save_failed",
+                    "user_id": user_id,
+                    "filename": sanitized_filename,
+                    "file_size": file_size,
+                    "error_detail": str(err),
+                },
+            ) from err
+
+        document, is_duplicate = await self._create_document_with_deduplication(
+            file_hash=file_hash,
+            temp_path=temp_path,
+            temp_filename=temp_filename,
+            user_id=user_id,
+            sanitized_filename=sanitized_filename,
+            mime_type=mime_type,
+            description=description,
+            file_size=file_size,
+        )
+
+        logger.info(
+            "document_saved_to_db",
+            document_id=document.id,
+            status=document.document_status.value,
+            is_duplicate=is_duplicate,
+        )
+
+        if not is_duplicate:
+            celery_task = await self._send_to_queue_for_extraction(
+                document_id=document.id,
+                temp_path=temp_path,
+                mime_type=mime_type.value,
+                request_id=request_id,
+            )
+            logger.info("task_dispatched_to_queue", document_id=document.id, celery_task_id=celery_task.id)
+
+        return DocumentResponse.model_validate(document)
+
+    async def _create_duplicate_document(
+            self,
+            existing_doc: Document,
+            user_id: int,
+            sanitized_filename: str,
+            mime_type: MimeType,
+            description: str | None,
+            file_size: int,
+            temp_path: Path,
+    ) -> Document:
+        """Creates a duplicate document from the existing document-data and remove temp-file"""
+        data = DocumentData(
+            filename=sanitized_filename,
+            user_id=user_id,
+            mime_type=mime_type,
+            description=description,
+            file_size=file_size,
+            temp_filename=existing_doc.temp_filename,
+            file_hash=existing_doc.file_hash,
+            document_status=existing_doc.document_status,
+            document_text=existing_doc.document_text,
+            analysis=existing_doc.analysis,
+            analysis_version=existing_doc.analysis_version,
+        )
+
+        document = await self.repository.create_document(data)
+
+        self._remove_from_temp(temp_path)
+
+        return document
+
+    async def _create_document_with_deduplication(
+            self,
+            file_hash: str,
+            temp_path: Path,
+            temp_filename: str,
+            user_id: int,
+            sanitized_filename: str,
+            mime_type: MimeType,
+            description: str | None,
+            file_size: int,
+    ) -> tuple[Document, bool]:
+        """
+        Creates document or returns existing duplicate
+        Returns: (document, is_duplicate)
+        """
+        existing_doc = await self.repository.get_document_by_hash_and_active_status(file_hash)
+        if existing_doc:
+            logger.info(
+                "document_duplicate_found",
+                filename=sanitized_filename,
+                file_hash=file_hash[:16],
+                existing_document_id=existing_doc.id,
+                original_status=existing_doc.document_status,
+            )
+            doc = await self._create_duplicate_document(
+                existing_doc=existing_doc,
+                user_id=user_id,
+                sanitized_filename=sanitized_filename,
+                mime_type=mime_type,
+                description=description,
+                file_size=file_size,
+                temp_path=temp_path,
+            )
+            return doc, True
+
+        data = DocumentData(
+            filename=sanitized_filename,
+            user_id=user_id,
+            mime_type=mime_type,
+            description=description,
+            file_size=file_size,
+            temp_filename=temp_filename,
+            file_hash=file_hash,
+        )
+
+        try:
+            doc = await self.repository.create_document(data)
+            return doc, False
+        except IntegrityError as err:
+            existing_doc = await self.repository.get_document_by_hash_and_active_status(file_hash)
+            if existing_doc:
+                logger.info(
+                    "document_found_after_race",
+                    filename=sanitized_filename,
+                    file_hash=file_hash[:16],
+                    existing_document_id=existing_doc.id,
+                    original_status=existing_doc.document_status,
+                )
+                doc = await self._create_duplicate_document(
+                    existing_doc=existing_doc,
+                    user_id=user_id,
+                    sanitized_filename=sanitized_filename,
+                    mime_type=mime_type,
+                    description=description,
+                    file_size=file_size,
+                    temp_path=temp_path,
+                )
+                return doc, True
+
+            raise BadRequestError(
+                error_code="storage_error",
+                message="Failed to save document due to concurrent upload",
+                log_context={
+                    "event_name": "document_upload_rejected",
+                    "reason": "concurrent upload conflict",
+                    "user_id": user_id,
+                    "file_hash": file_hash[:16],
+                },
+            ) from err
+
+    async def _validate_and_prepare_upload(
+            self, uploaded_file: UploadFile, user_id: int
+    ) -> tuple[str, MimeType, int, str]:
+        """
+        Validates uploaded file and returns prepared metadata
+        Returns: (sanitized_filename, mime_type, file_size, temp_filename)
+        """
         if not uploaded_file.filename:
             raise BadRequestError(
                 error_code="filename_is_missing",
@@ -102,96 +320,42 @@ class UploadService(BaseService[DocumentRepository]):
                 },
             )
 
-        file_extension = Path(uploaded_file.filename).suffix.lower()
-        filename = Path(uploaded_file.filename).stem
-        temp_filename = self._get_temp_filename(file_extension)
-        sanitized_filename = self._sanitize_filename(filename)
-
         detected_mime = self._detect_mime(uploaded_file)
-        mime_type: MimeType
+        file_extension = Path(uploaded_file.filename).suffix.lower()
+        mime_type = self._validate_mime_type(detected_mime, file_extension)
 
+        temp_filename = self._get_temp_filename(file_extension)
+        sanitized_filename = self._sanitize_filename(Path(uploaded_file.filename).stem)
+
+        return sanitized_filename, mime_type, file_size, temp_filename
+
+    @staticmethod
+    def _validate_mime_type(detected_mime: str | None, file_extension: str) -> MimeType:
+        """Validates and returns MimeType enum"""
         if detected_mime is not None and detected_mime in ALLOWED_MIME_VALUES:
-            mime_type = MimeType(detected_mime)
+            return MimeType(detected_mime)
         elif detected_mime is not None:
             raise BadRequestError(
                 error_code="mime_type_is_invalid",
-                message="The has an invalid type",
+                message="The file has an invalid type",
                 log_context={
                     "event_name": "document_upload_rejected",
                     "reason": "invalid mime type",
-                    "user_id": user_id,
                     "mime_type": detected_mime,
                 },
             )
         elif detected_mime is None and file_extension == ".txt":
-            mime_type = MimeType.txt
+            return MimeType.txt
         else:
             raise BadRequestError(
                 error_code="mime_type_is_invalid",
-                message="The has invalid type",
+                message="The file has an invalid type",
                 log_context={
                     "event_name": "document_upload_rejected",
                     "reason": "unknown mime type",
-                    "user_id": user_id,
                     "mime_type": detected_mime,
                 },
             )
-
-        try:
-            start_time = time.perf_counter()
-            temp_path = self._save_to_temp(file=uploaded_file, temp_name=temp_filename)
-            duration_ms = round((time.perf_counter() - start_time) * 1000, 2)
-
-            logger.info(
-                "file_saved_to_disk",
-                filename=sanitized_filename,
-                file_size=file_size,
-                duration_ms=duration_ms,
-            )
-        except OSError as err:
-            raise BadRequestError(
-                error_code="storage_error",
-                message="Failed to save the file to disk",
-                log_context={
-                    "event_name": "file_save_failed",
-                    "user_id": user_id,
-                    "filename": sanitized_filename,
-                    "file_size": file_size,
-                    "error_detail": str(err),
-                },
-            ) from err
-
-        data = DocumentData(
-            filename=sanitized_filename,
-            user_id=user_id,  # temp
-            mime_type=mime_type,
-            description=description,
-            file_size=file_size,
-            temp_filename=temp_filename,
-        )
-
-        document = await self.repository.create_document(data)
-
-        logger.info(
-            "document_saved_to_db",
-            document_id=document.id,
-            status="created",
-        )
-
-        celery_task = await self._send_to_queue_for_extraction(
-            document_id=document.id,
-            temp_path=temp_path,
-            mime_type=mime_type.value,
-            request_id=request_id,
-        )
-
-        logger.info(
-            "task_dispatched_to_queue",
-            document_id=document.id,
-            celery_task_id=celery_task.id,
-        )
-
-        return DocumentResponse.model_validate(document)
 
     @staticmethod
     async def _send_to_queue_for_extraction(
@@ -243,17 +407,7 @@ class UploadService(BaseService[DocumentRepository]):
         return sanitized_filename if sanitized_filename.upper() not in RESERVED_NAMES else "_" + sanitized_filename
 
     @staticmethod
-    def _save_to_temp(file: UploadFile, temp_name: str) -> Path:
-        """Saves the uploaded file to the temp folder on disk by chunks"""
-        path = Path(settings.base_dir).parent / "temp" / temp_name
-        Path(Path(settings.base_dir).parent / "temp").mkdir(exist_ok=True, parents=True)
-        try:
-            with open(path, "wb") as temp_file:
-                while chunk := file.file.read(CHUNK_SIZE):
-                    temp_file.write(chunk)
-        except OSError as err:
-            if path.exists():
-                path.unlink(missing_ok=True)
-            raise err
-
-        return path
+    def _remove_from_temp(path: Path) -> None:
+        """Removes the uploaded file from the temp folder"""
+        if path.exists():
+            path.unlink(missing_ok=True)
