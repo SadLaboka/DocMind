@@ -3,8 +3,8 @@ import hashlib
 import string
 import time
 from pathlib import Path
-from uuid import uuid4
 from typing import BinaryIO
+from uuid import uuid4
 
 import filetype
 import structlog
@@ -15,11 +15,11 @@ from sqlalchemy.exc import IntegrityError
 from src.core.config import settings
 from src.core.enums import MimeType
 from src.core.exceptions import BadRequestError
+from src.models.documents import Document
 from src.repositories.documents import DocumentRepository
 from src.schemas.documents import DocumentData, DocumentResponse
 from src.services.base import BaseService
 from src.worker.tasks import extract_text_task
-from src.models.documents import Document
 
 logger = structlog.get_logger(__name__)
 
@@ -71,12 +71,11 @@ class HashingFileSaver:
         self._file = open(self._file_path, "wb")
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> bool:
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         """Guarantees the file is closed when exiting the 'with' block"""
         if self._file is not None:
             self._file.close()
             self._cached_hash = self._hasher.hexdigest()
-        return False
 
     def save_from_stream(self, stream: BinaryIO) -> None:
         """Reads from the input stream in chunks, writes to file, and updates hash"""
@@ -168,14 +167,14 @@ class UploadService(BaseService[DocumentRepository]):
         return DocumentResponse.model_validate(document)
 
     async def _create_duplicate_document(
-            self,
-            existing_doc: Document,
-            user_id: int,
-            sanitized_filename: str,
-            mime_type: MimeType,
-            description: str | None,
-            file_size: int,
-            temp_path: Path,
+        self,
+        existing_doc: Document,
+        user_id: int,
+        sanitized_filename: str,
+        mime_type: MimeType,
+        description: str | None,
+        file_size: int,
+        temp_path: Path,
     ) -> Document:
         """Creates a duplicate document from the existing document-data and remove temp-file"""
         data = DocumentData(
@@ -199,15 +198,15 @@ class UploadService(BaseService[DocumentRepository]):
         return document
 
     async def _create_document_with_deduplication(
-            self,
-            file_hash: str,
-            temp_path: Path,
-            temp_filename: str,
-            user_id: int,
-            sanitized_filename: str,
-            mime_type: MimeType,
-            description: str | None,
-            file_size: int,
+        self,
+        file_hash: str,
+        temp_path: Path,
+        temp_filename: str,
+        user_id: int,
+        sanitized_filename: str,
+        mime_type: MimeType,
+        description: str | None,
+        file_size: int,
     ) -> tuple[Document, bool]:
         """
         Creates document or returns existing duplicate
@@ -279,7 +278,7 @@ class UploadService(BaseService[DocumentRepository]):
             ) from err
 
     async def _validate_and_prepare_upload(
-            self, uploaded_file: UploadFile, user_id: int
+        self, uploaded_file: UploadFile, user_id: int
     ) -> tuple[str, MimeType, int, str]:
         """
         Validates uploaded file and returns prepared metadata

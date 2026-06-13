@@ -1,4 +1,5 @@
 import sys
+import os
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.resolve()))
@@ -23,7 +24,6 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-import os
 if os.getenv("ALEMBIC_FORCE_LOCAL_HOST") == "true":
     db_host = "localhost" if settings.db.host == "main_db" else settings.db.host
 else:
