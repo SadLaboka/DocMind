@@ -324,7 +324,7 @@ class UploadService(BaseService[DocumentRepository]):
         mime_type = self._validate_mime_type(detected_mime, file_extension)
 
         temp_filename = self._get_temp_filename(file_extension)
-        sanitized_filename = self._sanitize_filename(Path(uploaded_file.filename).stem)
+        sanitized_filename = self._sanitize_filename(uploaded_file.filename)
 
         return sanitized_filename, mime_type, file_size, temp_filename
 
