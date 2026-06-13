@@ -66,11 +66,13 @@ class DocumentService(BaseService[DocumentRepository]):
         document = await self._get_document(user, document_id)
 
         if document.document_status != DocumentStatus.cancelled:
+            temp_filename_to_delete = document.temp_filename
+
             updated_document = await self.repository.update_document_fields(
                 document_id=document_id, document_status=DocumentStatus.cancelled, temp_filename=None
             )
-            if document.temp_filename:
-                path = Path(settings.base_dir).parent / "temp" / document.temp_filename
+            if temp_filename_to_delete:
+                path = Path(settings.base_dir).parent / "temp" / temp_filename_to_delete
 
                 if path.exists():
                     path.unlink(missing_ok=True)
