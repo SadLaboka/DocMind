@@ -29,6 +29,12 @@ migrate-down:
 migrate-new:
 	poetry run alembic revision --autogenerate -m "$(m)"
 
+migrate-new-local:
+	ALEMBIC_FORCE_LOCAL_HOST=true poetry run alembic revision --autogenerate -m "$(m)"
+
+migrate-up-local:
+	ALEMBIC_FORCE_LOCAL_HOST=true poetry run alembic upgrade head
+
 # Development
 lint:
 	docker run --rm -it \

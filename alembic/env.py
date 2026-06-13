@@ -23,7 +23,17 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-config.set_main_option("sqlalchemy.url", settings.db.url + "?async_fallback=True")
+import os
+if os.getenv("ALEMBIC_FORCE_LOCAL_HOST") == "true":
+    db_host = "localhost" if settings.db.host == "main_db" else settings.db.host
+else:
+    db_host = settings.db.host
+
+local_db_url = f"postgresql+asyncpg://{settings.db.user}:{settings.db.password}@{db_host}:{settings.db.port}/{settings.db.name}?async_fallback=True"
+config.set_main_option("sqlalchemy.url", local_db_url)
+
+target_metadata = Base.metadata
+
 
 # add your model's MetaData object here
 # for 'autogenerate' support
