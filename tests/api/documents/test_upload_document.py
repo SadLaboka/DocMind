@@ -6,9 +6,7 @@ from src.core.enums import DocumentStatus, MimeType
 from tests.conftest import FIXTURES_DIR
 
 
-# ==============================================================================
 # SUCCESS CASES
-# ==============================================================================
 
 @pytest.mark.asyncio
 async def test_upload_document_success_new_file(
@@ -83,9 +81,7 @@ async def test_upload_document_duplicate_fast_path(
     mock_to_thread.assert_not_called()
 
 
-# ==============================================================================
 # AUTHORIZATION & VALIDATION CASES
-# ==============================================================================
 
 @pytest.mark.asyncio
 async def test_upload_document_unauthorized(client: AsyncClient):

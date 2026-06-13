@@ -146,6 +146,7 @@ async def create_document():
             "description": document.description,
             "mime_type": document.mime_type,
             "file_size": document.file_size,
+            "temp_filename": document.temp_filename,
             "document_status": document.document_status,
             "document_text": document.document_text,
             "analysis": document.analysis,
