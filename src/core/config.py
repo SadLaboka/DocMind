@@ -97,6 +97,7 @@ class Settings(BaseSettings):
     logs: LogsSettings = Field(default_factory=LogsSettings)
     server: ServerSettings = Field(default_factory=ServerSettings)
     rabbit: RabbitSettings = Field(default_factory=RabbitSettings)
+    mongo: MongoSettings = Field(default_factory=MongoSettings)
 
     app_name: str = APP_NAME
     app_version: str = APP_VERSION
