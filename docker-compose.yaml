@@ -1,4 +1,23 @@
 services:
+  mongo_db:
+    image: mongo:latest
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME:-root}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD:-example}
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    networks:
+      - DocMind_network
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping').ok", "--quiet" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
   rabbitmq:
     image: rabbitmq:3-management
     environment:
@@ -39,6 +58,8 @@ services:
         condition: service_healthy
       main_db:
         condition: service_healthy
+      mongo_db:
+        condition: service_healthy
 
   worker:
     build: .
@@ -60,6 +81,8 @@ services:
       rabbitmq:
         condition: service_healthy
       main_db:
+        condition: service_healthy
+      mongo_db:
         condition: service_healthy
     networks:
       - DocMind_network
