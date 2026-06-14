@@ -77,6 +77,20 @@ class RabbitSettings(SettingsBase):
         return f"amqp://{self.user}:{self.password}@{self.host}:{self.port}"
 
 
+class MongoSettings(SettingsBase):
+    model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="MONGO")
+
+    host: str = "localhost"
+    port: int = 27017
+    username: str = "guest"
+    password: str = ""
+
+    @property
+    def url(self) -> str:
+        """Returns a ready URL for connecting to Mongo"""
+        return f"mongodb://{self.username}:{self.password}@{self.host}:{self.port}"
+
+
 class Settings(BaseSettings):
     db: DatabaseSettings = Field(default_factory=DatabaseSettings)
     jwt: JWTSettings = Field(default_factory=JWTSettings)
