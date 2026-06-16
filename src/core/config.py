@@ -78,17 +78,18 @@ class RabbitSettings(SettingsBase):
 
 
 class MongoSettings(SettingsBase):
-    model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="MONGO")
+    model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="MONGO_")
 
     host: str = "localhost"
     port: int = 27017
     username: str = "guest"
     password: str = ""
+    name: str = "DocMind"
 
     @property
     def url(self) -> str:
         """Returns a ready URL for connecting to Mongo"""
-        return f"mongodb://{self.username}:{self.password}@{self.host}:{self.port}"
+        return f"mongodb://{self.username}:{self.password}@{self.host}:{self.port}/{self.name}?authSource=admin"
 
 
 class Settings(BaseSettings):
