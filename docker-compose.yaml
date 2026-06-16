@@ -1,6 +1,6 @@
 services:
   mongo_db:
-    image: mongo:latest
+    image: mongo:7
     restart: always
     env_file:
       - .env
