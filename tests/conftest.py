@@ -1,6 +1,8 @@
-from datetime import UTC
+from datetime import UTC, datetime
 from pathlib import Path
+from unittest.mock import AsyncMock
 
+from pydantic import BaseModel
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
@@ -10,12 +12,15 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
+from src.models.mongo_documents import MongoDocument
+from src.repositories.mongo_documents import MongoDocumentRepository
 from src.core.config import settings
 from src.core.database import get_session
 from src.core.enums import DocumentStatus, MimeType
 from src.core.jwt import JWTManager
 from src.core.security import get_password_hash
 from src.DependencyInjection.auth import get_jwt_manager
+from src.DependencyInjection.documents import get_mongo_document_repository
 
 TEST_DB_URL = settings.db.url
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
@@ -52,11 +57,39 @@ async def test_db_session(db_engine):
                 await transaction.rollback()
 
 
+class MockMongoContent(BaseModel):
+    raw_text: str | None = None
+    analysis: dict | None = None
+    analysis_version: str | None = None
+
+
+@pytest.fixture
+def mock_mongo_content():
+    return MockMongoContent(
+        raw_text="Mocked extracted text",
+        analysis={"key": "value"},
+        analysis_version="v1.0",
+    )
+
+
+@pytest.fixture
+def mock_mongo_repo(mock_mongo_content):
+    mock_repo = AsyncMock(spec=MongoDocumentRepository)
+    mock_repo.get_content = AsyncMock(return_value=mock_mongo_content)
+    mock_repo.create_content = AsyncMock(return_value=mock_mongo_content)
+    mock_repo.create_duplicate_content = AsyncMock(return_value=mock_mongo_content)
+    return mock_repo
+
+
 @pytest_asyncio.fixture(scope="function")
-async def client(test_db_session):
+async def client(test_db_session, mock_mongo_repo):
     async def override_get_session():
         yield test_db_session
 
+    def override_get_mongo_repo():
+        return mock_mongo_repo
+
+    app.dependency_overrides[get_mongo_document_repository] = override_get_mongo_repo
     app.dependency_overrides[get_session] = override_get_session
     app.dependency_overrides[get_jwt_manager] = get_test_jwt_manager
 
@@ -115,10 +148,7 @@ async def create_document():
         file_size: int,
         temp_filename: str | None = None,
         document_status: DocumentStatus = DocumentStatus.created,
-        document_text: str | None = None,
-        analysis: str | None = None,
         file_hash: str | None = None,
-        analysis_version: str | None = None,
     ):
         from src.models.documents import Document
 
@@ -130,10 +160,7 @@ async def create_document():
             file_size=file_size,
             temp_filename=temp_filename,
             document_status=document_status,
-            document_text=document_text,
-            analysis=analysis,
             file_hash=file_hash,
-            analysis_version=analysis_version,
         )
         session.add(document)
         await session.flush()
@@ -148,8 +175,6 @@ async def create_document():
             "file_size": document.file_size,
             "temp_filename": document.temp_filename,
             "document_status": document.document_status,
-            "document_text": document.document_text,
-            "analysis": document.analysis,
             "file_hash": document.file_hash,
             "created_at": document.created_at,
             "updated_at": document.updated_at,

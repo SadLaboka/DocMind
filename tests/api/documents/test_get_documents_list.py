@@ -231,7 +231,5 @@ async def test_get_documents_field_values(
     assert item["mime_type"] == doc["mime_type"].value
     assert item["file_size"] == doc["file_size"]
     assert item["document_status"] == doc["document_status"].value
-    assert item["document_text"] == doc["document_text"]
-    assert item["analysis"] == doc["analysis"]
     assert "created_at" in item
     assert "updated_at" in item

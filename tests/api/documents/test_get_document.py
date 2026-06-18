@@ -8,7 +8,7 @@ from src.core.enums import MimeType
 
 @pytest.mark.asyncio
 async def test_get_document_success(
-    client: AsyncClient, test_password, create_document, create_token_pair, test_db_session
+    client: AsyncClient, test_password, create_document, create_token_pair, test_db_session, mock_mongo_content
 ):
     _, hashed_pw = test_password
 
@@ -30,7 +30,6 @@ async def test_get_document_success(
 
     assert response.status_code == 200
     data = response.json()
-
     assert data["id"] == document["id"]
     assert data["user_id"] == document["user_id"]
     assert data["filename"] == document["filename"]
@@ -38,18 +37,24 @@ async def test_get_document_success(
     assert data["mime_type"] == document["mime_type"].value
     assert data["file_size"] == document["file_size"]
     assert data["document_status"] == document["document_status"].value
-    assert data["document_text"] == document["document_text"]
-    assert data["analysis"] == document["analysis"]
 
+    assert data["document_text"] == mock_mongo_content.raw_text
+    assert data["analysis"] == mock_mongo_content.analysis
+    assert data["analysis_version"] == mock_mongo_content.analysis_version
     assert "created_at" in data
     assert "updated_at" in data
-
     assert "temp_filename" not in data
 
 
 @pytest.mark.asyncio
 async def test_get_document_success_admin(
-    client: AsyncClient, test_password, create_document, create_user, create_token_pair, test_db_session
+        client: AsyncClient,
+        test_password,
+        create_document,
+        create_user,
+        create_token_pair,
+        test_db_session,
+        mock_mongo_content
 ):
     _, hashed_pw = test_password
 
@@ -87,12 +92,12 @@ async def test_get_document_success_admin(
     assert data["mime_type"] == document["mime_type"].value
     assert data["file_size"] == document["file_size"]
     assert data["document_status"] == document["document_status"].value
-    assert data["document_text"] == document["document_text"]
-    assert data["analysis"] == document["analysis"]
 
+    assert data["document_text"] == mock_mongo_content.raw_text
+    assert data["analysis"] == mock_mongo_content.analysis
+    assert data["analysis_version"] == mock_mongo_content.analysis_version
     assert "created_at" in data
     assert "updated_at" in data
-
     assert "temp_filename" not in data
 
 

@@ -11,6 +11,7 @@ from src.models.documents import DocumentStatus, MimeType
 from src.repositories.documents import DocumentRepository
 from src.services.extractors import TextExtractor
 from src.worker.celery_app import app as celery_app
+from src.repositories.mongo_documents import MongoDocumentRepository
 
 logger = structlog.get_logger(__name__)
 
@@ -115,7 +116,6 @@ class DocumentExtractionTask:
 
     async def _process_extraction(self, repo: DocumentRepository, mime_enum: MimeType) -> None:
         """Launch extraction logic"""
-        from src.repositories.mongo_documents import MongoDocumentRepository
 
         mongo_repo = MongoDocumentRepository()
 

@@ -38,7 +38,7 @@ async def test_upload_document_success_new_file(client: AsyncClient, create_toke
 
 @pytest.mark.asyncio
 async def test_upload_document_duplicate_fast_path(
-    client: AsyncClient, create_token_pair, create_document, test_password, test_db_session
+    client: AsyncClient, create_token_pair, create_document, test_password, test_db_session, mock_mongo_content
 ):
     _, hashed_pw = test_password
     tokens = await create_token_pair(login="uploader", email="up@test.com", password_hash=hashed_pw)
@@ -56,7 +56,6 @@ async def test_upload_document_duplicate_fast_path(
         file_size=len(test_file_bytes),
         temp_filename=None,
         document_status=DocumentStatus.extracted,
-        document_text="Mocked extracted text from first run",
         file_hash=file_hash,
     )
 
@@ -76,7 +75,6 @@ async def test_upload_document_duplicate_fast_path(
 
     assert isinstance(resp_data["id"], int)
     assert resp_data["document_status"] == DocumentStatus.extracted.value
-    assert resp_data["document_text"] == "Mocked extracted text from first run"
 
     mock_to_thread.assert_not_called()
 
