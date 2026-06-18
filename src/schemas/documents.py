@@ -17,10 +17,11 @@ class DocumentBase(BaseModel):
 class DocumentResponse(DocumentBase):
     id: int
     status: DocumentStatus = Field(alias="document_status")
-    document_text: str | None
-    analysis: str | None
+    document_text: str | None = None
+    analysis: dict | None = None
     created_at: datetime
     updated_at: datetime
+    analysis_version: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -28,10 +29,7 @@ class DocumentResponse(DocumentBase):
 class DocumentData(DocumentBase):
     temp_filename: str | None = None
     file_hash: str | None = None
-    analysis: str | None = None
-    document_text: str | None = None
     document_status: DocumentStatus = Field(alias="document_status", default=DocumentStatus.created)
-    analysis_version: str | None = None
 
 
 class DocumentListResponse(BaseModel):
