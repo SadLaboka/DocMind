@@ -7,6 +7,6 @@ T = TypeVar("T", bound=BaseRepository)
 
 
 class BaseService[T]:
-    def __init__(self, repository: T, mongo_repository: MongoDocumentRepository):
+    def __init__(self, repository: T, mongo_repository: MongoDocumentRepository | None = None):
         self.repository = repository
         self.mongo_repository = mongo_repository
