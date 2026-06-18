@@ -30,10 +30,10 @@ migrate-new:
 	poetry run alembic revision --autogenerate -m "$(m)"
 
 migrate-new-local:
-	ALEMBIC_FORCE_LOCAL_HOST=true poetry run alembic revision --autogenerate -m "$(m)"
+	poetry run python scripts/migrate_local.py revision --autogenerate -m "$(m)"
 
 migrate-up-local:
-	ALEMBIC_FORCE_LOCAL_HOST=true poetry run alembic upgrade head
+	poetry run python scripts/migrate_local.py upgrade head
 
 # Development
 lint:
