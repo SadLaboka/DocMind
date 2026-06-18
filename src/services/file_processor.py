@@ -137,7 +137,7 @@ class UploadService(BaseService[DocumentRepository]):
                 },
             ) from err
 
-        document, is_duplicate = await self._create_document_with_deduplication(
+        document, is_duplicate, needs_extraction = await self._create_document_with_deduplication(
             file_hash=file_hash,
             temp_path=temp_path,
             temp_filename=temp_filename,
@@ -153,9 +153,10 @@ class UploadService(BaseService[DocumentRepository]):
             document_id=document.id,
             status=document.document_status.value,
             is_duplicate=is_duplicate,
+            needs_extraction=needs_extraction,
         )
 
-        if not is_duplicate:
+        if needs_extraction:
             celery_task = await self._send_to_queue_for_extraction(
                 document_id=document.id,
                 temp_path=temp_path,
@@ -175,8 +176,10 @@ class UploadService(BaseService[DocumentRepository]):
         description: str | None,
         file_size: int,
         temp_path: Path,
-    ) -> Document:
-        """Creates a duplicate document from the existing document-data and remove temp-file"""
+    ) -> tuple[Document, bool]:
+        """Creates a duplicate document from the existing document-data and
+        Returns: (document, content_was_copied)
+        """
         data = DocumentData(
             filename=sanitized_filename,
             user_id=user_id,
@@ -185,17 +188,53 @@ class UploadService(BaseService[DocumentRepository]):
             file_size=file_size,
             temp_filename=existing_doc.temp_filename,
             file_hash=existing_doc.file_hash,
-            document_status=existing_doc.document_status,
-            document_text=existing_doc.document_text,
-            analysis=existing_doc.analysis,
-            analysis_version=existing_doc.analysis_version,
+            document_status=existing_doc.document_status
         )
 
         document = await self.repository.create_document(data)
 
-        self._remove_from_temp(temp_path)
+        content_was_copied = False
+        try:
+            new_doc = await self.mongo_repository.create_duplicate_content(existing_doc.id, document.id)
+            if new_doc:
+                content_was_copied = True
+                self._remove_from_temp(temp_path)
+            else:
+                # Content was not found in mongo. Don't remove temp_path for extraction in future
+                logger.warning(
+                    "duplicate_content_not_found_in_mongo",
+                    existing_document_id=existing_doc.id,
+                    new_document_id=document.id,
+                    reason="original_content_missing",
+                )
 
-        return document
+                try:
+                    await self.mongo_repository.create_content(document.id)
+                except Exception as mongo_err:
+                    logger.error(
+                        "mongo_create_empty_error",
+                        document_id=document.id,
+                        error=str(mongo_err),
+                    )
+
+        except Exception as err:
+            # Mongo connection error. Don't remove temp_path for extraction
+            logger.error(
+                "mongo_connection_error",
+                document_id=document.id,
+                error=str(err),
+            )
+
+            try:
+                await self.mongo_repository.create_content(document.id)
+            except Exception as mongo_err:
+                logger.error(
+                    "mongo_create_empty_error",
+                    document_id=document.id,
+                    error=str(mongo_err),
+                )
+
+        return document, content_was_copied
 
     async def _create_document_with_deduplication(
         self,
@@ -207,10 +246,12 @@ class UploadService(BaseService[DocumentRepository]):
         mime_type: MimeType,
         description: str | None,
         file_size: int,
-    ) -> tuple[Document, bool]:
+    ) -> tuple[Document, bool, bool]:
         """
         Creates document or returns existing duplicate
-        Returns: (document, is_duplicate)
+        Returns: (document, is_duplicate, needs_extraction)
+
+        needs_extraction is True if this is a new document or this is a duplicate without content in mongo
         """
         existing_doc = await self.repository.get_document_by_hash_and_active_status(file_hash)
         if existing_doc:
@@ -221,7 +262,7 @@ class UploadService(BaseService[DocumentRepository]):
                 existing_document_id=existing_doc.id,
                 original_status=existing_doc.document_status,
             )
-            doc = await self._create_duplicate_document(
+            doc, content_was_copied = await self._create_duplicate_document(
                 existing_doc=existing_doc,
                 user_id=user_id,
                 sanitized_filename=sanitized_filename,
@@ -230,7 +271,8 @@ class UploadService(BaseService[DocumentRepository]):
                 file_size=file_size,
                 temp_path=temp_path,
             )
-            return doc, True
+            needs_extraction = not content_was_copied
+            return doc, True, needs_extraction
 
         data = DocumentData(
             filename=sanitized_filename,
@@ -244,7 +286,7 @@ class UploadService(BaseService[DocumentRepository]):
 
         try:
             doc = await self.repository.create_document(data)
-            return doc, False
+            return doc, False, True
         except IntegrityError as err:
             existing_doc = await self.repository.get_document_by_hash_and_active_status(file_hash)
             if existing_doc:
@@ -255,7 +297,7 @@ class UploadService(BaseService[DocumentRepository]):
                     existing_document_id=existing_doc.id,
                     original_status=existing_doc.document_status,
                 )
-                doc = await self._create_duplicate_document(
+                doc, content_was_copied = await self._create_duplicate_document(
                     existing_doc=existing_doc,
                     user_id=user_id,
                     sanitized_filename=sanitized_filename,
@@ -264,7 +306,8 @@ class UploadService(BaseService[DocumentRepository]):
                     file_size=file_size,
                     temp_path=temp_path,
                 )
-                return doc, True
+                needs_extraction = not content_was_copied
+                return doc, True, needs_extraction
 
             raise BadRequestError(
                 error_code="storage_error",

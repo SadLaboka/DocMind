@@ -4,6 +4,7 @@ from pathlib import Path
 
 import structlog
 
+from src.core.mongo_database import init_mongo_for_worker
 from src.core.database import celery_session_factory
 from src.core.exceptions import ExtractionError
 from src.models.documents import DocumentStatus, MimeType
@@ -28,6 +29,8 @@ class DocumentExtractionTask:
         """Main task manager"""
         structlog.contextvars.bind_contextvars(request_id=self.request_id)
         logger.info("task_received_by_worker", document_id=self.document_id, mime_type=self.mime_type)
+
+        await init_mongo_for_worker()
 
         try:
             mime_enum = self._validate_mime_type()
@@ -112,14 +115,22 @@ class DocumentExtractionTask:
 
     async def _process_extraction(self, repo: DocumentRepository, mime_enum: MimeType) -> None:
         """Launch extraction logic"""
+        from src.repositories.mongo_documents import MongoDocumentRepository
+
+        mongo_repo = MongoDocumentRepository()
+
         try:
             start_time = time.perf_counter()
             text = self.extractor.extract(self.temp_path, mime_enum)
             duration_ms = round((time.perf_counter() - start_time) * 1000, 2)
 
+            await mongo_repo.create_content(
+                document_id=self.document_id,
+                raw_text=text,
+            )
+
             await repo.update_document_fields(
                 document_id=self.document_id,
-                document_text=text,
                 document_status=DocumentStatus.extracted,
                 temp_filename=None,
             )

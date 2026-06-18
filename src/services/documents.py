@@ -2,6 +2,7 @@ from pathlib import Path
 
 import structlog
 
+from src.models.mongo_documents import MongoDocument
 from src.core.config import settings
 from src.core.enums import DocumentStatus
 from src.core.exceptions import ResourceNotFoundError
@@ -29,7 +30,38 @@ class DocumentService(BaseService[DocumentRepository]):
             filename=document.filename,
         )
 
-        return DocumentResponse.model_validate(document)
+        response = DocumentResponse.model_validate(document)
+
+        try:
+            doc_content = await self._get_document_content(document.id)
+        except Exception as err:
+            logger.error(
+                "mongo_connection_error",
+                document_id=document.id,
+                error=str(err),
+            )
+            doc_content = None
+
+        if doc_content:
+            logger.info(
+                "document_content_retrieved",
+                document_id=document.id,
+                user_id=user.id,
+            )
+
+            response.document_text = doc_content.raw_text
+            response.analysis = doc_content.analysis
+            response.analysis_version = doc_content.analysis_version
+
+        else:
+            logger.info(
+                "document_content_not_found",
+                document_id=document.id,
+                user_id=user.id,
+            )
+
+
+        return response
 
     async def get_document_list(self, user: User, page: int, limit: int) -> DocumentListResponse:
         """Gets a list of documents from the database by user_id, constructs pagination and returns it"""
@@ -121,3 +153,7 @@ class DocumentService(BaseService[DocumentRepository]):
             )
 
         return document
+
+    async def _get_document_content(self, document_id: int) -> MongoDocument | None:
+        """Gets a document content from mongo database"""
+        return await self.mongo_repository.get_content(document_id)

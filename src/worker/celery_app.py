@@ -28,3 +28,4 @@ def configure_logging(**kwargs):
     logging.getLogger("amqp").setLevel(logging.WARNING)
     logging.getLogger("celery.app.trace").setLevel(logging.WARNING)
     logging.getLogger("celery.worker.job").setLevel(logging.WARNING)
+
