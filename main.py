@@ -7,11 +7,11 @@ from src.api.auth import router as auth_router
 from src.api.documents import router as documents_router
 from src.api.users import router as users_router
 from src.core.config import settings
-from src.core.mongo_database import init_mongo_db
 from src.core.exception_handlers import app_base_error_handler, exception_handler, request_validation_error_handler
 from src.core.exceptions import AppBaseError
 from src.core.logging_config import setup_logging
 from src.core.middleware import Middleware
+from src.core.mongo_database import init_mongo_db
 
 setup_logging()
 app = FastAPI(

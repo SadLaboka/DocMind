@@ -48,13 +48,13 @@ async def test_get_document_success(
 
 @pytest.mark.asyncio
 async def test_get_document_success_admin(
-        client: AsyncClient,
-        test_password,
-        create_document,
-        create_user,
-        create_token_pair,
-        test_db_session,
-        mock_mongo_content
+    client: AsyncClient,
+    test_password,
+    create_document,
+    create_user,
+    create_token_pair,
+    test_db_session,
+    mock_mongo_content,
 ):
     _, hashed_pw = test_password
 

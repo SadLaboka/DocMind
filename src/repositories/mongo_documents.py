@@ -1,21 +1,19 @@
 import datetime
+
 from src.models.mongo_documents import MongoDocument
 
 
 class MongoDocumentRepository:
 
     async def create_content(
-            self,
-            document_id: int,
-            raw_text: str | None = None,
-            analysis: dict | None = None,
-            analysis_version: str | None = None
+        self,
+        document_id: int,
+        raw_text: str | None = None,
+        analysis: dict | None = None,
+        analysis_version: str | None = None,
     ) -> MongoDocument:
         document_content = MongoDocument(
-            document_id=document_id,
-            raw_text=raw_text,
-            analysis=analysis,
-            analysis_version=analysis_version
+            document_id=document_id, raw_text=raw_text, analysis=analysis, analysis_version=analysis_version
         )
 
         await document_content.insert()
@@ -32,7 +30,7 @@ class MongoDocumentRepository:
                 document_id=new_doc_id,
                 raw_text=original_doc.raw_text,
                 analysis=original_doc.analysis,
-                analysis_version=original_doc.analysis_version
+                analysis_version=original_doc.analysis_version,
             )
             await new_doc.insert()
             return new_doc

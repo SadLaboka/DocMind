@@ -2,11 +2,11 @@ from pathlib import Path
 
 import structlog
 
-from src.models.mongo_documents import MongoDocument
 from src.core.config import settings
 from src.core.enums import DocumentStatus
 from src.core.exceptions import ResourceNotFoundError
 from src.models.documents import Document
+from src.models.mongo_documents import MongoDocument
 from src.repositories.documents import DocumentRepository
 from src.schemas.documents import DocumentListResponse, DocumentResponse
 from src.schemas.users import User
@@ -59,7 +59,6 @@ class DocumentService(BaseService[DocumentRepository]):
                 document_id=document.id,
                 user_id=user.id,
             )
-
 
         return response
 
@@ -156,4 +155,7 @@ class DocumentService(BaseService[DocumentRepository]):
 
     async def _get_document_content(self, document_id: int) -> MongoDocument | None:
         """Gets a document content from mongo database"""
+        if self.mongo_repository is None:
+            return None
+
         return await self.mongo_repository.get_content(document_id)

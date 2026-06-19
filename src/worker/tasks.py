@@ -4,14 +4,14 @@ from pathlib import Path
 
 import structlog
 
-from src.core.mongo_database import init_mongo_for_worker
 from src.core.database import celery_session_factory
 from src.core.exceptions import ExtractionError
+from src.core.mongo_database import init_mongo_for_worker
 from src.models.documents import DocumentStatus, MimeType
 from src.repositories.documents import DocumentRepository
+from src.repositories.mongo_documents import MongoDocumentRepository
 from src.services.extractors import TextExtractor
 from src.worker.celery_app import app as celery_app
-from src.repositories.mongo_documents import MongoDocumentRepository
 
 logger = structlog.get_logger(__name__)
 

@@ -6,8 +6,8 @@ from src.core.enums import DocumentStatus
 from src.core.exceptions import ExtractionError
 from src.worker.tasks import DocumentExtractionTask
 
-
 # FIXTURES
+
 
 @pytest.fixture
 def mock_celery_session():
@@ -42,12 +42,15 @@ def mock_init_mongo():
 
 @pytest.fixture
 def mock_path_operations():
-    with patch("pathlib.Path.exists", return_value=True) as mock_exists:
-        with patch("pathlib.Path.unlink") as mock_unlink:
-            yield mock_exists, mock_unlink
+    with (
+        patch("pathlib.Path.exists", return_value=True) as mock_exists,
+        patch("pathlib.Path.unlink") as mock_unlink,
+    ):
+        yield mock_exists, mock_unlink
 
 
 # TESTS
+
 
 @pytest.mark.asyncio
 async def test_execute_success(mock_celery_session, mock_repo, mock_mongo_repo, mock_init_mongo, mock_path_operations):
@@ -55,10 +58,7 @@ async def test_execute_success(mock_celery_session, mock_repo, mock_mongo_repo, 
 
     with patch("src.worker.tasks.TextExtractor.extract", return_value="Mocked extracted text"):
         task = DocumentExtractionTask(
-            document_id=1,
-            temp_path="/tmp/test.txt",
-            mime_type="text/plain",
-            request_id="req-123"
+            document_id=1, temp_path="/tmp/test.txt", mime_type="text/plain", request_id="req-123"
         )
 
         await task.execute()
@@ -79,11 +79,7 @@ async def test_execute_success(mock_celery_session, mock_repo, mock_mongo_repo, 
 
 @pytest.mark.asyncio
 async def test_execute_document_already_cancelled(
-        mock_celery_session,
-        mock_mongo_repo,
-        mock_init_mongo,
-        mock_repo,
-        mock_path_operations
+    mock_celery_session, mock_mongo_repo, mock_init_mongo, mock_repo, mock_path_operations
 ):
     _, mock_unlink = mock_path_operations
 
@@ -91,10 +87,7 @@ async def test_execute_document_already_cancelled(
 
     with patch("src.worker.tasks.TextExtractor.extract") as mock_extract:
         task = DocumentExtractionTask(
-            document_id=1,
-            temp_path="/tmp/test.txt",
-            mime_type="text/plain",
-            request_id="req-123"
+            document_id=1, temp_path="/tmp/test.txt", mime_type="text/plain", request_id="req-123"
         )
 
         await task.execute()
@@ -110,25 +103,15 @@ async def test_execute_document_already_cancelled(
 
 @pytest.mark.asyncio
 async def test_process_extraction_hard_fail(
-        mock_celery_session,
-        mock_repo,
-        mock_mongo_repo,
-        mock_init_mongo,
-        mock_path_operations
+    mock_celery_session, mock_repo, mock_mongo_repo, mock_init_mongo, mock_path_operations
 ):
     _, mock_unlink = mock_path_operations
 
-    mock_error = ExtractionError(
-        error_code="invalid_file",
-        log_context={"detail": "bad pdf structure"}
-    )
+    mock_error = ExtractionError(error_code="invalid_file", log_context={"detail": "bad pdf structure"})
 
     with patch("src.worker.tasks.TextExtractor.extract", side_effect=mock_error):
         task = DocumentExtractionTask(
-            document_id=1,
-            temp_path="/tmp/bad.pdf",
-            mime_type="application/pdf",
-            request_id="req-123"
+            document_id=1, temp_path="/tmp/bad.pdf", mime_type="application/pdf", request_id="req-123"
         )
 
         await task.execute()
@@ -146,19 +129,13 @@ async def test_process_extraction_hard_fail(
 
 @pytest.mark.asyncio
 async def test_process_extraction_soft_fail(
-        mock_celery_session,
-        mock_repo,
-        mock_mongo_repo,
-        mock_init_mongo,
-        mock_path_operations):
+    mock_celery_session, mock_repo, mock_mongo_repo, mock_init_mongo, mock_path_operations
+):
     _, mock_unlink = mock_path_operations
 
     with patch("src.worker.tasks.TextExtractor.extract", side_effect=RuntimeError("Connection lost")):
         task = DocumentExtractionTask(
-            document_id=1,
-            temp_path="/tmp/test.txt",
-            mime_type="text/plain",
-            request_id="req-123"
+            document_id=1, temp_path="/tmp/test.txt", mime_type="text/plain", request_id="req-123"
         )
 
         with pytest.raises(RuntimeError, match="Connection lost"):
@@ -177,8 +154,7 @@ async def test_update_status_after_failure(mock_celery_session, mock_repo):
     mock_repo.get_document_by_id.return_value = MagicMock(document_status=DocumentStatus.extracting)
 
     await DocumentExtractionTask._update_status_after_failure(
-        document_id=1,
-        error_detail="Task failed after 3 retries: Connection lost"
+        document_id=1, error_detail="Task failed after 3 retries: Connection lost"
     )
 
     mock_repo.update_document_fields.assert_called_once_with(

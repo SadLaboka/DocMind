@@ -2,18 +2,16 @@ from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import AsyncMock
 
-from pydantic import BaseModel
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from main import app
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     create_async_engine,
 )
 
-from src.models.mongo_documents import MongoDocument
-from src.repositories.mongo_documents import MongoDocumentRepository
 from src.core.config import settings
 from src.core.database import get_session
 from src.core.enums import DocumentStatus, MimeType
@@ -21,6 +19,7 @@ from src.core.jwt import JWTManager
 from src.core.security import get_password_hash
 from src.DependencyInjection.auth import get_jwt_manager
 from src.DependencyInjection.documents import get_mongo_document_repository
+from src.repositories.mongo_documents import MongoDocumentRepository
 
 TEST_DB_URL = settings.db.url
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
@@ -200,7 +199,7 @@ def create_token_pair(create_user, test_db_session):
         expired: bool = False,
         is_admin: bool = False,
     ):
-        from datetime import datetime, timedelta
+        from datetime import timedelta
 
         import jwt
 

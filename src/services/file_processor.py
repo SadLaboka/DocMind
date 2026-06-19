@@ -188,10 +188,14 @@ class UploadService(BaseService[DocumentRepository]):
             file_size=file_size,
             temp_filename=existing_doc.temp_filename,
             file_hash=existing_doc.file_hash,
-            document_status=existing_doc.document_status
+            document_status=existing_doc.document_status,
         )
 
         document = await self.repository.create_document(data)
+
+        if self.mongo_repository is None:
+            logger.error("mongo_repository_not_available", document_id=document.id)
+            return document, False
 
         content_was_copied = False
         try:

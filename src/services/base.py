@@ -1,7 +1,7 @@
 from typing import TypeVar
 
-from src.repositories.mongo_documents import MongoDocumentRepository
 from src.repositories.base import BaseRepository
+from src.repositories.mongo_documents import MongoDocumentRepository
 
 T = TypeVar("T", bound=BaseRepository)
 
