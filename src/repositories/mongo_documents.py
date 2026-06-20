@@ -1,5 +1,7 @@
 import datetime
 
+from pymongo.errors import DuplicateKeyError
+
 from src.models.mongo_documents import MongoDocument
 
 
@@ -16,7 +18,10 @@ class MongoDocumentRepository:
             document_id=document_id, raw_text=raw_text, analysis=analysis, analysis_version=analysis_version
         )
 
-        await document_content.insert()
+        try:
+            await document_content.insert()
+        except DuplicateKeyError:
+            pass
 
         return document_content
 
