@@ -2,14 +2,12 @@ from kombu import Queue, Connection, Exchange
 from src.core.config import settings
 from src.events.schemas import DocumentTextExtractedEvent
 
-ROUTING_KEY = "documents.text.extracted"
-
 document_exchange = Exchange(settings.rabbit.document_exchange_name, type='direct')
 
 document_text_extracted_queue = Queue(
-    ROUTING_KEY,
+    settings.rabbit.extracted_routing_key,
     exchange=document_exchange,
-    routing_key=ROUTING_KEY,
+    routing_key=settings.rabbit.extracted_routing_key,
 )
 
 
@@ -35,6 +33,6 @@ def publish_document_text_extracted(
         producer.publish(
             event.model_dump(),
             exchange=document_exchange,
-            routing_key=ROUTING_KEY,
+            routing_key=settings.rabbit.extracted_routing_key,
             declare=[document_text_extracted_queue],
         )
