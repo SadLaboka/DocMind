@@ -12,6 +12,7 @@ from src.repositories.documents import DocumentRepository
 from src.repositories.mongo_documents import MongoDocumentRepository
 from src.services.extractors import TextExtractor
 from src.worker.celery_app import app as celery_app
+from src.events.publisher import publish_document_text_extracted
 
 logger = structlog.get_logger(__name__)
 
@@ -19,12 +20,13 @@ logger = structlog.get_logger(__name__)
 class DocumentExtractionTask:
     """Celery task to extract text from document"""
 
-    def __init__(self, document_id: int, temp_path: str, mime_type: str, request_id: str) -> None:
+    def __init__(self, document_id: int, temp_path: str, user_id: int, mime_type: str, request_id: str) -> None:
         self.document_id = document_id
         self.temp_path = Path(temp_path)
         self.mime_type = mime_type
         self.request_id = request_id
         self.extractor = TextExtractor()
+        self.user_id = user_id
 
     async def execute(self) -> None:
         """Main task manager"""
@@ -55,8 +57,7 @@ class DocumentExtractionTask:
 
             await self._process_extraction(repo, mime_enum)
 
-    @staticmethod
-    def _on_task_failure(exc, task_id, args, kwargs, _einfo) -> None:
+    def _on_task_failure(self, exc, task_id, args, kwargs, _einfo) -> None:
         """
         Celery callback for on_failure
         Called after all retries have been exhausted
@@ -68,6 +69,7 @@ class DocumentExtractionTask:
                 "task_final_failure",
                 document_id=document_id,
                 task_id=task_id,
+                user_id=kwargs.get("user_id"),
                 error_detail=str(exc),
             )
             asyncio.run(DocumentExtractionTask._update_status_after_failure(document_id, str(exc)))
@@ -89,7 +91,12 @@ class DocumentExtractionTask:
     def _validate_mime_type(self) -> MimeType:
         """Validates mime type"""
         if not self.mime_type:
-            logger.error("task_invalid_mime", document_id=self.document_id, reason="empty_mime_type")
+            logger.error(
+                "task_invalid_mime",
+                document_id=self.document_id,
+                user_id=self.user_id,
+                reason="empty_mime_type"
+            )
             self._cleanup_file()
             raise ValueError(f"mime_type is required for document {self.document_id}")
 
@@ -100,6 +107,7 @@ class DocumentExtractionTask:
                 "task_invalid_mime",
                 document_id=self.document_id,
                 reason="unsupported_mime",
+                user_id=self.user_id,
                 mime_type=self.mime_type,
             )
             self._cleanup_file()
@@ -138,8 +146,24 @@ class DocumentExtractionTask:
             logger.info(
                 "text_extraction_completed",
                 document_id=self.document_id,
+                request_id=self.request_id,
+                user_id=self.user_id,
                 duration_ms=duration_ms,
                 text_length=len(text),
+            )
+
+            publish_document_text_extracted(
+                document_id=self.document_id,
+                user_id=self.user_id,
+                mime_type=self.mime_type,
+                request_id=self.request_id,
+            )
+
+            logger.info(
+                "document_text_extracted_event_published",
+                document_id=self.document_id,
+                user_id=self.user_id,
+                request_id=self.request_id,
             )
 
             self._cleanup_file()
@@ -155,6 +179,7 @@ class DocumentExtractionTask:
                 logger.error(
                     "document_deleted_during_processing",
                     document_id=self.document_id,
+                    user_id=self.user_id,
                     error_code=err.error_code,
                     error_detail=str(err.log_context),
                 )
@@ -168,6 +193,7 @@ class DocumentExtractionTask:
                 logger.error(
                     "text_extraction_failed",
                     document_id=self.document_id,
+                    user_id=self.user_id,
                     error_code=err.error_code,
                     error_detail=str(err.log_context),
                 )
@@ -177,6 +203,7 @@ class DocumentExtractionTask:
             logger.error(
                 "transient_extraction_error",
                 document_id=self.document_id,
+                user_id=self.user_id,
                 error_detail=str(err),
                 exc_info=True,
             )
@@ -197,7 +224,7 @@ class DocumentExtractionTask:
     task_acks_late=True,
     on_failure=DocumentExtractionTask._on_task_failure,
 )
-def extract_text_task(document_id: int, temp_path: str, mime_type: str, request_id: str) -> None:
+def extract_text_task(document_id: int, temp_path: str, mime_type: str, user_id: int, request_id: str) -> None:
     """Runs a text extraction task async"""
-    task = DocumentExtractionTask(document_id, temp_path, mime_type, request_id)
+    task = DocumentExtractionTask(document_id, temp_path, user_id, mime_type, request_id)
     asyncio.run(task.execute())

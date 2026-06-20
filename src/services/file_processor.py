@@ -121,6 +121,7 @@ class UploadService(BaseService[DocumentRepository]):
                 "file_saved_to_disk",
                 filename=sanitized_filename,
                 file_size=file_size,
+                user_id=user_id,
                 duration_ms=duration_ms,
                 file_hash=file_hash[:16],
             )
@@ -152,6 +153,7 @@ class UploadService(BaseService[DocumentRepository]):
             "document_saved_to_db",
             document_id=document.id,
             status=document.document_status.value,
+            user_id=user_id,
             is_duplicate=is_duplicate,
             needs_extraction=needs_extraction,
         )
@@ -160,6 +162,7 @@ class UploadService(BaseService[DocumentRepository]):
             celery_task = await self._send_to_queue_for_extraction(
                 document_id=document.id,
                 temp_path=temp_path,
+                user_id=user_id,
                 mime_type=mime_type.value,
                 request_id=request_id,
             )
@@ -209,6 +212,7 @@ class UploadService(BaseService[DocumentRepository]):
                     "duplicate_content_not_found_in_mongo",
                     existing_document_id=existing_doc.id,
                     new_document_id=document.id,
+                    user_id=user_id,
                     reason="original_content_missing",
                 )
 
@@ -218,6 +222,7 @@ class UploadService(BaseService[DocumentRepository]):
                     logger.error(
                         "mongo_create_empty_error",
                         document_id=document.id,
+                        user_id=user_id,
                         error=str(mongo_err),
                     )
 
@@ -226,6 +231,7 @@ class UploadService(BaseService[DocumentRepository]):
             logger.error(
                 "mongo_connection_error",
                 document_id=document.id,
+                user_id=user_id,
                 error=str(err),
             )
 
@@ -235,6 +241,7 @@ class UploadService(BaseService[DocumentRepository]):
                 logger.error(
                     "mongo_create_empty_error",
                     document_id=document.id,
+                    user_id=user_id,
                     error=str(mongo_err),
                 )
 
@@ -298,6 +305,7 @@ class UploadService(BaseService[DocumentRepository]):
                     "document_found_after_race",
                     filename=sanitized_filename,
                     file_hash=file_hash[:16],
+                    user_id=user_id,
                     existing_document_id=existing_doc.id,
                     original_status=existing_doc.document_status,
                 )
@@ -368,7 +376,7 @@ class UploadService(BaseService[DocumentRepository]):
 
         detected_mime = self._detect_mime(uploaded_file)
         file_extension = Path(uploaded_file.filename).suffix.lower()
-        mime_type = self._validate_mime_type(detected_mime, file_extension)
+        mime_type = self._validate_mime_type(detected_mime, file_extension, user_id)
 
         temp_filename = self._get_temp_filename(file_extension)
         sanitized_filename = self._sanitize_filename(uploaded_file.filename)
@@ -376,7 +384,7 @@ class UploadService(BaseService[DocumentRepository]):
         return sanitized_filename, mime_type, file_size, temp_filename
 
     @staticmethod
-    def _validate_mime_type(detected_mime: str | None, file_extension: str) -> MimeType:
+    def _validate_mime_type(detected_mime: str | None, file_extension: str, user_id: int) -> MimeType:
         """Validates and returns MimeType enum"""
         if detected_mime is not None and detected_mime in ALLOWED_MIME_VALUES:
             return MimeType(detected_mime)
@@ -387,6 +395,7 @@ class UploadService(BaseService[DocumentRepository]):
                 log_context={
                     "event_name": "document_upload_rejected",
                     "reason": "invalid mime type",
+                    "user_id": user_id,
                     "mime_type": detected_mime,
                 },
             )
@@ -399,13 +408,14 @@ class UploadService(BaseService[DocumentRepository]):
                 log_context={
                     "event_name": "document_upload_rejected",
                     "reason": "unknown mime type",
+                    "user_id": user_id,
                     "mime_type": detected_mime,
                 },
             )
 
     @staticmethod
     async def _send_to_queue_for_extraction(
-        document_id: int, temp_path: Path, mime_type: str, request_id: str
+        document_id: int, temp_path: Path, mime_type: str, request_id: str, user_id: int
     ) -> AsyncResult:
         """Adds a text extraction task to the queue and returns the task object"""
         return await asyncio.to_thread(
@@ -413,6 +423,7 @@ class UploadService(BaseService[DocumentRepository]):
             document_id=document_id,
             temp_path=str(temp_path),
             mime_type=mime_type,
+            user_id=user_id,
             request_id=request_id,
         )
 
