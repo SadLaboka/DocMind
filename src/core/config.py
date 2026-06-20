@@ -70,6 +70,7 @@ class RabbitSettings(SettingsBase):
     panel_port: int = 15671
     user: str = "guest"
     password: str = ""
+    document_exchange_name: str = "documents"
 
     @property
     def url(self) -> str:
