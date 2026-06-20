@@ -41,6 +41,12 @@ def mock_init_mongo():
 
 
 @pytest.fixture
+def mock_publisher():
+    with patch("src.worker.tasks.publish_document_text_extracted") as mock_pub:
+        yield mock_pub
+
+
+@pytest.fixture
 def mock_path_operations():
     with (
         patch("pathlib.Path.exists", return_value=True) as mock_exists,
@@ -53,12 +59,19 @@ def mock_path_operations():
 
 
 @pytest.mark.asyncio
-async def test_execute_success(mock_celery_session, mock_repo, mock_mongo_repo, mock_init_mongo, mock_path_operations):
+async def test_execute_success(
+        mock_celery_session,
+        mock_repo,
+        mock_mongo_repo,
+        mock_init_mongo,
+        mock_publisher,
+        mock_path_operations
+):
     _, mock_unlink = mock_path_operations
 
     with patch("src.worker.tasks.TextExtractor.extract", return_value="Mocked extracted text"):
         task = DocumentExtractionTask(
-            document_id=1, temp_path="/tmp/test.txt", mime_type="text/plain", request_id="req-123"
+            document_id=1, temp_path="/tmp/test.txt", user_id=1, mime_type="text/plain", request_id="req-123"
         )
 
         await task.execute()
@@ -74,6 +87,13 @@ async def test_execute_success(mock_celery_session, mock_repo, mock_mongo_repo, 
             temp_filename=None,
         )
 
+        mock_publisher.assert_called_once_with(
+            document_id=1,
+            user_id=1,
+            mime_type="text/plain",
+            request_id="req-123",
+        )
+
         mock_unlink.assert_called_with(missing_ok=True)
 
 
@@ -87,7 +107,7 @@ async def test_execute_document_already_cancelled(
 
     with patch("src.worker.tasks.TextExtractor.extract") as mock_extract:
         task = DocumentExtractionTask(
-            document_id=1, temp_path="/tmp/test.txt", mime_type="text/plain", request_id="req-123"
+            document_id=1, temp_path="/tmp/test.txt", user_id=1, mime_type="text/plain", request_id="req-123"
         )
 
         await task.execute()
@@ -111,7 +131,7 @@ async def test_process_extraction_hard_fail(
 
     with patch("src.worker.tasks.TextExtractor.extract", side_effect=mock_error):
         task = DocumentExtractionTask(
-            document_id=1, temp_path="/tmp/bad.pdf", mime_type="application/pdf", request_id="req-123"
+            document_id=1, temp_path="/tmp/bad.pdf", user_id=1, mime_type="application/pdf", request_id="req-123"
         )
 
         await task.execute()
@@ -135,7 +155,7 @@ async def test_process_extraction_soft_fail(
 
     with patch("src.worker.tasks.TextExtractor.extract", side_effect=RuntimeError("Connection lost")):
         task = DocumentExtractionTask(
-            document_id=1, temp_path="/tmp/test.txt", mime_type="text/plain", request_id="req-123"
+            document_id=1, temp_path="/tmp/test.txt", user_id=1, mime_type="text/plain", request_id="req-123"
         )
 
         with pytest.raises(RuntimeError, match="Connection lost"):
