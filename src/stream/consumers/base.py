@@ -31,7 +31,7 @@ class BaseConsumer(ABC):
                 error_code="invalid_event_schema",
                 error_detail=str(e),
                 queue=queue_name,
-                rettry_count=retry_count,
+                retry_count=retry_count,
                 raw_data=raw_message,
             )
             return
@@ -42,7 +42,7 @@ class BaseConsumer(ABC):
             "consumer_processing_started",
             event_type=event_model.__name__,
             queue=queue_name,
-            rettry_count=retry_count,
+            retry_count=retry_count,
             **log_context,
         )
 
@@ -53,7 +53,7 @@ class BaseConsumer(ABC):
                 "consumer_processing_completed",
                 event_type=event_model.__name__,
                 queue=queue_name,
-                rettry_count=retry_count,
+                retry_count=retry_count,
                 **log_context,
             )
 
