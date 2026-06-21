@@ -94,6 +94,13 @@ class MongoSettings(SettingsBase):
         return f"mongodb://{self.username}:{self.password}@{self.host}:{self.port}/{self.name}?authSource=admin"
 
 
+class InitialPromptSettings(SettingsBase):
+    model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="PROMPT_")
+
+    initial_content: str = "base prompt"
+    initial_version: str = "v1.0.0"
+
+
 class Settings(BaseSettings):
     db: DatabaseSettings = Field(default_factory=DatabaseSettings)
     jwt: JWTSettings = Field(default_factory=JWTSettings)
@@ -101,6 +108,7 @@ class Settings(BaseSettings):
     server: ServerSettings = Field(default_factory=ServerSettings)
     rabbit: RabbitSettings = Field(default_factory=RabbitSettings)
     mongo: MongoSettings = Field(default_factory=MongoSettings)
+    prompt: InitialPromptSettings = Field(default_factory=InitialPromptSettings)
 
     app_name: str = APP_NAME
     app_version: str = APP_VERSION
