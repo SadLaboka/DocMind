@@ -145,6 +145,11 @@ def setup_logging() -> None:
                     "handlers": ["default"],
                     "propagate": False,
                 },
+                "faststream": {
+                    "level": 50,
+                    "handlers": ["default"],
+                    "propagate": False,
+                },
             },
         }
     )
