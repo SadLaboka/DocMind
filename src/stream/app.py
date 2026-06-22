@@ -1,3 +1,5 @@
+import aio_pika
+from aio_pika.abc import AbstractRobustConnection
 from faststream import FastStream
 from faststream.rabbit import RabbitBroker, RabbitExchange, ExchangeType, RabbitQueue
 from faststream.rabbit.schemas.queue import ClassicQueueArgs
@@ -16,13 +18,6 @@ broker.add_middleware(RetryLoggingMiddleware)
 
 app = FastStream(broker)
 
-
-@app.on_startup
-async def on_startup():
-    setup_logging()
-
-    await init_mongo_for_worker()
-
 main_queue_name = settings.rabbit.extracted_routing_key
 dead_letter_exchange = settings.rabbit.document_exchange_name + ".dlx"
 retry_name = settings.rabbit.extracted_routing_key + ".retry"
@@ -40,20 +35,11 @@ main_queue = RabbitQueue(
     arguments=main_queue_args,
 )
 
-retry_queue_args: ClassicQueueArgs = {
+retry_queue_args = {
     "x-dead-letter-exchange": settings.rabbit.document_exchange_name,
     "x-dead-letter-routing-key": main_queue_name,
+    "x-message-ttl": 60000,
 }
-retry_queue = RabbitQueue(
-    name=retry_name,
-    routing_key=retry_name,
-    arguments=retry_queue_args,
-)
-
-dlq_queue = RabbitQueue(
-    name=dlq_name,
-    routing_key=dlq_name,
-)
 
 llm_service = GeminiLLMService(
     api_key=settings.gemini.api_key,
@@ -69,4 +55,38 @@ analysis_consumer = DocumentAnalysisConsumer(
     prompt_repo=prompt_repo,
 )
 
-broker.subscriber(queue=main_queue, exchange=documents_exchange)(analysis_consumer)
+
+@app.on_startup
+async def on_startup():
+    """Setup FastStream on startup"""
+    setup_logging()
+
+    await init_mongo_for_worker()
+
+    connection: AbstractRobustConnection = await aio_pika.connect_robust(settings.rabbit.url)
+    async with connection:
+        channel = await connection.channel()
+
+        dlx_exchange = await channel.declare_exchange(
+            dead_letter_exchange,
+            aio_pika.ExchangeType.DIRECT,
+            durable=True,
+        )
+
+        retry_queue=await channel.declare_queue(
+            retry_name,
+            durable=True,
+            arguments=retry_queue_args
+        )
+        await retry_queue.bind(dlx_exchange, routing_key=settings.rabbit.extracted_routing_key + ".retry")
+
+        await channel.declare_queue(
+            dlq_name,
+            durable=True,
+        )
+
+
+@broker.subscriber(queue=main_queue, exchange=documents_exchange)
+async def handle_document_analysis(message: dict) -> None:
+    """FastStream entrypoint for document analysis"""
+    await analysis_consumer(message)
