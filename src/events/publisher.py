@@ -4,10 +4,16 @@ from src.events.schemas import DocumentTextExtractedEvent
 
 document_exchange = Exchange(settings.rabbit.document_exchange_name, type='direct')
 
+queue_arguments = {
+    'x-dead-letter-exchange': settings.rabbit.document_exchange_name + '.dlx',
+    'x-dead-letter-routing-key': settings.rabbit.extracted_routing_key + '.retry',
+}
+
 document_text_extracted_queue = Queue(
     settings.rabbit.extracted_routing_key,
     exchange=document_exchange,
     routing_key=settings.rabbit.extracted_routing_key,
+    queue_arguments=queue_arguments,
 )
 
 
