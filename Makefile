@@ -17,7 +17,7 @@ logs-all:
 	docker compose logs -f --no-log-prefix
 
 logs-app:
-	docker compose logs -f --no-log-prefix application worker
+	docker compose logs -f --no-log-prefix application worker seed-prompt stream
 
 # Migrations
 migrate-up:

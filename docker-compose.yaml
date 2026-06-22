@@ -31,6 +31,27 @@ services:
     networks:
       - DocMind_network
 
+  stream:
+    build: .
+    command: ["poetry", "run", "python", "run_stream.py"]
+    env_file:
+      - .env
+    environment:
+      - PYTHONPATH=/usr/src/app
+      - DB_HOST=main_db
+      - RABBITMQ_HOST=rabbitmq
+      - MONGO_HOST=mongo_db
+    restart: always
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      main_db:
+        condition: service_healthy
+      mongo_db:
+        condition: service_healthy
+    networks:
+      - DocMind_network
+
   rabbitmq:
     image: rabbitmq:3-management
     environment:
