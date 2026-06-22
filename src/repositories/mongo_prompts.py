@@ -9,7 +9,7 @@ class MongoPromptsRepository:
     async def get_prompt_by_version(self, prompt_version: str) -> Prompt | None:
         return await Prompt.find_one(Prompt.version == prompt_version)
 
-    async def create_prompt(self, version: str, prompt_type: str, content: str) -> Prompt | None:
+    async def create_prompt(self, version: str, prompt_type: str, content: str) -> Prompt:
         prompt_with_version = await self.get_prompt_by_version(version)
 
         if prompt_with_version:
