@@ -34,6 +34,7 @@ class BaseConsumer(ABC):
                 retry_count=retry_count,
                 raw_data=raw_message,
             )
+
             return
 
         log_context = self._extract_log_context(event)
@@ -71,6 +72,7 @@ class BaseConsumer(ABC):
                     retry_count=retry_count,
                     **log_context,
                 )
+
                 return
 
             if retry_count > MAX_RETRIES:
@@ -84,6 +86,7 @@ class BaseConsumer(ABC):
                     max_retries=MAX_RETRIES,
                     **log_context,
                 )
+
                 return
 
             logger.warning(
@@ -95,6 +98,7 @@ class BaseConsumer(ABC):
                     retry_count=retry_count,
                     **log_context,
                 )
+
             raise
 
     @abstractmethod
