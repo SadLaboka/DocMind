@@ -6,8 +6,11 @@ from src.core.config import settings
 from src.core.logging_config import setup_logging
 from src.core.mongo_database import init_mongo_for_worker
 from src.stream.middleware import RetryLoggingMiddleware
+from src.llm.gemini.service import GeminiLLMService
+from src.repositories.mongo_prompts import MongoPromptsRepository
+from src.stream.consumers.document_analysis import DocumentAnalysisConsumer
 
-broker = RabbitBroker(settings.rabbit.url)
+broker = RabbitBroker(settings.rabbit.url, logger=None)
 
 broker.add_middleware(RetryLoggingMiddleware)
 
@@ -26,7 +29,6 @@ retry_name = settings.rabbit.extracted_routing_key + ".retry"
 dlq_name = settings.rabbit.extracted_routing_key + ".dlq"
 
 documents_exchange = RabbitExchange(settings.rabbit.document_exchange_name, type=ExchangeType.DIRECT)
-dlx_exchange = RabbitExchange(dead_letter_exchange, type=ExchangeType.DIRECT)
 
 main_queue_args: ClassicQueueArgs = {
     "x-dead-letter-exchange": dead_letter_exchange,
@@ -52,3 +54,19 @@ dlq_queue = RabbitQueue(
     name=dlq_name,
     routing_key=dlq_name,
 )
+
+llm_service = GeminiLLMService(
+    api_key=settings.gemini.api_key,
+    model=settings.gemini.model,
+    timeout=settings.gemini.timeout,
+    max_tokens=settings.gemini.max_tokens,
+    temperature=settings.gemini.temperature,
+)
+prompt_repo = MongoPromptsRepository()
+
+analysis_consumer = DocumentAnalysisConsumer(
+    llm_service=llm_service,
+    prompt_repo=prompt_repo,
+)
+
+broker.subscriber(queue=main_queue, exchange=documents_exchange)(analysis_consumer)
