@@ -4,6 +4,7 @@ from beanie import init_beanie
 from pymongo import AsyncMongoClient
 from pymongo.errors import ConnectionFailure, DuplicateKeyError
 import structlog
+from pathlib import Path
 
 from src.core.config import settings
 from src.core.logging_config import setup_logging
@@ -14,7 +15,8 @@ logger = structlog.get_logger(__name__)
 
 INITIAL_PROMPT_VERSION = settings.prompt.initial_version
 INITIAL_PROMPT_TYPE = "document_analysis"
-INITIAL_PROMPT_CONTENT = settings.prompt.initial_content
+PROMPT_FILE_PATH = Path(__file__).parent / "prompts" / "v1_0_0.txt"
+INITIAL_PROMPT_CONTENT = PROMPT_FILE_PATH.read_text(encoding="utf-8").strip()
 
 
 async def init_mongo() -> AsyncMongoClient:
@@ -42,11 +44,20 @@ async def seed_prompt() -> None:
         )
         return
 
+    if "{text}" not in INITIAL_PROMPT_CONTENT:
+        logger.error(
+            "seed_prompt_invalid",
+            error_code="prompt_missing_placeholder",
+            error_detail="Prompt does not contain {text} placeholder",
+            version=INITIAL_PROMPT_VERSION,
+        )
+        sys.exit(1)
+
     try:
         await prompt_repo.create_prompt(
             version=INITIAL_PROMPT_VERSION,
             prompt_type=INITIAL_PROMPT_TYPE,
-            content=INITIAL_PROMPT_CONTENT.strip(),
+            content=INITIAL_PROMPT_CONTENT,
         )
         logger.info(
             "seed_prompt_created",

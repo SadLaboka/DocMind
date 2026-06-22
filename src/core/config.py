@@ -97,8 +97,17 @@ class MongoSettings(SettingsBase):
 class InitialPromptSettings(SettingsBase):
     model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="PROMPT_")
 
-    initial_content: str = "base prompt"
     initial_version: str = "v1.0.0"
+
+
+class GeminiSettings(SettingsBase):
+    model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="GEMINI_")
+
+    api_key: str
+    model: str = "gemini-2.0-flash"
+    timeout: float = 60.0
+    max_tokens: int = 4096
+    temperature: float = 0.2
 
 
 class Settings(BaseSettings):
@@ -109,6 +118,7 @@ class Settings(BaseSettings):
     rabbit: RabbitSettings = Field(default_factory=RabbitSettings)
     mongo: MongoSettings = Field(default_factory=MongoSettings)
     prompt: InitialPromptSettings = Field(default_factory=InitialPromptSettings)
+    gemini: GeminiSettings = Field(default_factory=GeminiSettings)
 
     app_name: str = APP_NAME
     app_version: str = APP_VERSION
