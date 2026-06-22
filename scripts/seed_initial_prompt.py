@@ -1,10 +1,11 @@
 import asyncio
 import sys
+from pathlib import Path
+
+import structlog
 from beanie import init_beanie
 from pymongo import AsyncMongoClient
 from pymongo.errors import ConnectionFailure, DuplicateKeyError
-import structlog
-from pathlib import Path
 
 from src.core.config import settings
 from src.core.logging_config import setup_logging

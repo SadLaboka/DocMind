@@ -1,16 +1,16 @@
 import aio_pika
 from aio_pika.abc import AbstractRobustConnection
 from faststream import FastStream
-from faststream.rabbit import RabbitBroker, RabbitExchange, ExchangeType, RabbitQueue
+from faststream.rabbit import ExchangeType, RabbitBroker, RabbitExchange, RabbitQueue
 from faststream.rabbit.schemas.queue import ClassicQueueArgs
 
 from src.core.config import settings
 from src.core.logging_config import setup_logging
 from src.core.mongo_database import init_mongo_for_worker
-from src.stream.middleware import RetryLoggingMiddleware
 from src.llm.gemini.service import GeminiLLMService
 from src.repositories.mongo_prompts import MongoPromptsRepository
 from src.stream.consumers.document_analysis import DocumentAnalysisConsumer
+from src.stream.middleware import RetryLoggingMiddleware
 
 broker = RabbitBroker(settings.rabbit.url, logger=None)
 
@@ -73,11 +73,7 @@ async def on_startup():
             durable=True,
         )
 
-        retry_queue=await channel.declare_queue(
-            retry_name,
-            durable=True,
-            arguments=retry_queue_args
-        )
+        retry_queue = await channel.declare_queue(retry_name, durable=True, arguments=retry_queue_args)
         await retry_queue.bind(dlx_exchange, routing_key=settings.rabbit.extracted_routing_key + ".retry")
 
         await channel.declare_queue(

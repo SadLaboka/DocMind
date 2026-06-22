@@ -7,12 +7,12 @@ import structlog
 from src.core.database import celery_session_factory
 from src.core.exceptions import ExtractionError
 from src.core.mongo_database import init_mongo_for_worker
+from src.events.publisher import publish_document_text_extracted
 from src.models.documents import DocumentStatus, MimeType
 from src.repositories.documents import DocumentRepository
 from src.repositories.mongo_documents import MongoDocumentRepository
 from src.services.extractors import TextExtractor
 from src.worker.celery_app import app as celery_app
-from src.events.publisher import publish_document_text_extracted
 
 logger = structlog.get_logger(__name__)
 
@@ -92,10 +92,7 @@ class DocumentExtractionTask:
         """Validates mime type"""
         if not self.mime_type:
             logger.error(
-                "task_invalid_mime",
-                document_id=self.document_id,
-                user_id=self.user_id,
-                reason="empty_mime_type"
+                "task_invalid_mime", document_id=self.document_id, user_id=self.user_id, reason="empty_mime_type"
             )
             self._cleanup_file()
             raise ValueError(f"mime_type is required for document {self.document_id}")

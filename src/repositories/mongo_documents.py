@@ -1,3 +1,4 @@
+import contextlib
 import datetime
 
 from pymongo.errors import DuplicateKeyError
@@ -18,10 +19,8 @@ class MongoDocumentRepository:
             document_id=document_id, raw_text=raw_text, analysis=analysis, analysis_version=analysis_version
         )
 
-        try:
+        with contextlib.suppress(DuplicateKeyError):
             await document_content.insert()
-        except DuplicateKeyError:
-            pass
 
         return document_content
 

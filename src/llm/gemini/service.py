@@ -1,13 +1,14 @@
 import asyncio
-import structlog
-from google.genai.types import GenerateContentConfig
-from google import genai
-from google.genai.errors import ServerError, ClientError
 
-from src.llm.exceptions import LLMException
-from src.llm.schemas import AnalysisResult
+import structlog
+from google import genai
+from google.genai.errors import ClientError, ServerError
+from google.genai.types import GenerateContentConfig
+
 from src.llm.base import BaseLLMService
+from src.llm.exceptions import LLMException
 from src.llm.gemini.mapper import GeminiMapper
+from src.llm.schemas import AnalysisResult
 
 logger = structlog.get_logger(__name__)
 
@@ -44,15 +45,17 @@ class GeminiLLMService(BaseLLMService):
                 contents=prompt_with_text,
                 config=config,
             )
-        except asyncio.TimeoutError:
-            raise LLMException(message="Request timeout", error_code="llm_timeout", retryable=True)
-        except ServerError:
-            raise LLMException(message="Provider error", error_code="llm_provider_error", retryable=True)
+        except TimeoutError as e:
+            raise LLMException(message="Request timeout", error_code="llm_timeout", retryable=True) from e
+        except ServerError as e:
+            raise LLMException(message="Provider error", error_code="llm_provider_error", retryable=True) from e
         except ClientError as e:
             if e.code == 429 or "RESOURCE_EXHAUSTED" in str(e):
-                raise LLMException(message="Rate limit exceeded", error_code="llm_rate_limit", retryable=True)
+                raise LLMException(message="Rate limit exceeded", error_code="llm_rate_limit", retryable=True) from e
 
-            raise LLMException(message=getattr(e, "message", str(e)), error_code="llm_config_error", retryable=False)
+            raise LLMException(
+                message=getattr(e, "message", str(e)), error_code="llm_config_error", retryable=False
+            ) from e
 
         if not raw_response:
             raise LLMException(
@@ -71,7 +74,7 @@ class GeminiLLMService(BaseLLMService):
                 contents=contents,
                 config=config,
             ),
-            timeout=self.timeout
+            timeout=self.timeout,
         )
 
         return response.text

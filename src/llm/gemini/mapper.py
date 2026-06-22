@@ -1,5 +1,6 @@
 import json
 import re
+
 from pydantic import ValidationError
 
 from src.llm.exceptions import LLMException
@@ -28,7 +29,7 @@ class GeminiMapper:
         last_brace = raw_text.rfind("}")
 
         if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
-            return raw_text[first_brace:last_brace + 1]
+            return raw_text[first_brace : last_brace + 1]
 
         raise LLMException(
             message="No JSON found in LLM response",
@@ -40,13 +41,13 @@ class GeminiMapper:
         """Parse json-structure from raw text"""
         try:
             return json.loads(json_str)
-        except json.decoder.JSONDecodeError:
-            raise LLMException(message="Invalid JSON", error_code="llm_validation_error", retryable=True)
+        except json.decoder.JSONDecodeError as e:
+            raise LLMException(message="Invalid JSON", error_code="llm_validation_error", retryable=True) from e
 
     def _validate_and_normalize(self, data: dict) -> AnalysisResult:
         """Validate and normalize json-structure"""
         try:
             normalized_data = {k.lower(): v for k, v in data.items()}
             return AnalysisResult.model_validate(normalized_data)
-        except ValidationError:
-            raise LLMException(message="Invalid structure", error_code="llm_validation_error", retryable=True)
+        except ValidationError as e:
+            raise LLMException(message="Invalid structure", error_code="llm_validation_error", retryable=True) from e

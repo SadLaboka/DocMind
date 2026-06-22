@@ -60,12 +60,7 @@ def mock_path_operations():
 
 @pytest.mark.asyncio
 async def test_execute_success(
-        mock_celery_session,
-        mock_repo,
-        mock_mongo_repo,
-        mock_init_mongo,
-        mock_publisher,
-        mock_path_operations
+    mock_celery_session, mock_repo, mock_mongo_repo, mock_init_mongo, mock_publisher, mock_path_operations
 ):
     _, mock_unlink = mock_path_operations
 

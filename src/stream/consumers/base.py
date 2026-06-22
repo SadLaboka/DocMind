@@ -1,21 +1,23 @@
 from abc import ABC, abstractmethod
+from typing import TypeVar
 
-from pydantic import BaseModel, ValidationError
 import structlog
+from pydantic import BaseModel, ValidationError
 
 logger = structlog.get_logger(__name__)
 
 MAX_RETRIES = 3
 
+T = TypeVar("T", bound=BaseModel)
 
-class BaseConsumer(ABC):
+
+class BaseConsumer[T: BaseModel](ABC):
     """Base class for FastStream consumers"""
 
     @staticmethod
     def _get_retry_count() -> int:
         """Extracts number of retry count from contextvars"""
         return structlog.contextvars.get_contextvars().get("retry_count", 0)
-
 
     async def __call__(self, raw_message: dict) -> None:
         """Entrypoint for FastStream"""
@@ -90,14 +92,14 @@ class BaseConsumer(ABC):
                 return
 
             logger.warning(
-                    "consumer_processing_error",
-                    error_code=getattr(e, "error_code", "processing_error"),
-                    error_detail=getattr(e, "message", str(e)),
-                    error_type=type(e).__name__,
-                    queue_name=queue_name,
-                    retry_count=retry_count,
-                    **log_context,
-                )
+                "consumer_processing_error",
+                error_code=getattr(e, "error_code", "processing_error"),
+                error_detail=getattr(e, "message", str(e)),
+                error_type=type(e).__name__,
+                queue_name=queue_name,
+                retry_count=retry_count,
+                **log_context,
+            )
 
             raise
 
@@ -107,7 +109,7 @@ class BaseConsumer(ABC):
 
     @abstractmethod
     def _get_event_model(self) -> type[BaseModel]:
-       """Returns pydantic model for validate"""
+        """Returns pydantic model for validate"""
 
     @abstractmethod
     def _get_queue_name(self) -> str:

@@ -18,13 +18,14 @@ PROMPT_TYPE = "document_analysis"
 
 class ConsumerError(Exception):
     """Exception for consumer errors"""
+
     def __init__(self, message: str, retryable: bool = True):
         self.message = message
         self.retryable = retryable
         super().__init__(message)
 
 
-class DocumentAnalysisConsumer(BaseConsumer):
+class DocumentAnalysisConsumer(BaseConsumer[DocumentTextExtractedEvent]):
     """FastStream consumer for analyzing extracted text"""
 
     def __init__(self, llm_service: BaseLLMService, prompt_repo: MongoPromptsRepository) -> None:
@@ -37,7 +38,7 @@ class DocumentAnalysisConsumer(BaseConsumer):
     def _get_queue_name(self) -> str:
         return settings.rabbit.extracted_routing_key
 
-    async def handle(self, event: DocumentTextExtractedEvent) -> None:
+    async def handle(self, event: DocumentTextExtractedEvent) -> None:  # type: ignore[override]
         """Main logic for analyzing extracted text"""
         document_id = event.document_id
         user_id = event.user_id

@@ -1,6 +1,6 @@
+import structlog
 from faststream import BaseMiddleware
 from faststream.rabbit import RabbitMessage
-import structlog
 
 logger = structlog.get_logger(__name__)
 
@@ -21,9 +21,9 @@ class RetryLoggingMiddleware(BaseMiddleware):
 
     def _get_retry_count(self, message: RabbitMessage) -> int:
         """Extracts retry count from message"""
-        if 'x-death' in message.headers:
-            x_death = message.headers['x-death']
+        if "x-death" in message.headers:
+            x_death = message.headers["x-death"]
             if isinstance(x_death, list) and len(x_death) > 0:
-                return x_death[0].get('count', 0)
+                return x_death[0].get("count", 0)
 
         return 0

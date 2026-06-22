@@ -1,10 +1,10 @@
-from src.models.mongo_prompts import Prompt
 from src.core.exceptions import ConflictError
+from src.models.mongo_prompts import Prompt
 
 
 class MongoPromptsRepository:
     async def get_active_prompt(self, prompt_type: str) -> Prompt | None:
-        return await Prompt.find_one(Prompt.prompt_type == prompt_type, Prompt.is_active == True)
+        return await Prompt.find_one(Prompt.prompt_type == prompt_type, Prompt.is_active == True)  # noqa: E712
 
     async def get_prompt_by_version(self, prompt_version: str) -> Prompt | None:
         return await Prompt.find_one(Prompt.version == prompt_version)
