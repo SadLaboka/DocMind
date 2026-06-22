@@ -1,4 +1,5 @@
 import asyncio
+import structlog
 from google.genai.types import GenerateContentConfig
 from google import genai
 from google.genai.errors import ServerError, ClientError
@@ -7,6 +8,8 @@ from src.llm.exceptions import LLMException
 from src.llm.schemas import AnalysisResult
 from src.llm.base import BaseLLMService
 from src.llm.gemini.mapper import GeminiMapper
+
+logger = structlog.get_logger(__name__)
 
 
 class GeminiLLMService(BaseLLMService):
@@ -49,7 +52,7 @@ class GeminiLLMService(BaseLLMService):
             if e.code == 429 or "RESOURCE_EXHAUSTED" in str(e):
                 raise LLMException(message="Rate limit exceeded", error_code="llm_rate_limit", retryable=True)
 
-            raise LLMException(message="Config error", error_code="llm_config_error", retryable=False)
+            raise LLMException(message=getattr(e, "message", str(e)), error_code="llm_config_error", retryable=False)
 
         if not raw_response:
             raise LLMException(
