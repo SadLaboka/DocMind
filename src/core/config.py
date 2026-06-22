@@ -103,7 +103,7 @@ class InitialPromptSettings(SettingsBase):
 class GeminiSettings(SettingsBase):
     model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="GEMINI_")
 
-    api_key: str
+    api_key: str = ""
     model: str = "gemini-3.1-flash-lite"
     timeout: float = 60.0
     max_tokens: int = 4096
