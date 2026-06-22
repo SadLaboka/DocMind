@@ -30,7 +30,7 @@ class BaseConsumer(ABC):
                 "consumer_validation_error",
                 error_code="invalid_event_schema",
                 error_detail=str(e),
-                queue=queue_name,
+                queue_name=queue_name,
                 retry_count=retry_count,
                 raw_data=raw_message,
             )
@@ -41,7 +41,7 @@ class BaseConsumer(ABC):
         logger.info(
             "consumer_processing_started",
             event_type=event_model.__name__,
-            queue=queue_name,
+            queue_name=queue_name,
             retry_count=retry_count,
             **log_context,
         )
@@ -52,17 +52,32 @@ class BaseConsumer(ABC):
             logger.info(
                 "consumer_processing_completed",
                 event_type=event_model.__name__,
-                queue=queue_name,
+                queue_name=queue_name,
                 retry_count=retry_count,
                 **log_context,
             )
 
         except Exception as e:
+
+            retryable = getattr(e, "retryable", True)
+
+            if not retryable:
+                logger.error(
+                    "consumer_deterministic_error",
+                    error_code=getattr(e, "error_code", "deterministic_error"),
+                    error_detail=getattr(e, "message", str(e)),
+                    error_type=type(e).__name__,
+                    queue_name=queue_name,
+                    retry_count=retry_count,
+                    **log_context,
+                )
+                return
+
             if retry_count > MAX_RETRIES:
                 logger.error(
                     "consumer_max_retries_exceeded",
-                    error_code="max_retries_exceeded",
-                    error_detail=str(e),
+                    error_code=getattr(e, "error_code", "max_retries_exceeded"),
+                    error_detail=getattr(e, "message", str(e)),
                     error_type=type(e).__name__,
                     queue_name=queue_name,
                     retry_count=retry_count,
@@ -71,15 +86,16 @@ class BaseConsumer(ABC):
                 )
                 return
 
-            logger.error(
+            logger.warning(
                     "consumer_processing_error",
-                    error_code="processing_error",
-                    error_detail=str(e),
+                    error_code=getattr(e, "error_code", "processing_error"),
+                    error_detail=getattr(e, "message", str(e)),
                     error_type=type(e).__name__,
-                    queue=self._get_queue_name(),
+                    queue_name=queue_name,
+                    retry_count=retry_count,
                     **log_context,
                 )
-        raise
+            raise
 
     @abstractmethod
     async def handle(self, event: BaseModel) -> None:
