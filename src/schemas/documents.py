@@ -2,6 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from src.core.enums import LLMProvider
 from src.core.enums import MimeType
 from src.models.documents import DocumentStatus
 
@@ -22,6 +23,7 @@ class DocumentResponse(DocumentBase):
     created_at: datetime
     updated_at: datetime
     analysis_version: str | None = None
+    provider: LLMProvider | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -30,6 +32,7 @@ class DocumentData(DocumentBase):
     temp_filename: str | None = None
     file_hash: str | None = None
     document_status: DocumentStatus = Field(alias="document_status", default=DocumentStatus.created)
+    provider: LLMProvider | None = None
 
 
 class DocumentListResponse(BaseModel):
