@@ -3,6 +3,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from src.core.enums import DocumentStatus, MimeType
 from src.models.base import Base
+from src.core.enums import LLMProvider
 
 
 class Document(Base):
@@ -21,3 +22,8 @@ class Document(Base):
         default=DocumentStatus.created,
     )
     error_trace: Mapped[str] = mapped_column(Text, nullable=True, default=None)
+    provider: Mapped[LLMProvider | None] = mapped_column(
+        Enum(LLMProvider, name="llm_provider", native_enum=False),
+        nullable=True,
+        default=None,
+    )
