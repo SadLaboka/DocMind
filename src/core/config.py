@@ -4,6 +4,8 @@ from pathlib import Path
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from src.core.enums import LLMProvider
+
 _PACKAGE_NAME = "docmind"
 
 try:
@@ -100,6 +102,12 @@ class InitialPromptSettings(SettingsBase):
     initial_version: str = "v1.0.0"
 
 
+class LLMSettings(SettingsBase):
+    model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="LLM_")
+
+    default_provider: LLMProvider = LLMProvider.deepseek
+
+
 class GeminiSettings(SettingsBase):
     model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="GEMINI_")
 
@@ -107,6 +115,17 @@ class GeminiSettings(SettingsBase):
     model: str = "gemini-3.1-flash-lite"
     timeout: float = 60.0
     max_tokens: int = 4096
+    temperature: float = 0.2
+
+
+class DeepSeekSettings(SettingsBase):
+    model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="DEEPSEEK_")
+
+    api_key: str = ""
+    model: str = "deepseek-v4-flash"
+    base_url: str = "https://api.deepseek.com"
+    timeout: float = 60.0
+    max_tokens: int = 8192
     temperature: float = 0.2
 
 
@@ -118,7 +137,9 @@ class Settings(BaseSettings):
     rabbit: RabbitSettings = Field(default_factory=RabbitSettings)
     mongo: MongoSettings = Field(default_factory=MongoSettings)
     prompt: InitialPromptSettings = Field(default_factory=InitialPromptSettings)
+    llm: LLMSettings = Field(default_factory=LLMSettings)
     gemini: GeminiSettings = Field(default_factory=GeminiSettings)
+    deepseek: DeepSeekSettings = Field(default_factory=DeepSeekSettings)
 
     app_name: str = APP_NAME
     app_version: str = APP_VERSION
