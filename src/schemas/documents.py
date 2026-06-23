@@ -13,6 +13,7 @@ class DocumentBase(BaseModel):
     description: str | None = Field(max_length=300, default=None)
     mime_type: MimeType
     file_size: int
+    provider: LLMProvider | None = None
 
 
 class DocumentResponse(DocumentBase):
@@ -23,7 +24,6 @@ class DocumentResponse(DocumentBase):
     created_at: datetime
     updated_at: datetime
     analysis_version: str | None = None
-    provider: LLMProvider | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -32,7 +32,6 @@ class DocumentData(DocumentBase):
     temp_filename: str | None = None
     file_hash: str | None = None
     document_status: DocumentStatus = Field(alias="document_status", default=DocumentStatus.created)
-    provider: LLMProvider | None = None
 
 
 class DocumentListResponse(BaseModel):

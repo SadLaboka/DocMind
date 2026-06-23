@@ -1,5 +1,6 @@
 from sqlalchemy import and_, func, select
 
+from src.core.enums import LLMProvider
 from src.core.enums import DocumentStatus
 from src.models.documents import Document
 from src.repositories.base import BaseRepository
@@ -52,11 +53,16 @@ class DocumentRepository(BaseRepository):
         await self.session.refresh(document)
         return document
 
-    async def get_document_by_hash_and_active_status(self, file_hash: str) -> Document | None:
+    async def get_document_by_hash_and_active_status_and_provider(
+            self,
+            file_hash: str,
+            provider: LLMProvider
+    ) -> Document | None:
         stmt = select(Document).where(
             and_(
                 Document.file_hash == file_hash,
                 Document.document_status.in_([DocumentStatus.success, DocumentStatus.extracted]),
+                Document.provider == provider
             )
         )
         result = await self.session.execute(stmt)

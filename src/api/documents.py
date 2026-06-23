@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, File, Form, Query, Request, UploadFile
 from fastapi.security import HTTPBearer
 from starlette import status
 
+from src.core.enums import LLMProvider
 from src.DependencyInjection.auth import get_current_user
 from src.DependencyInjection.documents import get_document_service, get_upload_service
 from src.schemas.documents import DocumentListResponse, DocumentResponse
@@ -55,12 +56,13 @@ async def get_document(
 async def upload_document(
     description: Annotated[str, Form(max_length=300)],
     request: Request,
+    provider: LLMProvider | None = Form(None),
     file: UploadFile = File(...),
     service: UploadService = Depends(get_upload_service),
     current_user: User = Depends(get_current_user),
 ) -> DocumentResponse:
 
-    return await service.process_upload(file, current_user.id, description, request.state.request_id)
+    return await service.process_upload(file, current_user.id, description, request.state.request_id, provider)
 
 
 @router.delete(

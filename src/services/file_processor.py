@@ -13,7 +13,7 @@ from fastapi import UploadFile
 from sqlalchemy.exc import IntegrityError
 
 from src.core.config import settings
-from src.core.enums import MimeType
+from src.core.enums import MimeType, LLMProvider
 from src.core.exceptions import BadRequestError
 from src.models.documents import Document
 from src.repositories.documents import DocumentRepository
@@ -96,7 +96,11 @@ class HashingFileSaver:
 class UploadService(BaseService[DocumentRepository]):
 
     async def process_upload(
-        self, uploaded_file: UploadFile, user_id: int, description: str | None, request_id: str
+        self, uploaded_file: UploadFile,
+            user_id: int,
+            description: str | None,
+            request_id: str,
+            provider: LLMProvider | None = None,
     ) -> DocumentResponse:
         """Orchestrates file upload: validation, saving, deduplication, and queue dispatch"""
 
@@ -109,6 +113,9 @@ class UploadService(BaseService[DocumentRepository]):
 
         temp_path = Path(settings.base_dir).parent / "temp" / temp_filename
         Path(Path(settings.base_dir).parent / "temp").mkdir(exist_ok=True, parents=True)
+
+        if provider is None:
+            provider = LLMProvider(settings.llm.default_provider)
 
         try:
             start_time = time.perf_counter()
@@ -147,6 +154,7 @@ class UploadService(BaseService[DocumentRepository]):
             mime_type=mime_type,
             description=description,
             file_size=file_size,
+            provider=provider,
         )
 
         logger.info(
@@ -179,6 +187,7 @@ class UploadService(BaseService[DocumentRepository]):
         description: str | None,
         file_size: int,
         temp_path: Path,
+        provider: LLMProvider,
     ) -> tuple[Document, bool]:
         """Creates a duplicate document from the existing document-data and
         Returns: (document, content_was_copied)
@@ -192,6 +201,7 @@ class UploadService(BaseService[DocumentRepository]):
             temp_filename=existing_doc.temp_filename,
             file_hash=existing_doc.file_hash,
             document_status=existing_doc.document_status,
+            provider=provider,
         )
 
         document = await self.repository.create_document(data)
@@ -257,6 +267,7 @@ class UploadService(BaseService[DocumentRepository]):
         mime_type: MimeType,
         description: str | None,
         file_size: int,
+        provider: LLMProvider,
     ) -> tuple[Document, bool, bool]:
         """
         Creates document or returns existing duplicate
@@ -264,7 +275,7 @@ class UploadService(BaseService[DocumentRepository]):
 
         needs_extraction is True if this is a new document or this is a duplicate without content in mongo
         """
-        existing_doc = await self.repository.get_document_by_hash_and_active_status(file_hash)
+        existing_doc = await self.repository.get_document_by_hash_and_active_status_and_provider(file_hash, provider)
         if existing_doc:
             logger.info(
                 "document_duplicate_found",
@@ -281,6 +292,7 @@ class UploadService(BaseService[DocumentRepository]):
                 description=description,
                 file_size=file_size,
                 temp_path=temp_path,
+                provider=provider,
             )
             needs_extraction = not content_was_copied
             return doc, True, needs_extraction
@@ -293,13 +305,17 @@ class UploadService(BaseService[DocumentRepository]):
             file_size=file_size,
             temp_filename=temp_filename,
             file_hash=file_hash,
+            provider=provider,
         )
 
         try:
             doc = await self.repository.create_document(data)
             return doc, False, True
         except IntegrityError as err:
-            existing_doc = await self.repository.get_document_by_hash_and_active_status(file_hash)
+            existing_doc = await self.repository.get_document_by_hash_and_active_status_and_provider(
+                file_hash,
+                provider
+            )
             if existing_doc:
                 logger.info(
                     "document_found_after_race",
@@ -317,6 +333,7 @@ class UploadService(BaseService[DocumentRepository]):
                     description=description,
                     file_size=file_size,
                     temp_path=temp_path,
+                    provider=provider,
                 )
                 needs_extraction = not content_was_copied
                 return doc, True, needs_extraction
