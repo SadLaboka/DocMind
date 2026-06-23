@@ -97,7 +97,7 @@ class MongoSettings(SettingsBase):
 
 
 class InitialPromptSettings(SettingsBase):
-    model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="PROMPT_")
+    model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="PROMPT_", extra="ignore")
 
     initial_version: str = "v1.0.0"
 
@@ -136,7 +136,7 @@ class Settings(BaseSettings):
     server: ServerSettings = Field(default_factory=ServerSettings)
     rabbit: RabbitSettings = Field(default_factory=RabbitSettings)
     mongo: MongoSettings = Field(default_factory=MongoSettings)
-    prompt: InitialPromptSettings = Field(default_factory=InitialPromptSettings)
+    initial_prompt: InitialPromptSettings = Field(default_factory=InitialPromptSettings)
     llm: LLMSettings = Field(default_factory=LLMSettings)
     gemini: GeminiSettings = Field(default_factory=GeminiSettings)
     deepseek: DeepSeekSettings = Field(default_factory=DeepSeekSettings)

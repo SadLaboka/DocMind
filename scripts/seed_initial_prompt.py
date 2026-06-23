@@ -14,7 +14,7 @@ from src.repositories.mongo_prompts import MongoPromptsRepository
 
 logger = structlog.get_logger(__name__)
 
-INITIAL_PROMPT_VERSION = settings.prompt.initial_version
+INITIAL_PROMPT_VERSION = settings.initial_prompt.initial_version
 INITIAL_PROMPT_TYPE = "document_analysis"
 PROMPT_FILE_PATH = Path(__file__).parent / "prompts" / "v1_0_0.txt"
 INITIAL_PROMPT_CONTENT = PROMPT_FILE_PATH.read_text(encoding="utf-8").strip()
