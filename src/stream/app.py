@@ -4,10 +4,10 @@ from faststream import FastStream
 from faststream.rabbit import ExchangeType, RabbitBroker, RabbitExchange, RabbitQueue
 from faststream.rabbit.schemas.queue import ClassicQueueArgs
 
+from src.llm.factory import LLMServiceFactory
 from src.core.config import settings
 from src.core.logging_config import setup_logging
 from src.core.mongo_database import init_mongo_for_worker
-from src.llm.gemini.service import GeminiLLMService
 from src.repositories.mongo_prompts import MongoPromptsRepository
 from src.stream.consumers.document_analysis import DocumentAnalysisConsumer
 from src.stream.middleware import RetryLoggingMiddleware
@@ -41,17 +41,12 @@ retry_queue_args = {
     "x-message-ttl": 60000,
 }
 
-llm_service = GeminiLLMService(
-    api_key=settings.gemini.api_key,
-    model=settings.gemini.model,
-    timeout=settings.gemini.timeout,
-    max_tokens=settings.gemini.max_tokens,
-    temperature=settings.gemini.temperature,
-)
+
 prompt_repo = MongoPromptsRepository()
+llm_service_factory = LLMServiceFactory(settings)
 
 analysis_consumer = DocumentAnalysisConsumer(
-    llm_service=llm_service,
+    llm_service_factory=llm_service_factory,
     prompt_repo=prompt_repo,
 )
 

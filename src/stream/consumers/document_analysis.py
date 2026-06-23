@@ -4,8 +4,8 @@ from src.core.config import settings
 from src.core.database import async_session_factory
 from src.core.enums import DocumentStatus
 from src.events.schemas import DocumentTextExtractedEvent
-from src.llm.base import BaseLLMService
 from src.llm.exceptions import LLMException
+from src.llm.factory import LLMServiceFactory
 from src.repositories.documents import DocumentRepository
 from src.repositories.mongo_documents import MongoDocumentRepository
 from src.repositories.mongo_prompts import MongoPromptsRepository
@@ -28,9 +28,9 @@ class ConsumerError(Exception):
 class DocumentAnalysisConsumer(BaseConsumer[DocumentTextExtractedEvent]):
     """FastStream consumer for analyzing extracted text"""
 
-    def __init__(self, llm_service: BaseLLMService, prompt_repo: MongoPromptsRepository) -> None:
-        self.llm_service = llm_service
+    def __init__(self, llm_service_factory: LLMServiceFactory, prompt_repo: MongoPromptsRepository) -> None:
         self.prompt_repo = prompt_repo
+        self.llm_service_factory = llm_service_factory
 
     def _get_event_model(self) -> type[DocumentTextExtractedEvent]:
         return DocumentTextExtractedEvent
@@ -43,6 +43,9 @@ class DocumentAnalysisConsumer(BaseConsumer[DocumentTextExtractedEvent]):
         document_id = event.document_id
         user_id = event.user_id
         request_id = event.request_id
+        provider = event.provider
+
+        llm_service = self.llm_service_factory.create(provider)
 
         prompt = await self.prompt_repo.get_active_prompt(PROMPT_TYPE)
         if not prompt:
@@ -89,7 +92,7 @@ class DocumentAnalysisConsumer(BaseConsumer[DocumentTextExtractedEvent]):
             )
 
             try:
-                analysis_result = await self.llm_service.analyze_text(
+                analysis_result = await llm_service.analyze_text(
                     text=content.raw_text,
                     prompt=prompt.content,
                 )
