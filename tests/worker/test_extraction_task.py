@@ -66,7 +66,12 @@ async def test_execute_success(
 
     with patch("src.worker.tasks.TextExtractor.extract", return_value="Mocked extracted text"):
         task = DocumentExtractionTask(
-            document_id=1, temp_path="/tmp/test.txt", user_id=1, mime_type="text/plain", request_id="req-123"
+            document_id=1,
+            temp_path="/tmp/test.txt",
+            user_id=1,
+            mime_type="text/plain",
+            request_id="req-123",
+            provider="gemini"
         )
 
         await task.execute()
@@ -87,6 +92,7 @@ async def test_execute_success(
             user_id=1,
             mime_type="text/plain",
             request_id="req-123",
+            provider="gemini",
         )
 
         mock_unlink.assert_called_with(missing_ok=True)
@@ -102,7 +108,12 @@ async def test_execute_document_already_cancelled(
 
     with patch("src.worker.tasks.TextExtractor.extract") as mock_extract:
         task = DocumentExtractionTask(
-            document_id=1, temp_path="/tmp/test.txt", user_id=1, mime_type="text/plain", request_id="req-123"
+            document_id=1,
+            temp_path="/tmp/test.txt",
+            user_id=1,
+            mime_type="text/plain",
+            request_id="req-123",
+            provider="gemini"
         )
 
         await task.execute()
@@ -126,7 +137,12 @@ async def test_process_extraction_hard_fail(
 
     with patch("src.worker.tasks.TextExtractor.extract", side_effect=mock_error):
         task = DocumentExtractionTask(
-            document_id=1, temp_path="/tmp/bad.pdf", user_id=1, mime_type="application/pdf", request_id="req-123"
+            document_id=1,
+            temp_path="/tmp/bad.pdf",
+            user_id=1,
+            mime_type="application/pdf",
+            request_id="req-123",
+            provider="gemini"
         )
 
         await task.execute()
@@ -150,7 +166,12 @@ async def test_process_extraction_soft_fail(
 
     with patch("src.worker.tasks.TextExtractor.extract", side_effect=RuntimeError("Connection lost")):
         task = DocumentExtractionTask(
-            document_id=1, temp_path="/tmp/test.txt", user_id=1, mime_type="text/plain", request_id="req-123"
+            document_id=1,
+            temp_path="/tmp/test.txt",
+            user_id=1,
+            mime_type="text/plain",
+            request_id="req-123",
+            provider="gemini"
         )
 
         with pytest.raises(RuntimeError, match="Connection lost"):
