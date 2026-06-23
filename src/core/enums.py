@@ -16,3 +16,8 @@ class DocumentStatus(Enum):
     success = "success"
     failed = "failed"
     cancelled = "cancelled"
+
+
+class LLMProvider(Enum):
+    gemini = "gemini"
+    deepseek = "deepseek"
