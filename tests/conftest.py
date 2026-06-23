@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
+
 from main import app
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import (
@@ -14,7 +15,7 @@ from sqlalchemy.ext.asyncio import (
 
 from src.core.config import settings
 from src.core.database import get_session
-from src.core.enums import DocumentStatus, MimeType
+from src.core.enums import DocumentStatus, MimeType, LLMProvider
 from src.core.jwt import JWTManager
 from src.core.security import get_password_hash
 from src.DependencyInjection.auth import get_jwt_manager
@@ -148,8 +149,12 @@ async def create_document():
         temp_filename: str | None = None,
         document_status: DocumentStatus = DocumentStatus.created,
         file_hash: str | None = None,
+        provider: LLMProvider | None = None,
     ):
         from src.models.documents import Document
+
+        if not provider:
+            provider = LLMProvider(settings.llm.default_provider)
 
         document = Document(
             user_id=user_id,
@@ -158,6 +163,7 @@ async def create_document():
             mime_type=mime_type,
             file_size=file_size,
             temp_filename=temp_filename,
+            provider=provider,
             document_status=document_status,
             file_hash=file_hash,
         )
@@ -177,6 +183,7 @@ async def create_document():
             "file_hash": document.file_hash,
             "created_at": document.created_at,
             "updated_at": document.updated_at,
+            "provider": document.provider,
         }
 
     return _create
