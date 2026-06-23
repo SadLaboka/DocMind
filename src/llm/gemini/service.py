@@ -7,7 +7,7 @@ from google.genai.types import GenerateContentConfig
 
 from src.llm.base import BaseLLMService
 from src.llm.exceptions import LLMException
-from src.llm.gemini.mapper import GeminiMapper
+from src.llm.base_mapper import BaseMapper
 from src.llm.schemas import AnalysisResult
 
 logger = structlog.get_logger(__name__)
@@ -21,7 +21,7 @@ class GeminiLLMService(BaseLLMService):
         self.max_tokens = max_tokens
         self.temperature = temperature
         self.client = genai.Client(api_key=self.api_key).aio
-        self._mapper = GeminiMapper()
+        self._mapper = BaseMapper()
 
     async def analyze_text(self, text: str, prompt: str) -> AnalysisResult:
 
@@ -45,7 +45,7 @@ class GeminiLLMService(BaseLLMService):
                 contents=prompt_with_text,
                 config=config,
             )
-        except TimeoutError as e:
+        except asyncio.TimeoutError as e:
             raise LLMException(message="Request timeout", error_code="llm_timeout", retryable=True) from e
         except ServerError as e:
             raise LLMException(message="Provider error", error_code="llm_provider_error", retryable=True) from e
