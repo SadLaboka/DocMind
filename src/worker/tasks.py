@@ -20,13 +20,22 @@ logger = structlog.get_logger(__name__)
 class DocumentExtractionTask:
     """Celery task to extract text from document"""
 
-    def __init__(self, document_id: int, temp_path: str, user_id: int, mime_type: str, request_id: str) -> None:
+    def __init__(
+            self,
+            document_id: int,
+            temp_path: str,
+            user_id: int,
+            mime_type: str,
+            request_id: str,
+            provider: str,
+    ) -> None:
         self.document_id = document_id
         self.temp_path = Path(temp_path)
         self.mime_type = mime_type
         self.request_id = request_id
         self.extractor = TextExtractor()
         self.user_id = user_id
+        self.provider = provider
 
     async def execute(self) -> None:
         """Main task manager"""
@@ -154,6 +163,7 @@ class DocumentExtractionTask:
                 user_id=self.user_id,
                 mime_type=self.mime_type,
                 request_id=self.request_id,
+                provider=self.provider,
             )
 
             logger.info(
@@ -221,7 +231,14 @@ class DocumentExtractionTask:
     task_acks_late=True,
     on_failure=DocumentExtractionTask._on_task_failure,
 )
-def extract_text_task(document_id: int, temp_path: str, mime_type: str, user_id: int, request_id: str) -> None:
+def extract_text_task(
+        document_id: int,
+        temp_path: str,
+        mime_type: str,
+        user_id: int,
+        request_id: str,
+        provider: str,
+) -> None:
     """Runs a text extraction task async"""
-    task = DocumentExtractionTask(document_id, temp_path, user_id, mime_type, request_id)
+    task = DocumentExtractionTask(document_id, temp_path, user_id, mime_type, request_id, provider)
     asyncio.run(task.execute())

@@ -173,6 +173,7 @@ class UploadService(BaseService[DocumentRepository]):
                 user_id=user_id,
                 mime_type=mime_type.value,
                 request_id=request_id,
+                provider=provider.value,
             )
             logger.info("task_dispatched_to_queue", document_id=document.id, celery_task_id=celery_task.id)
 
@@ -432,7 +433,7 @@ class UploadService(BaseService[DocumentRepository]):
 
     @staticmethod
     async def _send_to_queue_for_extraction(
-        document_id: int, temp_path: Path, mime_type: str, request_id: str, user_id: int
+        document_id: int, temp_path: Path, mime_type: str, request_id: str, user_id: int, provider: str
     ) -> AsyncResult:
         """Adds a text extraction task to the queue and returns the task object"""
         return await asyncio.to_thread(
@@ -442,6 +443,7 @@ class UploadService(BaseService[DocumentRepository]):
             mime_type=mime_type,
             user_id=user_id,
             request_id=request_id,
+            provider=provider,
         )
 
     @staticmethod

@@ -6,3 +6,4 @@ class DocumentTextExtractedEvent(BaseModel):
     mime_type: str
     user_id: int
     request_id: str
+    provider: str

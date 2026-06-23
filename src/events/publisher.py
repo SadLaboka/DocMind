@@ -23,6 +23,7 @@ def publish_document_text_extracted(
     mime_type: str,
     user_id: int,
     request_id: str,
+    provider: str,
 ) -> None:
     """
     Publish event: text was extracted
@@ -33,6 +34,7 @@ def publish_document_text_extracted(
         mime_type=mime_type,
         user_id=user_id,
         request_id=request_id,
+        provider=provider,
     )
 
     with Connection(settings.rabbit.url) as conn:
