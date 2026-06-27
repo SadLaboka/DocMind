@@ -96,6 +96,14 @@ class MongoSettings(SettingsBase):
         return f"mongodb://{self.username}:{self.password}@{self.host}:{self.port}/{self.name}?authSource=admin"
 
 
+class RedisSettings(SettingsBase):
+    model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="REDIS_")
+
+    host: str = "localhost"
+    port: int = 6379
+    db: int = 0
+
+
 class InitialPromptSettings(SettingsBase):
     model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="PROMPT_", extra="ignore")
 
@@ -136,6 +144,7 @@ class Settings(BaseSettings):
     server: ServerSettings = Field(default_factory=ServerSettings)
     rabbit: RabbitSettings = Field(default_factory=RabbitSettings)
     mongo: MongoSettings = Field(default_factory=MongoSettings)
+    redis: RedisSettings = Field(default_factory=RedisSettings)
     initial_prompt: InitialPromptSettings = Field(default_factory=InitialPromptSettings)
     llm: LLMSettings = Field(default_factory=LLMSettings)
     gemini: GeminiSettings = Field(default_factory=GeminiSettings)
