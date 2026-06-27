@@ -1,4 +1,29 @@
 services:
+  redis:
+    image: redis:8-alpine
+    env_file:
+      - .env
+    ports:
+      - "${REDIS_PORT:-6379}:${REDIS_PORT:-6379}"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+    networks:
+      - DocMind_network
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    env_file:
+      - .env
+    environment:
+      - REDIS_HOSTS=local:redis:${REDIS_PORT:-6379}
+    ports:
+      - "${REDIS_COMMANDER_HOST:-8081}:8081"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - DocMind_network
+
   mongo_db:
     image: mongo:7
     restart: always
@@ -8,7 +33,7 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME:-root}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD:-example}
     ports:
-      - "${MONGO_PORT:-27017}:27017"
+      - "${MONGO_PORT:-27017}:${MONGO_PORT:-27017}"
     networks:
       - DocMind_network
     healthcheck:
@@ -49,6 +74,8 @@ services:
         condition: service_healthy
       mongo_db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - DocMind_network
 
@@ -58,8 +85,8 @@ services:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER:-guest}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:-guest}
     ports:
-      - "${RABBITMQ_PORT:-5672}:5672"
-      - "${RABBITMQ_PANEL_PORT:-15672}:15672"
+      - "${RABBITMQ_PORT:-5672}:${RABBITMQ_PORT:-5672}"
+      - "${RABBITMQ_PANEL_PORT:-15672}:${RABBITMQ_PANEL_PORT:-15672}"
     networks:
       - DocMind_network
     healthcheck:
@@ -93,6 +120,8 @@ services:
       main_db:
         condition: service_healthy
       mongo_db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
 
   worker:
