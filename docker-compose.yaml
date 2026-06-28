@@ -104,6 +104,7 @@ services:
     environment:
       - PYTHONPATH=/usr/src/app
       - DB_HOST=main_db
+      - REDIS_HOST=redis
       - SERVER_HOST=0.0.0.0
       - SERVER_PORT=8000
       - SERVER_RELOAD=false
