@@ -102,6 +102,7 @@ class RedisSettings(SettingsBase):
     host: str = "localhost"
     port: int = 6379
     db: int = 0
+    max_connections: int = 30
 
 
 class InitialPromptSettings(SettingsBase):
