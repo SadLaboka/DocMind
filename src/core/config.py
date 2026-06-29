@@ -105,6 +105,25 @@ class RedisSettings(SettingsBase):
     max_connections: int = 30
 
 
+class RateLimitSettings(SettingsBase):
+    model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="RATE_LIMIT_", extra="ignore")
+
+    global_limit: int = 60
+    global_window: int = 60
+
+    login_limit: int = 5
+    login_window: int = 60
+
+    register_limit: int = 3
+    register_window: int = 60
+
+    documents_post_limit: int = 10
+    documents_post_window: int = 60
+
+    documents_get_limit: int = 20
+    documents_get_window: int = 60
+
+
 class InitialPromptSettings(SettingsBase):
     model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="PROMPT_", extra="ignore")
 
@@ -146,6 +165,7 @@ class Settings(BaseSettings):
     rabbit: RabbitSettings = Field(default_factory=RabbitSettings)
     mongo: MongoSettings = Field(default_factory=MongoSettings)
     redis: RedisSettings = Field(default_factory=RedisSettings)
+    rate_limit: RateLimitSettings = Field(default_factory=RateLimitSettings)
     initial_prompt: InitialPromptSettings = Field(default_factory=InitialPromptSettings)
     llm: LLMSettings = Field(default_factory=LLMSettings)
     gemini: GeminiSettings = Field(default_factory=GeminiSettings)
