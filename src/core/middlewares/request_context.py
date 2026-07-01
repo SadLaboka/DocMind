@@ -5,7 +5,7 @@ from uuid import uuid4
 import structlog
 
 
-class Middleware:
+class RequestContextMiddleware:
     """ASGI middleware for FastAPI"""
 
     def __init__(self, app: Any) -> None:

@@ -10,7 +10,7 @@ from src.core.config import settings
 from src.core.exception_handlers import app_base_error_handler, exception_handler, request_validation_error_handler
 from src.core.exceptions import AppBaseError
 from src.core.logging_config import setup_logging
-from src.core.middleware import Middleware
+from core.middlewares.request_context import RequestContextMiddleware
 from src.core.lifespan import app_lifespan
 
 setup_logging()
@@ -23,7 +23,7 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-app.add_middleware(Middleware)
+app.add_middleware(RequestContextMiddleware)
 app.include_router(documents_router)
 app.include_router(users_router)
 app.include_router(auth_router)
