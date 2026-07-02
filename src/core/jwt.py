@@ -36,36 +36,40 @@ class JWTManager:
     def get_tokens(self, payload: dict) -> dict:
         """Entry point for creating a token pair.
         Splits the payload for assembling tokens and returns the resulting dictionary."""
+        jti = uuid4().hex
         return {
-            "access_token": self._create_access_token(payload),
+            "access_token": self._create_access_token(payload, jti),
             "refresh_token": self._create_refresh_token(payload["sub"]),
             "token_type": "Bearer",
         }
 
-    def _create_access_token(self, payload: dict) -> str:
+    def _create_access_token(self, payload: dict, jti: str) -> str:
         """Submits a payload for gathering access token"""
         access_token = self._create_jwt(
-            payload=payload, token_type=ACCESS_TOKEN_TYPE, time_delta=timedelta(minutes=settings.jwt.timedelta)
+            payload=payload,
+            token_type=ACCESS_TOKEN_TYPE,
+            time_delta=timedelta(minutes=settings.jwt.timedelta),
+            jti=jti,
         )
         return access_token
 
-    def _create_refresh_token(self, user_id: int) -> str:
+    def _create_refresh_token(self, user_id: int, jti: str) -> str:
         """Submits a payload for gathering refresh token"""
         refresh_token = self._create_jwt(
             payload={"sub": str(user_id)},
             token_type=REFRESH_TOKEN_TYPE,
             time_delta=timedelta(days=settings.jwt.refresh_timedelta),
+            jti=jti,
         )
         return refresh_token
 
-    def _create_jwt(self, payload: dict, token_type: str, time_delta: timedelta) -> str:
+    def _create_jwt(self, payload: dict, token_type: str, time_delta: timedelta, jti: str) -> str:
         """Gathering payload and encode it to JWT"""
         to_encode = payload.copy()
         if to_encode.get("sub"):
             to_encode["sub"] = str(to_encode["sub"])
         iat = datetime.now(UTC)
         expire = iat + time_delta
-        jti = uuid4().hex
         to_encode.update({"jti": jti, "exp": expire, "iat": iat, "type": token_type})
         return jwt.encode(to_encode, self.private_key, algorithm=self.algorithm)
 
