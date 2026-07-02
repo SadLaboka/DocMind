@@ -1,6 +1,7 @@
 from datetime import UTC, datetime, timedelta
 from functools import cached_property
 from pathlib import Path
+from uuid import uuid4
 
 import jwt
 
@@ -64,7 +65,8 @@ class JWTManager:
             to_encode["sub"] = str(to_encode["sub"])
         iat = datetime.now(UTC)
         expire = iat + time_delta
-        to_encode.update({"exp": expire, "iat": iat, "type": token_type})
+        jti = uuid4().hex
+        to_encode.update({"jti": jti, "exp": expire, "iat": iat, "type": token_type})
         return jwt.encode(to_encode, self.private_key, algorithm=self.algorithm)
 
     def get_payload_from_access_token(self, access_token: str) -> dict:
