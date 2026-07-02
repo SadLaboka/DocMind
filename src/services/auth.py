@@ -2,6 +2,7 @@ import structlog
 
 from src.core.exceptions import AuthenticationError
 from src.core.security import check_password
+from src.core.token_blacklist import TokenBlackList
 from src.repositories.users import UserRepository
 from src.schemas.users import User
 from src.services.base import BaseService
@@ -11,6 +12,14 @@ logger = structlog.get_logger(__name__)
 
 class AuthService(BaseService[UserRepository]):
     """Service for authentication"""
+
+    def __init__(
+            self,
+            repository: UserRepository,
+            token_blacklist: TokenBlackList
+    ):
+        super().__init__(repository)
+        self.token_blacklist = token_blacklist
 
     async def authenticate(self, username: str, password: str) -> User:
         """Gets a user from the database by login
@@ -72,3 +81,7 @@ class AuthService(BaseService[UserRepository]):
         logger.info("token_refresh_success", user_id=user.id, username=user.login)
 
         return User.model_validate(user)
+
+    async def logout(self, jti: str, ttl: int) -> None:
+        """Adds token to blacklist"""
+        await self.token_blacklist.add_to_blacklist(jti, ttl)

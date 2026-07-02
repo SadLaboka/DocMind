@@ -21,21 +21,34 @@ def get_user_repository(session: AsyncSession = Depends(get_session)) -> UserRep
     return UserRepository(session)
 
 
-def get_auth_service(repository: UserRepository = Depends(get_user_repository)) -> AuthService:
-    return AuthService(repository)
+def get_auth_service(
+        repository: UserRepository = Depends(get_user_repository),
+        token_blacklist: TokenBlackList = Depends(get_token_blacklist),
+) -> AuthService:
+    return AuthService(repository, token_blacklist)
+
+
+def get_current_token_payload(
+    credentials: HTTPAuthorizationCredentials = Depends(http_bearer),
+    jwt_manager: JWTManager = Depends(get_jwt_manager),
+) -> dict:
+    """Returns the full JWT payload: jti, exp, sub, login, is_admin"""
+    if credentials is None:
+        raise AuthenticationError(
+            error_code="invalid_credentials",
+            message="No credentials provided",
+            log_context={"event_name": "no_credentials"},
+        )
+    token = credentials.credentials
+    return jwt_manager.get_payload_from_access_token(token)
+
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(http_bearer),
-    jwt_manager: JWTManager = Depends(get_jwt_manager),
+    payload: dict = Depends(get_current_token_payload),
     token_blacklist: TokenBlackList = Depends(get_token_blacklist)
 ) -> User:
-    if credentials is None:
-        raise HTTPException(status_code=401, detail="Invalid authentication credentials")
-    token = credentials.credentials
-    token_payload = jwt_manager.get_payload_from_access_token(token)
-
-    jti = token_payload.get("jti")
+    jti = payload.get("jti")
     if jti and await token_blacklist.is_blacklisted(jti):
         raise AuthenticationError(
             error_code="token_revoked",
@@ -43,8 +56,8 @@ async def get_current_user(
             log_context={
                 "event_name": "token_blacklisted",
                 "jti": jti,
-                "user_id": token_payload["sub"],
+                "user_id": payload["sub"],
             },
         )
 
-    return User(id=int(token_payload["sub"]), login=token_payload["login"], is_admin=token_payload["is_admin"])
+    return User(id=int(payload["sub"]), login=payload["login"], is_admin=payload["is_admin"])
