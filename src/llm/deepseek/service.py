@@ -1,21 +1,16 @@
 import asyncio
-from openai import AsyncOpenAI, APIError
 
-from src.llm.schemas import AnalysisResult
+from openai import APIError, AsyncOpenAI
+
 from src.llm.base import BaseLLMService
-from src.llm.exceptions import LLMException
 from src.llm.base_mapper import BaseMapper
+from src.llm.exceptions import LLMException
+from src.llm.schemas import AnalysisResult
 
 
 class DeepSeekLLMService(BaseLLMService):
     def __init__(
-            self,
-            api_key: str,
-            model: str,
-            timeout: float,
-            max_tokens: int,
-            temperature: float,
-            base_url: str
+        self, api_key: str, model: str, timeout: float, max_tokens: int, temperature: float, base_url: str
     ) -> None:
         self.api_key = api_key
         self.model = model
@@ -44,7 +39,7 @@ class DeepSeekLLMService(BaseLLMService):
 
         try:
             raw_response = await self._call_deepseek_api(messages=messages)
-        except asyncio.TimeoutError as e:
+        except TimeoutError as e:
             raise LLMException(message="Request timeout", error_code="llm_timeout", retryable=True) from e
         except APIError as e:
             if e.code and e.code.startswith("5"):

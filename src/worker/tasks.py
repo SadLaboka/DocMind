@@ -21,13 +21,13 @@ class DocumentExtractionTask:
     """Celery task to extract text from document"""
 
     def __init__(
-            self,
-            document_id: int,
-            temp_path: str,
-            user_id: int,
-            mime_type: str,
-            request_id: str,
-            provider: str,
+        self,
+        document_id: int,
+        temp_path: str,
+        user_id: int,
+        mime_type: str,
+        request_id: str,
+        provider: str,
     ) -> None:
         self.document_id = document_id
         self.temp_path = Path(temp_path)
@@ -232,12 +232,12 @@ class DocumentExtractionTask:
     on_failure=DocumentExtractionTask._on_task_failure,
 )
 def extract_text_task(
-        document_id: int,
-        temp_path: str,
-        mime_type: str,
-        user_id: int,
-        request_id: str,
-        provider: str,
+    document_id: int,
+    temp_path: str,
+    mime_type: str,
+    user_id: int,
+    request_id: str,
+    provider: str,
 ) -> None:
     """Runs a text extraction task async"""
     task = DocumentExtractionTask(document_id, temp_path, user_id, mime_type, request_id, provider)

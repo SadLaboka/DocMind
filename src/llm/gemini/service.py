@@ -6,8 +6,8 @@ from google.genai.errors import ClientError, ServerError
 from google.genai.types import GenerateContentConfig
 
 from src.llm.base import BaseLLMService
-from src.llm.exceptions import LLMException
 from src.llm.base_mapper import BaseMapper
+from src.llm.exceptions import LLMException
 from src.llm.schemas import AnalysisResult
 
 logger = structlog.get_logger(__name__)
@@ -45,7 +45,7 @@ class GeminiLLMService(BaseLLMService):
                 contents=prompt_with_text,
                 config=config,
             )
-        except asyncio.TimeoutError as e:
+        except TimeoutError as e:
             raise LLMException(message="Request timeout", error_code="llm_timeout", retryable=True) from e
         except ServerError as e:
             raise LLMException(message="Provider error", error_code="llm_provider_error", retryable=True) from e

@@ -4,10 +4,10 @@ from faststream import FastStream
 from faststream.rabbit import ExchangeType, RabbitBroker, RabbitExchange, RabbitQueue
 from faststream.rabbit.schemas.queue import ClassicQueueArgs
 
-from src.llm.factory import LLMServiceFactory
 from src.core.config import settings
 from src.core.logging_config import setup_logging
 from src.core.mongo_database import init_mongo_for_worker
+from src.llm.factory import LLMServiceFactory
 from src.repositories.mongo_prompts import MongoPromptsRepository
 from src.stream.consumers.document_analysis import DocumentAnalysisConsumer
 from src.stream.middleware import RetryLoggingMiddleware

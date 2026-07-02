@@ -1,17 +1,19 @@
 import json
 from time import time
 from typing import Any
-from starlette.status import HTTP_429_TOO_MANY_REQUESTS
-import structlog
 
-from src.core.rate_limiter import get_rate_limiter
+import structlog
+from starlette.status import HTTP_429_TOO_MANY_REQUESTS
+
 from src.core.config import settings
+from src.core.rate_limiter import get_rate_limiter
 
 logger = structlog.get_logger(__name__)
 
 
 class RateLimitMiddleware:
     """ASGI middleware that sets the limit on requests"""
+
     def __init__(self, app: Any) -> None:
         self.app = app
         self.limiter = get_rate_limiter()
@@ -55,16 +57,17 @@ class RateLimitMiddleware:
         async def wrapped_send(message: dict) -> None:
             if message["type"] == "http.response.start":
                 headers = list(message.get("headers", []))
-                headers.extend([
-                    (b"x-ratelimit-limit", str(limit).encode()),
-                    (b"x-ratelimit-remaining", str(remaining).encode()),
-                    (b"x-ratelimit-reset", str(reset_time).encode()),
-                ])
+                headers.extend(
+                    [
+                        (b"x-ratelimit-limit", str(limit).encode()),
+                        (b"x-ratelimit-remaining", str(remaining).encode()),
+                        (b"x-ratelimit-reset", str(reset_time).encode()),
+                    ]
+                )
                 message["headers"] = headers
             await send(message)
 
         await self.app(scope, receive, wrapped_send)
-
 
     def _get_limit_and_window(self, scope: dict) -> tuple[int, int]:
         """Matches the path with the limit and window values from config"""
@@ -92,16 +95,14 @@ class RateLimitMiddleware:
 
         if method == "POST":
             values = post_map.get(path)
-            return values if values else global_values
+            return values or global_values
         elif method == "GET":
             values = get_map.get(path)
-            return values if values else global_values
+            return values or global_values
 
         return global_values
 
-    async def _send_rate_limit_response(
-            self, send: Any, limit: int, reset_time: int
-    ) -> None:
+    async def _send_rate_limit_response(self, send: Any, limit: int, reset_time: int) -> None:
         """Sends 429 response with rate limit headers"""
         response_body = {
             "code": "rate_limit_exceeded",
@@ -111,22 +112,26 @@ class RateLimitMiddleware:
 
         retry_after = max(0, reset_time - int(time()))
 
-        await send({
-            "type": "http.response.start",
-            "status": HTTP_429_TOO_MANY_REQUESTS,
-            "headers": [
-                (b"content-type", b"application/json"),
-                (b"content-length", str(len(body)).encode()),
-                (b"x-ratelimit-limit", str(limit).encode()),
-                (b"x-ratelimit-remaining", b"0"),
-                (b"x-ratelimit-reset", str(reset_time).encode()),
-                (b"retry-after", str(retry_after).encode()),
-            ],
-        })
-        await send({
-            "type": "http.response.body",
-            "body": body,
-        })
+        await send(
+            {
+                "type": "http.response.start",
+                "status": HTTP_429_TOO_MANY_REQUESTS,
+                "headers": [
+                    (b"content-type", b"application/json"),
+                    (b"content-length", str(len(body)).encode()),
+                    (b"x-ratelimit-limit", str(limit).encode()),
+                    (b"x-ratelimit-remaining", b"0"),
+                    (b"x-ratelimit-reset", str(reset_time).encode()),
+                    (b"retry-after", str(retry_after).encode()),
+                ],
+            }
+        )
+        await send(
+            {
+                "type": "http.response.body",
+                "body": body,
+            }
+        )
 
     def _get_key(self, scope: dict) -> str:
         """Constructs the key based on the scope"""
@@ -147,9 +152,9 @@ class RateLimitMiddleware:
         parts = path.split("/")
 
         if len(parts) >= 3 and parts[1] == "documents":
-            if parts[2].isdigit():
-                if len(parts) == 3:
-                    return "/documents/{id}"
+            if parts[2].isdigit() and len(parts) == 3:
+                return "/documents/{id}"
+            elif parts[2].isdigit():
                 return f"/documents/{id}/{'/'.join(parts[3:])}"
 
         return path

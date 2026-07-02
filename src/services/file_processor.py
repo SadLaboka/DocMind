@@ -13,7 +13,7 @@ from fastapi import UploadFile
 from sqlalchemy.exc import IntegrityError
 
 from src.core.config import settings
-from src.core.enums import MimeType, LLMProvider
+from src.core.enums import LLMProvider, MimeType
 from src.core.exceptions import BadRequestError
 from src.models.documents import Document
 from src.repositories.documents import DocumentRepository
@@ -96,11 +96,12 @@ class HashingFileSaver:
 class UploadService(BaseService[DocumentRepository]):
 
     async def process_upload(
-        self, uploaded_file: UploadFile,
-            user_id: int,
-            description: str | None,
-            request_id: str,
-            provider: LLMProvider | None = None,
+        self,
+        uploaded_file: UploadFile,
+        user_id: int,
+        description: str | None,
+        request_id: str,
+        provider: LLMProvider | None = None,
     ) -> DocumentResponse:
         """Orchestrates file upload: validation, saving, deduplication, and queue dispatch"""
 
@@ -314,8 +315,7 @@ class UploadService(BaseService[DocumentRepository]):
             return doc, False, True
         except IntegrityError as err:
             existing_doc = await self.repository.get_document_by_hash_and_active_status_and_provider(
-                file_hash,
-                provider
+                file_hash, provider
             )
             if existing_doc:
                 logger.info(

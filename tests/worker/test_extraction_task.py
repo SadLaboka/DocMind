@@ -71,7 +71,7 @@ async def test_execute_success(
             user_id=1,
             mime_type="text/plain",
             request_id="req-123",
-            provider="gemini"
+            provider="gemini",
         )
 
         await task.execute()
@@ -113,7 +113,7 @@ async def test_execute_document_already_cancelled(
             user_id=1,
             mime_type="text/plain",
             request_id="req-123",
-            provider="gemini"
+            provider="gemini",
         )
 
         await task.execute()
@@ -142,7 +142,7 @@ async def test_process_extraction_hard_fail(
             user_id=1,
             mime_type="application/pdf",
             request_id="req-123",
-            provider="gemini"
+            provider="gemini",
         )
 
         await task.execute()
@@ -171,7 +171,7 @@ async def test_process_extraction_soft_fail(
             user_id=1,
             mime_type="text/plain",
             request_id="req-123",
-            provider="gemini"
+            provider="gemini",
         )
 
         with pytest.raises(RuntimeError, match="Connection lost"):

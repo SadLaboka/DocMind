@@ -1,7 +1,9 @@
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
+
 from src.core.mongo_database import init_mongo_db
-from src.core.redis import init_redis, close_redis
+from src.core.redis import close_redis, init_redis
 
 
 @asynccontextmanager

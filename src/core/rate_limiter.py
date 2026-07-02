@@ -1,6 +1,7 @@
-from redis.asyncio import Redis
 from time import time
 from uuid import uuid4
+
+from redis.asyncio import Redis
 
 from src.core.redis import get_redis
 
@@ -34,7 +35,7 @@ class RateLimiter:
 
             res = await pipe.execute()
 
-        _, current_count, _, _ = res
+        _, _, current_count, _ = res
 
         reset_time = current_time_ms // 1000 + window
 

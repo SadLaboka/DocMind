@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-
 from main import app
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import (
@@ -15,7 +14,7 @@ from sqlalchemy.ext.asyncio import (
 
 from src.core.config import settings
 from src.core.database import get_session
-from src.core.enums import DocumentStatus, MimeType, LLMProvider
+from src.core.enums import DocumentStatus, LLMProvider, MimeType
 from src.core.jwt import JWTManager
 from src.core.security import get_password_hash
 from src.DependencyInjection.auth import get_jwt_manager

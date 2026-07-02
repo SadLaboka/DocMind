@@ -2,8 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from src.core.enums import LLMProvider
-from src.core.enums import MimeType
+from src.core.enums import LLMProvider, MimeType
 from src.models.documents import DocumentStatus
 
 

@@ -9,10 +9,10 @@ from src.api.users import router as users_router
 from src.core.config import settings
 from src.core.exception_handlers import app_base_error_handler, exception_handler, request_validation_error_handler
 from src.core.exceptions import AppBaseError
-from src.core.logging_config import setup_logging
-from src.core.middlewares.request_context import RequestContextMiddleware
-from src.core.middlewares.rate_limit import RateLimitMiddleware
 from src.core.lifespan import app_lifespan
+from src.core.logging_config import setup_logging
+from src.core.middlewares.rate_limit import RateLimitMiddleware
+from src.core.middlewares.request_context import RequestContextMiddleware
 
 setup_logging()
 app = FastAPI(
