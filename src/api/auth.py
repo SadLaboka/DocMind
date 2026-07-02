@@ -3,9 +3,10 @@ from datetime import UTC, datetime
 from fastapi import APIRouter, Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
+from src.core.config import settings
 from src.core.exceptions import AuthenticationError
 from src.core.jwt import JWTManager
-from src.DependencyInjection.auth import get_auth_service, get_jwt_manager
+from src.DependencyInjection.auth import get_auth_service, get_jwt_manager, get_current_token_payload
 from src.schemas.auth import LoginRequest, TokenResponse
 from src.services.auth import AuthService
 
@@ -47,3 +48,15 @@ async def refresh(
 
     response = TokenResponse(**jwt_manager.get_tokens({"sub": user.id, "login": user.login, "is_admin": user.is_admin}))
     return response
+
+
+@router.post("/logout")
+async def logout(
+        payload: dict = Depends(get_current_token_payload),
+        auth_service: AuthService = Depends(get_auth_service),
+):
+    jti = payload["jti"]
+    ttl = settings.jwt.refresh_timedelta * 24 * 60 * 60
+
+    await auth_service.logout(jti, ttl)
+    return {"detail": "Successfully logged out"}
