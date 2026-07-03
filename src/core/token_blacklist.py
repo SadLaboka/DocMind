@@ -1,6 +1,5 @@
-from redis.asyncio import Redis
-
 import structlog
+from redis.asyncio import Redis
 
 from src.core.redis import get_redis
 
@@ -27,6 +26,7 @@ class TokenBlackList:
                 error=str(err),
             )
             return False
+
 
 _token_blacklist: TokenBlackList | None = None
 

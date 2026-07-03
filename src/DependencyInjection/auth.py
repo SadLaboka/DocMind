@@ -2,10 +2,10 @@ from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.token_blacklist import TokenBlackList, get_token_blacklist
 from src.core.database import get_session
 from src.core.exceptions import AuthenticationError
 from src.core.jwt import JWTManager
+from src.core.token_blacklist import TokenBlackList, get_token_blacklist
 from src.repositories.users import UserRepository
 from src.schemas.users import User
 from src.services.auth import AuthService
@@ -22,8 +22,8 @@ def get_user_repository(session: AsyncSession = Depends(get_session)) -> UserRep
 
 
 def get_auth_service(
-        repository: UserRepository = Depends(get_user_repository),
-        token_blacklist: TokenBlackList = Depends(get_token_blacklist),
+    repository: UserRepository = Depends(get_user_repository),
+    token_blacklist: TokenBlackList = Depends(get_token_blacklist),
 ) -> AuthService:
     return AuthService(repository, token_blacklist)
 
@@ -43,10 +43,8 @@ def get_current_token_payload(
     return jwt_manager.get_payload_from_access_token(token)
 
 
-
 async def get_current_user(
-    payload: dict = Depends(get_current_token_payload),
-    token_blacklist: TokenBlackList = Depends(get_token_blacklist)
+    payload: dict = Depends(get_current_token_payload), token_blacklist: TokenBlackList = Depends(get_token_blacklist)
 ) -> User:
     jti = payload.get("jti")
     if jti and await token_blacklist.is_blacklisted(jti):

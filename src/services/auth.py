@@ -1,12 +1,12 @@
 import structlog
 
 from src.core.exceptions import AuthenticationError
+from src.core.jwt import REFRESH_TOKEN_TYPE, JWTManager
 from src.core.security import check_password
 from src.core.token_blacklist import TokenBlackList
 from src.repositories.users import UserRepository
 from src.schemas.users import User
 from src.services.base import BaseService
-from src.core.jwt import JWTManager, REFRESH_TOKEN_TYPE
 
 logger = structlog.get_logger(__name__)
 
@@ -14,11 +14,7 @@ logger = structlog.get_logger(__name__)
 class AuthService(BaseService[UserRepository]):
     """Service for authentication"""
 
-    def __init__(
-            self,
-            repository: UserRepository,
-            token_blacklist: TokenBlackList
-    ):
+    def __init__(self, repository: UserRepository, token_blacklist: TokenBlackList):
         super().__init__(repository)
         self.token_blacklist = token_blacklist
 
