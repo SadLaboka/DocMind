@@ -39,7 +39,7 @@ class JWTManager:
         jti = uuid4().hex
         return {
             "access_token": self._create_access_token(payload, jti),
-            "refresh_token": self._create_refresh_token(payload["sub"]),
+            "refresh_token": self._create_refresh_token(payload["sub"], jti),
             "token_type": "Bearer",
         }
 
