@@ -6,6 +6,7 @@ from src.core.token_blacklist import TokenBlackList
 from src.repositories.users import UserRepository
 from src.schemas.users import User
 from src.services.base import BaseService
+from src.core.jwt import JWTManager, REFRESH_TOKEN_TYPE
 
 logger = structlog.get_logger(__name__)
 
@@ -85,3 +86,22 @@ class AuthService(BaseService[UserRepository]):
     async def logout(self, jti: str, ttl: int) -> None:
         """Adds token to blacklist"""
         await self.token_blacklist.add_to_blacklist(jti, ttl)
+
+    async def verify_refresh_token(self, refresh_token: str, jwt_manager: JWTManager) -> User:
+        """Verifies refresh token and checks blacklist"""
+        payload = jwt_manager.verify_token(refresh_token, REFRESH_TOKEN_TYPE)
+
+        jti = payload.get("jti")
+        if jti and await self.token_blacklist.is_blacklisted(jti):
+            raise AuthenticationError(
+                error_code="token_revoked",
+                message="Refresh token has been revoked",
+                log_context={
+                    "event_name": "refresh_token_blacklisted",
+                    "jti": jti,
+                    "user_id": payload["sub"],
+                },
+            )
+
+        user_id = int(payload["sub"])
+        return await self.load_user_profile(user_id)

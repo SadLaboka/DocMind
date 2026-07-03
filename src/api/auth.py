@@ -38,13 +38,11 @@ async def refresh(
             error_code="invalid_credentials",
             message="No credentials provided",
             log_context={
-                "message": "Authentication credentials were not provided",
-                "checked_at": datetime.now(UTC).isoformat(),
+                "event_name": "refresh_token_missing",
             },
         )
     token: str = credentials.credentials
-    user_id = jwt_manager.get_sub_from_refresh_token(token)
-    user = await auth_service.load_user_profile(user_id)
+    user = await auth_service.verify_refresh_token(token, jwt_manager)
 
     response = TokenResponse(**jwt_manager.get_tokens({"sub": user.id, "login": user.login, "is_admin": user.is_admin}))
     return response
@@ -56,7 +54,7 @@ async def logout(
         auth_service: AuthService = Depends(get_auth_service),
 ):
     jti = payload["jti"]
-    ttl = settings.jwt.refresh_timedelta * 24 * 60 * 60
+    ttl = int(settings.jwt.refresh_timedelta * 24 * 60 * 60)
 
     await auth_service.logout(jti, ttl)
     return {"detail": "Successfully logged out"}
