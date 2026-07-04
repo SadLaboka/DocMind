@@ -109,6 +109,7 @@ class CacheSettings(SettingsBase):
     model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="CACHE_", extra="ignore")
 
     prompt_ttl: int = 3600
+    user_status_ttl: int = 3600
 
 
 class RateLimitSettings(SettingsBase):
