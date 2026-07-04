@@ -9,6 +9,7 @@ from pymongo.errors import ConnectionFailure, DuplicateKeyError
 
 from src.core.config import settings
 from src.core.logging_config import setup_logging
+from src.core.redis import get_redis
 from src.models.mongo_prompts import Prompt
 from src.repositories.mongo_prompts import MongoPromptsRepository
 
@@ -33,7 +34,7 @@ async def init_mongo() -> AsyncMongoClient:
 
 async def seed_prompt() -> None:
     """Creates prompt if active prompt isn't exists"""
-    prompt_repo = MongoPromptsRepository()
+    prompt_repo = MongoPromptsRepository(redis_client=get_redis())
 
     existing_prompt = await prompt_repo.get_active_prompt(INITIAL_PROMPT_TYPE)
 

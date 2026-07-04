@@ -6,6 +6,7 @@ from faststream.rabbit.schemas.queue import ClassicQueueArgs
 
 from src.core.config import settings
 from src.core.logging_config import setup_logging
+from src.core.redis import get_redis
 from src.core.mongo_database import init_mongo_for_worker
 from src.llm.factory import LLMServiceFactory
 from src.repositories.mongo_prompts import MongoPromptsRepository
@@ -42,7 +43,7 @@ retry_queue_args = {
 }
 
 
-prompt_repo = MongoPromptsRepository()
+prompt_repo = MongoPromptsRepository(redis_client=get_redis())
 llm_service_factory = LLMServiceFactory(settings)
 
 analysis_consumer = DocumentAnalysisConsumer(
