@@ -105,6 +105,12 @@ class RedisSettings(SettingsBase):
     max_connections: int = 30
 
 
+class CacheSettings(SettingsBase):
+    model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="CACHE_", extra="ignore")
+
+    prompt_ttl: int = 3600
+
+
 class RateLimitSettings(SettingsBase):
     model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="RATE_LIMIT_", extra="ignore")
 
@@ -165,6 +171,7 @@ class Settings(BaseSettings):
     rabbit: RabbitSettings = Field(default_factory=RabbitSettings)
     mongo: MongoSettings = Field(default_factory=MongoSettings)
     redis: RedisSettings = Field(default_factory=RedisSettings)
+    cache: CacheSettings = Field(default_factory=CacheSettings)
     rate_limit: RateLimitSettings = Field(default_factory=RateLimitSettings)
     initial_prompt: InitialPromptSettings = Field(default_factory=InitialPromptSettings)
     llm: LLMSettings = Field(default_factory=LLMSettings)
