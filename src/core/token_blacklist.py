@@ -13,7 +13,14 @@ class TokenBlackList:
     async def add_to_blacklist(self, jti: str, ttl: int) -> None:
         """Adds a jwt ID to the blacklist"""
         ttl = max(1, int(ttl))
-        await self.redis.set(f"blacklist:{jti}", "1", ex=ttl)
+        try:
+            await self.redis.set(f"blacklist:{jti}", "1", ex=ttl)
+        except Exception as err:
+            logger.warning(
+                "redis_unavailable_add_to_blacklist_skipped",
+                jti=jti,
+                error=str(err),
+            )
 
     async def is_blacklisted(self, jti: str) -> bool:
         """Checks if the blacklisted jwt ID is in the blacklist"""
