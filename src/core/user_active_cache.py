@@ -15,7 +15,8 @@ class UserActiveStatusCache:
         """Set the user's status to cache"""
         key = f"user:{user_id}:is_active"
         try:
-            await self.redis.set(key, is_active, ex=settings.cache.user_status_ttl)
+            value = str(is_active).lower()
+            await self.redis.set(key, value, ex=settings.cache.user_status_ttl)
         except Exception as err:
             logger.warning(
                 "redis_unavailable_caching_status_skipped",
@@ -28,7 +29,10 @@ class UserActiveStatusCache:
         """Get the user's status from cache"""
         key = f"user:{user_id}:is_active"
         try:
-            return await self.redis.get(key)
+            value = await self.redis.get(key)
+            if value is None:
+                return None
+            return value.lower() == "true"
         except Exception as err:
             logger.warning(
                 "redis_unavailable_getting_status_from_cache_skipped",
