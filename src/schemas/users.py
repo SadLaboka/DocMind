@@ -26,3 +26,6 @@ class User(BaseModel):
     is_admin: bool
 
     model_config = ConfigDict(from_attributes=True)
+
+class UserWithStatus(User):
+    is_active: bool
