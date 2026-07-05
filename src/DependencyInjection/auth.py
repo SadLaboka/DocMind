@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.user_active_cache import UserActiveStatusCache, get_user_active_cache
 from src.core.database import get_session
-from src.core.exceptions import AuthenticationError
+from src.core.exceptions import AuthenticationError, ForbiddenError
 from src.core.jwt import JWTManager
 from src.core.token_blacklist import TokenBlackList, get_token_blacklist
 from src.repositories.users import UserRepository
@@ -63,11 +63,11 @@ async def get_current_user(
             },
         )
 
-    is_active = await user_active_cache.get_active(payload["user_id"])
+    is_active = await user_active_cache.get_active(payload["sub"])
 
     if is_active is None:
-        user = await user_repository.get_user_by_id(payload["user_id"])
-        await user_active_cache.set_active(payload["user_id"], user.is_active)
+        user = await user_repository.get_user_by_id(payload["sub"])
+        await user_active_cache.set_active(payload["sub"], user.is_active)
 
     if not is_active:
         raise AuthenticationError(
@@ -75,8 +75,22 @@ async def get_current_user(
             message="User has been deactivated",
             log_context={
                 "event_name": "user_deactivated",
-                "user_id": payload["user_id"],
+                "user_id": payload["sub"],
             }
         )
 
     return User(id=int(payload["sub"]), login=payload["login"], is_admin=payload["is_admin"])
+
+
+async def get_current_admin_user(current_user: User = Depends(get_current_user)) -> User:
+    if not current_user.is_admin:
+        raise ForbiddenError(
+            error_code="user_is_not_admin",
+            message="You are not admin",
+            log_context={
+                "event_name": "user_is_not_admin",
+                "user_id": current_user.id,
+            },
+        )
+
+    return current_user
