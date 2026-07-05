@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
+from src.api.admin import router as admin_router
 from src.api.auth import router as auth_router
 from src.api.documents import router as documents_router
 from src.api.users import router as users_router
@@ -26,6 +27,7 @@ app = FastAPI(
 
 app.add_middleware(RateLimitMiddleware)
 app.add_middleware(RequestContextMiddleware)
+app.include_router(admin_router)
 app.include_router(documents_router)
 app.include_router(users_router)
 app.include_router(auth_router)

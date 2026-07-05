@@ -29,3 +29,7 @@ class User(BaseModel):
 
 class UserWithStatus(User):
     is_active: bool
+
+
+class UserStatusUpdateRequest(BaseModel):
+    is_active: bool
