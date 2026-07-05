@@ -3,6 +3,7 @@ from typing import Any
 from starlette.status import (
     HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
+    HTTP_403_FORBIDDEN,
     HTTP_404_NOT_FOUND,
     HTTP_409_CONFLICT,
     HTTP_500_INTERNAL_SERVER_ERROR,
@@ -44,6 +45,12 @@ class BadRequestError(AppBaseError):
     status_code = HTTP_400_BAD_REQUEST
     error_code = "bad_request"
     message = "Bad request"
+
+
+class ForbiddenError(AppBaseError):
+    status_code = HTTP_403_FORBIDDEN
+    error_code = "forbidden"
+    message = "Access denied"
 
 
 class ExtractionError(ValueError):
