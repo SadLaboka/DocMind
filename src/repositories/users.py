@@ -26,3 +26,14 @@ class UserRepository(BaseRepository):
         user = result.scalar_one_or_none()
 
         return user
+
+    async def update_is_active(self, user_id: int, is_active: bool) -> User | None:
+        user = await self.get_user_by_id(user_id)
+        if not user:
+            return None
+
+        user.is_active = is_active
+        await self.session.commit()
+        await self.session.refresh(user)
+
+        return user
