@@ -2,6 +2,7 @@ from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.user_active_cache import UserActiveStatusCache, get_user_active_cache
 from src.core.database import get_session
 from src.core.exceptions import AuthenticationError
 from src.core.jwt import JWTManager
@@ -24,8 +25,9 @@ def get_user_repository(session: AsyncSession = Depends(get_session)) -> UserRep
 def get_auth_service(
     repository: UserRepository = Depends(get_user_repository),
     token_blacklist: TokenBlackList = Depends(get_token_blacklist),
+    user_active_cache: UserActiveStatusCache = Depends(get_user_active_cache),
 ) -> AuthService:
-    return AuthService(repository, token_blacklist)
+    return AuthService(repository, token_blacklist, user_active_cache)
 
 
 def get_current_token_payload(
