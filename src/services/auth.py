@@ -1,5 +1,6 @@
 import structlog
 
+from src.core.user_active_cache import UserActiveStatusCache
 from src.core.exceptions import AuthenticationError
 from src.core.jwt import REFRESH_TOKEN_TYPE, JWTManager
 from src.core.security import check_password
@@ -14,8 +15,14 @@ logger = structlog.get_logger(__name__)
 class AuthService(BaseService[UserRepository]):
     """Service for authentication"""
 
-    def __init__(self, repository: UserRepository, token_blacklist: TokenBlackList):
+    def __init__(
+            self,
+            repository: UserRepository,
+            token_blacklist: TokenBlackList,
+            user_active_cache: UserActiveStatusCache
+    ):
         super().__init__(repository)
+        self.user_active_cache = user_active_cache
         self.token_blacklist = token_blacklist
 
     async def authenticate(self, username: str, password: str) -> User:
@@ -49,12 +56,25 @@ class AuthService(BaseService[UserRepository]):
                 },
             )
 
+        if not user.is_active:
+            raise AuthenticationError(
+                error_code="user_deactivated",
+                message="User account has been deactivated",
+                log_context={
+                    "event_name": "login_failed_deactivated",
+                    "username": username,
+                    "user_id": user.id,
+                },
+            )
+
         logger.info(
             "login_success",
             user_id=user.id,
             login=user.login,
             is_admin=user.is_admin,
         )
+
+        await self.user_active_cache.set_active(user.id, user.is_active)
 
         return User.model_validate(user)
 
