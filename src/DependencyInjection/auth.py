@@ -46,7 +46,10 @@ def get_current_token_payload(
 
 
 async def get_current_user(
-    payload: dict = Depends(get_current_token_payload), token_blacklist: TokenBlackList = Depends(get_token_blacklist)
+    payload: dict = Depends(get_current_token_payload),
+    token_blacklist: TokenBlackList = Depends(get_token_blacklist),
+    user_active_cache: UserActiveStatusCache = Depends(get_user_active_cache),
+    user_repository: UserRepository = Depends(get_user_repository),
 ) -> User:
     jti = payload.get("jti")
     if jti and await token_blacklist.is_blacklisted(jti):
@@ -58,6 +61,22 @@ async def get_current_user(
                 "jti": jti,
                 "user_id": payload["sub"],
             },
+        )
+
+    is_active = await user_active_cache.get_active(payload["user_id"])
+
+    if is_active is None:
+        user = await user_repository.get_user_by_id(payload["user_id"])
+        await user_active_cache.set_active(payload["user_id"], user.is_active)
+
+    if not is_active:
+        raise AuthenticationError(
+            error_code="user_deactivated",
+            message="User has been deactivated",
+            log_context={
+                "event_name": "user_deactivated",
+                "user_id": payload["user_id"],
+            }
         )
 
     return User(id=int(payload["sub"]), login=payload["login"], is_admin=payload["is_admin"])
