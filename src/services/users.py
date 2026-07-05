@@ -95,7 +95,7 @@ class UserService(BaseService[UserRepository]):
         await self.user_active_cache.set_active(user_id, is_active)
 
         logger.info(
-            f"user_status_change",
+            "user_status_change",
             is_active=is_active,
             user_id=user_id,
             initiator_id=initiator_id,
