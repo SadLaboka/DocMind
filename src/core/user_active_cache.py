@@ -1,8 +1,8 @@
 import structlog
 from redis.asyncio import Redis
 
-from src.core.redis import get_redis
 from src.core.config import settings
+from src.core.redis import get_redis
 
 logger = structlog.getLogger(__name__)
 
@@ -40,6 +40,7 @@ class UserActiveStatusCache:
                 error=str(err),
             )
             return None
+
 
 _user_active_cache: UserActiveStatusCache | None = None
 

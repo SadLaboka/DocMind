@@ -1,10 +1,10 @@
 import structlog
 
-from src.core.user_active_cache import UserActiveStatusCache
 from src.core.exceptions import AuthenticationError
 from src.core.jwt import REFRESH_TOKEN_TYPE, JWTManager
 from src.core.security import check_password
 from src.core.token_blacklist import TokenBlackList
+from src.core.user_active_cache import UserActiveStatusCache
 from src.repositories.users import UserRepository
 from src.schemas.users import User
 from src.services.base import BaseService
@@ -16,10 +16,7 @@ class AuthService(BaseService[UserRepository]):
     """Service for authentication"""
 
     def __init__(
-            self,
-            repository: UserRepository,
-            token_blacklist: TokenBlackList,
-            user_active_cache: UserActiveStatusCache
+        self, repository: UserRepository, token_blacklist: TokenBlackList, user_active_cache: UserActiveStatusCache
     ):
         super().__init__(repository)
         self.user_active_cache = user_active_cache

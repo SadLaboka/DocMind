@@ -27,6 +27,7 @@ class User(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class UserWithStatus(User):
     is_active: bool
 

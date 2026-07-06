@@ -1,7 +1,7 @@
 import structlog
 from sqlalchemy.exc import IntegrityError
 
-from src.core.exceptions import ConflictError, BadRequestError, ResourceNotFoundError
+from src.core.exceptions import BadRequestError, ConflictError, ResourceNotFoundError
 from src.core.security import get_password_hash
 from src.core.user_active_cache import UserActiveStatusCache
 from src.repositories.users import UserRepository
@@ -13,6 +13,7 @@ logger = structlog.get_logger(__name__)
 
 class UserService(BaseService[UserRepository]):
     """Service for user registration"""
+
     def __init__(self, repository: UserRepository, user_active_cache: UserActiveStatusCache):
         super().__init__(repository)
         self.user_active_cache = user_active_cache
@@ -76,7 +77,7 @@ class UserService(BaseService[UserRepository]):
                     "event_name": "user_update_active_status_impossible",
                     "user_id": user_id,
                     "initiator_id": initiator_id,
-                }
+                },
             )
 
         user = await self.repository.update_is_active(user_id, is_active)
@@ -89,7 +90,7 @@ class UserService(BaseService[UserRepository]):
                     "event_name": "user_not_found",
                     "user_id": user_id,
                     "initiator_id": initiator_id,
-                }
+                },
             )
 
         await self.user_active_cache.set_active(user_id, is_active)

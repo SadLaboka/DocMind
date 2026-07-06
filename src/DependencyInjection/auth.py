@@ -2,11 +2,11 @@ from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.core.user_active_cache import UserActiveStatusCache, get_user_active_cache
 from src.core.database import get_session
 from src.core.exceptions import AuthenticationError, ForbiddenError
 from src.core.jwt import JWTManager
 from src.core.token_blacklist import TokenBlackList, get_token_blacklist
+from src.core.user_active_cache import UserActiveStatusCache, get_user_active_cache
 from src.repositories.users import UserRepository
 from src.schemas.users import User
 from src.services.auth import AuthService
@@ -69,6 +69,15 @@ async def get_current_user(
 
     if is_active is None:
         user = await user_repository.get_user_by_id(user_id)
+        if not user:
+            raise AuthenticationError(
+                error_code="user_not_found",
+                message="User not found",
+                log_context={
+                    "event_name": "user_not_found_in_database",
+                    "user_id": user_id,
+                },
+            )
         await user_active_cache.set_active(user_id, user.is_active)
         is_active = user.is_active
 
@@ -79,7 +88,7 @@ async def get_current_user(
             log_context={
                 "event_name": "user_deactivated",
                 "user_id": user_id,
-            }
+            },
         )
 
     return User(id=user_id, login=payload["login"], is_admin=payload["is_admin"])

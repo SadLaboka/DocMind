@@ -1,9 +1,10 @@
-from redis.asyncio import Redis
 import json
-import structlog
 
-from src.core.exceptions import ConflictError
+import structlog
+from redis.asyncio import Redis
+
 from src.core.config import settings
+from src.core.exceptions import ConflictError
 from src.models.mongo_prompts import Prompt
 
 logger = structlog.get_logger(__name__)
@@ -20,10 +21,7 @@ class MongoPromptsRepository:
             if cache:
                 values = json.loads(cache)
                 return Prompt(
-                    version=values["version"],
-                    prompt_type=prompt_type,
-                    content=values["content"],
-                    is_active=True
+                    version=values["version"], prompt_type=prompt_type, content=values["content"], is_active=True
                 )
         except Exception as err:
             logger.warning(
@@ -32,7 +30,7 @@ class MongoPromptsRepository:
                 cache_key=cache_key,
                 error=str(err),
             )
-        prompt = await Prompt.find_one(Prompt.prompt_type == prompt_type, Prompt.is_active == True)
+        prompt = await Prompt.find_one(Prompt.prompt_type == prompt_type, Prompt.is_active == True)  # noqa: E712
         if prompt:
             try:
                 await self.redis_client.set(
@@ -49,7 +47,7 @@ class MongoPromptsRepository:
                     error=str(err),
                 )
 
-        return prompt  # noqa: E712
+        return prompt
 
     async def get_prompt_by_version(self, prompt_version: str) -> Prompt | None:
         return await Prompt.find_one(Prompt.version == prompt_version)
