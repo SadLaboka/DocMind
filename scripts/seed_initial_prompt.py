@@ -8,6 +8,7 @@ from pymongo import AsyncMongoClient
 from pymongo.errors import ConnectionFailure, DuplicateKeyError
 
 from src.core.config import settings
+from src.core.enums import PromptType
 from src.core.logging_config import setup_logging
 from src.core.redis import get_redis
 from src.models.mongo_prompts import Prompt
@@ -16,7 +17,7 @@ from src.repositories.mongo_prompts import MongoPromptsRepository
 logger = structlog.get_logger(__name__)
 
 INITIAL_PROMPT_VERSION = settings.initial_prompt.initial_version
-INITIAL_PROMPT_TYPE = "document_analysis"
+INITIAL_PROMPT_TYPE = PromptType.document_analysis.value
 PROMPT_FILE_PATH = Path(__file__).parent / "prompts" / "v1_0_0.txt"
 INITIAL_PROMPT_CONTENT = PROMPT_FILE_PATH.read_text(encoding="utf-8").strip()
 
