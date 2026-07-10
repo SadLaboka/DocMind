@@ -2,7 +2,7 @@ import structlog
 
 from src.core.config import settings
 from src.core.database import async_session_factory
-from src.core.enums import DocumentStatus
+from src.core.enums import DocumentStatus, PromptType
 from src.events.schemas import DocumentTextExtractedEvent
 from src.llm.exceptions import LLMException
 from src.llm.factory import LLMServiceFactory
@@ -13,7 +13,7 @@ from src.stream.consumers.base import BaseConsumer
 
 logger = structlog.get_logger(__name__)
 
-PROMPT_TYPE = "document_analysis"
+PROMPT_TYPE = PromptType.document_analysis.value
 
 
 class ConsumerError(Exception):
