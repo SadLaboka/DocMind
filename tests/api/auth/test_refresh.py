@@ -57,3 +57,25 @@ async def test_refresh_token_wrong_type(client: AsyncClient, create_token_pair, 
     assert response.status_code in (401, 422)
     data = response.json()
     assert data.get("code") or data.get("detail")
+
+
+@pytest.mark.asyncio
+async def test_refresh_token_blacklisted(
+    client: AsyncClient,
+    create_token_pair,
+    test_password,
+    mock_token_blacklist,
+):
+    _, hashed_pw = test_password
+    tokens = await create_token_pair(
+        login="blacklisted_user", email="blacklisted@test.com", password_hash=hashed_pw
+    )
+
+    mock_token_blacklist.is_blacklisted.return_value = True
+
+    response = await client.post(
+        "/auth/refresh",
+        headers={"Authorization": f"Bearer {tokens['refresh_token']}"},
+    )
+    assert response.status_code == 401
+    assert response.json()["code"] == "token_revoked"
