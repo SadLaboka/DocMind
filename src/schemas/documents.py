@@ -27,6 +27,15 @@ class DocumentResponse(DocumentBase):
     model_config = ConfigDict(from_attributes=True)
 
 
+class DocumentMetaResponse(DocumentBase):
+    id: int
+    status: DocumentStatus = Field(alias="document_status")
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class DocumentData(DocumentBase):
     temp_filename: str | None = None
     file_hash: str | None = None
@@ -34,7 +43,7 @@ class DocumentData(DocumentBase):
 
 
 class DocumentListResponse(BaseModel):
-    items: list[DocumentResponse]
+    items: list[DocumentMetaResponse]
     total: int
     page: int
     limit: int
