@@ -79,3 +79,50 @@ async def test_refresh_token_blacklisted(
     )
     assert response.status_code == 401
     assert response.json()["code"] == "token_revoked"
+
+
+@pytest.mark.asyncio
+async def test_refresh_deactivated_user(
+    client: AsyncClient,
+    create_user,
+    test_db_session,
+    test_password,
+    mock_user_active_cache,
+):
+    _, hashed_pw = test_password
+    user = await create_user(
+        session=test_db_session,
+        login="refresh_deactivated",
+        email="refresh_deactivated@test.com",
+        password_hash=hashed_pw,
+    )
+    from sqlalchemy import update
+    from src.models.users import User
+    await test_db_session.execute(
+        update(User).where(User.id == user["id"]).values(is_active=False)
+    )
+    await test_db_session.commit()
+
+    mock_user_active_cache.get_active.return_value = False
+
+    from datetime import UTC, datetime, timedelta
+    from tests.conftest import get_test_jwt_manager
+    import jwt
+
+    jwt_mgr = get_test_jwt_manager()
+    now = datetime.now(UTC)
+    payload = {
+        "sub": str(user["id"]),
+        "login": user["login"],
+        "is_admin": False,
+    }
+    refresh_payload = {**payload, "type": "refresh", "exp": now + timedelta(days=7)}
+    refresh_token = jwt.encode(refresh_payload, jwt_mgr.private_key, algorithm=jwt_mgr.algorithm)
+
+    response = await client.post(
+        "/auth/refresh",
+        headers={"Authorization": f"Bearer {refresh_token}"},
+    )
+    assert response.status_code == 401
+    data = response.json()
+    assert data["code"] == "user_deactivated"
