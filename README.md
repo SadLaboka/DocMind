@@ -30,6 +30,12 @@
   height="58"
 />
 <img
+  src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/redis/default.svg"
+  alt="Redis"
+  width="58"
+  height="58"
+/>
+<img
   src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/rabbitmq/default.svg"
   alt="RabbitMQ"
   width="58"
