@@ -137,3 +137,180 @@ The system is designed for high fault tolerance, scalability, and strict separat
 **Why local files instead of S3?**
 - Current implementation uses local temp storage for simplicity
 - TODO: Migrate to S3/MinIO for stateless architecture and horizontal scaling
+
+## 🚀 Quick Start
+
+### Prerequisites
+- **Docker & Docker Compose** (v2.0+)
+- **Python 3.13** (for local development)
+- **Poetry** (dependency management)
+- **Make** (optional, but recommended)
+
+### Installation & Running
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/SadLaboka/DocMind.git
+   cd DocMind
+   ```
+
+2. Configure environment variables:
+   ```bash
+   cp .env.example .env
+   # Edit .env and fill in your API keys, database credentials, etc.
+   ```
+
+3. Start all services:
+   ```bash
+   make up
+   # Or directly: docker compose up -d --build
+   ```
+
+4. The application will be available at `http://localhost:8000`
+
+> [!TIP]
+> The first run may take 2-3 minutes as Docker builds images and applies migrations.
+
+### API Documentation
+
+Once running, interactive API documentation is available at:
+- **Swagger UI (OpenAPI):** `http://localhost:8000/openapi`
+- **ReDoc:** `http://localhost:8000/redoc`
+
+---
+
+## ⚡ Useful Commands
+
+| Command | Description |
+|---------|-------------|
+| `make up` | Start all services (`docker compose up -d --build`) |
+| `make down` | Stop all services and remove volumes |
+| `make test` | Run tests in isolated Docker environment |
+| `make cov` | Run tests with coverage report |
+| `make cov-html` | Open interactive HTML coverage report |
+| `make lint` | Run pre-commit hooks (ruff, black, mypy) in Docker |
+| `make format` | Run ruff check + format |
+| `make typecheck` | Run mypy |
+| `make logs` | Follow application logs |
+| `make logs-all` | Follow all service logs |
+
+---
+
+## ⚙️ Environment Variables
+
+The full list of variables is in `.env.example`. Key variables grouped by category:
+
+### Server
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `SERVER_HOST` | Application host | `127.0.0.1` |
+| `SERVER_PORT` | Application port | `8000` |
+| `SERVER_RELOAD` | Auto-reload on code changes | `true` |
+
+### Databases
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DB_USER` / `DB_PASSWORD` / `DB_NAME` | PostgreSQL credentials | `postgres` / `postgres` / `postgres` |
+| `DB_HOST` / `DB_PORT` | PostgreSQL connection | `localhost` / `5432` |
+| `MONGO_USERNAME` / `MONGO_PASSWORD` | MongoDB credentials | `root` / `example` |
+| `MONGO_HOST` / `MONGO_PORT` / `MONGO_NAME` | MongoDB connection | `127.0.0.1` / `27017` / `DocMind` |
+| `REDIS_HOST` / `REDIS_PORT` / `REDIS_DB` | Redis connection | `localhost` / `6379` / `0` |
+
+### Message Broker
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `RABBITMQ_DEFAULT_USER` / `RABBITMQ_DEFAULT_PASSWORD` | RabbitMQ credentials | `guest` / `guest` |
+| `RABBITMQ_HOST` / `RABBITMQ_PORT` | RabbitMQ connection | `127.0.0.1` / `15672` |
+
+### JWT Authentication
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `JWT_ALGORITHM` | Signing algorithm | `RS256` |
+| `JWT_TIMEDELTA` | Access token lifetime (minutes) | `15` |
+| `JWT_REFRESH_TIMEDELTA` | Refresh token lifetime (days) | `7` |
+
+### LLM Providers
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `LLM_DEFAULT_PROVIDER` | Default provider for analysis | `deepseek` |
+| `DEEPSEEK_API_KEY` | DeepSeek API key | — |
+| `DEEPSEEK_MODEL` | DeepSeek model name | `deepseek-v4-flash` |
+| `GEMINI_API_KEY` | Google Gemini API key | — |
+| `GEMINI_MODEL` | Gemini model name | `gemini-3.1-flash-lite` |
+
+### Rate Limiting
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `RATE_LIMIT_GLOBAL_LIMIT` / `RATE_LIMIT_GLOBAL_WINDOW` | Global rate limit (requests / seconds) | `60` / `60` |
+| `RATE_LIMIT_LOGIN_LIMIT` / `RATE_LIMIT_LOGIN_WINDOW` | Login endpoint limit | `5` / `60` |
+| `RATE_LIMIT_REGISTER_LIMIT` / `RATE_LIMIT_REGISTER_WINDOW` | Register endpoint limit | `3` / `60` |
+| `RATE_LIMIT_DOCUMENTS_POST_LIMIT` / `..._WINDOW` | Upload endpoint limit | `10` / `60` |
+| `RATE_LIMIT_DOCUMENTS_GET_LIMIT` / `..._WINDOW` | List endpoint limit | `20` / `60` |
+
+### Caching
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `CACHE_PROMPT_TTL` | Prompt cache TTL (seconds) | `3600` |
+| `CACHE_USER_STATUS_TTL` | User status cache TTL (seconds) | `3600` |
+
+---
+
+## 🧪 Testing
+
+Tests run in an isolated Docker environment with a dedicated test database:
+
+```bash
+make test
+```
+
+Generate a coverage report (XML + terminal output):
+```bash
+make cov
+# Output: ./coverage/coverage.xml
+```
+
+Open an interactive HTML coverage report:
+```bash
+make cov-html
+```
+
+> [!NOTE]
+> The test database is automatically created and destroyed after each test run.
+
+---
+
+## 🔍 Code Quality
+
+Run linters and type checks:
+```bash
+make lint        # pre-commit hooks in Docker
+make format      # ruff check + format
+make typecheck   # mypy
+```
+
+---
+
+## 🗄 Database Migrations
+
+PostgreSQL schema is managed via **Alembic**.
+
+Create a new migration:
+```bash
+make migrate-new m="add_new_field"
+# Or: poetry run alembic revision --autogenerate -m "add_new_field"
+```
+
+Apply all pending migrations:
+```bash
+make migrate-up
+# Or: poetry run alembic upgrade head
+```
+
+Rollback the last migration:
+```bash
+make migrate-down
+# Or: poetry run alembic downgrade -1
+```
+
+> [!IMPORTANT]
+> During `make up`, migrations are applied automatically via the `db-migrate` service. You only need to run these commands manually when developing locally.
