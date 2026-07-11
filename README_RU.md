@@ -138,3 +138,180 @@
 **Почему локальные файлы вместо S3?**
 - Текущая реализация использует локальное временное хранилище для простоты
 - TODO: Мигрировать на S3/MinIO для stateless-архитектуры и горизонтального масштабирования
+
+## 🚀 Быстрый старт
+
+### Требования
+- **Docker & Docker Compose** (v2.0+)
+- **Python 3.13** (для локальной разработки)
+- **Poetry** (управление зависимостями)
+- **Make** (опционально, но рекомендуется)
+
+### Установка и запуск
+
+1. Клонируйте репозиторий:
+   ```bash
+   git clone https://github.com/SadLaboka/DocMind.git
+   cd DocMind
+   ```
+
+2. Настройте переменные окружения:
+   ```bash
+   cp .env.example .env
+   # Отредактируйте .env, укажите API-ключи, учётные данные БД и т.д.
+   ```
+
+3. Запустите все сервисы:
+   ```bash
+   make up
+   # Или напрямую: docker compose up -d --build
+   ```
+
+4. Приложение будет доступно по адресу `http://localhost:8000`
+
+> [!TIP]
+> Первый запуск может занять 2-3 минуты — Docker собирает образы и применяет миграции.
+
+### Документация API
+
+После запуска интерактивная документация API доступна по адресам:
+- **Swagger UI (OpenAPI):** `http://localhost:8000/openapi`
+- **ReDoc:** `http://localhost:8000/redoc`
+
+---
+
+## ⚡ Полезные команды
+
+| Команда | Описание |
+|---------|----------|
+| `make up` | Запуск всех сервисов (`docker compose up -d --build`) |
+| `make down` | Остановка всех сервисов и удаление томов |
+| `make test` | Запуск тестов в изолированном Docker-окружении |
+| `make cov` | Запуск тестов с отчётом покрытия |
+| `make cov-html` | Открыть интерактивный HTML-отчёт покрытия |
+| `make lint` | Запуск pre-commit хуков (ruff, black, mypy) в Docker |
+| `make format` | Запуск ruff check + format |
+| `make typecheck` | Запуск mypy |
+| `make logs` | Просмотр логов приложения |
+| `make logs-all` | Просмотр логов всех сервисов |
+
+---
+
+## ⚙️ Переменные окружения
+
+Полный список переменных находится в `.env.example`. Основные переменные по категориям:
+
+### Сервер
+| Переменная | Описание | По умолчанию |
+|------------|----------|--------------|
+| `SERVER_HOST` | Хост приложения | `127.0.0.1` |
+| `SERVER_PORT` | Порт приложения | `8000` |
+| `SERVER_RELOAD` | Автоперезагрузка при изменении кода | `true` |
+
+### Базы данных
+| Переменная | Описание | По умолчанию |
+|------------|----------|--------------|
+| `DB_USER` / `DB_PASSWORD` / `DB_NAME` | Учётные данные PostgreSQL | `postgres` / `postgres` / `postgres` |
+| `DB_HOST` / `DB_PORT` | Подключение к PostgreSQL | `localhost` / `5432` |
+| `MONGO_USERNAME` / `MONGO_PASSWORD` | Учётные данные MongoDB | `root` / `example` |
+| `MONGO_HOST` / `MONGO_PORT` / `MONGO_NAME` | Подключение к MongoDB | `127.0.0.1` / `27017` / `DocMind` |
+| `REDIS_HOST` / `REDIS_PORT` / `REDIS_DB` | Подключение к Redis | `localhost` / `6379` / `0` |
+
+### Брокер сообщений
+| Переменная | Описание | По умолчанию |
+|------------|----------|--------------|
+| `RABBITMQ_DEFAULT_USER` / `RABBITMQ_DEFAULT_PASSWORD` | Учётные данные RabbitMQ | `guest` / `guest` |
+| `RABBITMQ_HOST` / `RABBITMQ_PORT` | Подключение к RabbitMQ | `127.0.0.1` / `15672` |
+
+### JWT-аутентификация
+| Переменная | Описание | По умолчанию |
+|------------|----------|--------------|
+| `JWT_ALGORITHM` | Алгоритм подписи | `RS256` |
+| `JWT_TIMEDELTA` | Время жизни access-токена (минуты) | `15` |
+| `JWT_REFRESH_TIMEDELTA` | Время жизни refresh-токена (дни) | `7` |
+
+### LLM-провайдеры
+| Переменная | Описание | По умолчанию |
+|------------|----------|--------------|
+| `LLM_DEFAULT_PROVIDER` | Провайдер по умолчанию для анализа | `deepseek` |
+| `DEEPSEEK_API_KEY` | API-ключ DeepSeek | — |
+| `DEEPSEEK_MODEL` | Название модели DeepSeek | `deepseek-v4-flash` |
+| `GEMINI_API_KEY` | API-ключ Google Gemini | — |
+| `GEMINI_MODEL` | Название модели Gemini | `gemini-3.1-flash-lite` |
+
+### Rate Limiting
+| Переменная | Описание | По умолчанию |
+|------------|----------|--------------|
+| `RATE_LIMIT_GLOBAL_LIMIT` / `RATE_LIMIT_GLOBAL_WINDOW` | Глобальный лимит (запросы / секунды) | `60` / `60` |
+| `RATE_LIMIT_LOGIN_LIMIT` / `RATE_LIMIT_LOGIN_WINDOW` | Лимит для эндпоинта логина | `5` / `60` |
+| `RATE_LIMIT_REGISTER_LIMIT` / `RATE_LIMIT_REGISTER_WINDOW` | Лимит для эндпоинта регистрации | `3` / `60` |
+| `RATE_LIMIT_DOCUMENTS_POST_LIMIT` / `..._WINDOW` | Лимит для загрузки документов | `10` / `60` |
+| `RATE_LIMIT_DOCUMENTS_GET_LIMIT` / `..._WINDOW` | Лимит для получения списка документов | `20` / `60` |
+
+### Кэширование
+| Переменная | Описание | По умолчанию |
+|------------|----------|--------------|
+| `CACHE_PROMPT_TTL` | TTL кэша промптов (секунды) | `3600` |
+| `CACHE_USER_STATUS_TTL` | TTL кэша статусов пользователей (секунды) | `3600` |
+
+---
+
+## 🧪 Тестирование
+
+Тесты запускаются в изолированном Docker-окружении с отдельной тестовой базой данных:
+
+```bash
+make test
+```
+
+Сгенерировать отчёт покрытия (XML + вывод в терминал):
+```bash
+make cov
+# Результат: ./coverage/coverage.xml
+```
+
+Открыть интерактивный HTML-отчёт покрытия:
+```bash
+make cov-html
+```
+
+> [!NOTE]
+> Тестовая база данных автоматически создаётся и удаляется после каждого прогона тестов.
+
+---
+
+## 🔍 Качество кода
+
+Запуск линтеров и проверки типов:
+```bash
+make lint        # pre-commit хуки в Docker
+make format      # ruff check + format
+make typecheck   # mypy
+```
+
+---
+
+## 🗄 Миграции базы данных
+
+Схема PostgreSQL управляется через **Alembic**.
+
+Создать новую миграцию:
+```bash
+make migrate-new m="описание_изменений"
+# Или: poetry run alembic revision --autogenerate -m "описание_изменений"
+```
+
+Применить все ожидающие миграции:
+```bash
+make migrate-up
+# Или: poetry run alembic upgrade head
+```
+
+Откатить последнюю миграцию:
+```bash
+make migrate-down
+# Или: poetry run alembic downgrade -1
+```
+
+> [!IMPORTANT]
+> При запуске через `make up` миграции применяются автоматически через сервис `db-migrate`. Эти команды нужны только при локальной разработке.
