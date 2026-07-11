@@ -314,3 +314,142 @@ make migrate-down
 
 > [!IMPORTANT]
 > During `make up`, migrations are applied automatically via the `db-migrate` service. You only need to run these commands manually when developing locally.
+
+---
+
+## 🗺 Roadmap
+
+### Completed
+- [x] Async pipeline: FastAPI + Celery + FastStream
+- [x] Multi-format text extraction (TXT, DOCX, XLSX, PDF)
+- [x] LLM integration with Factory Pattern (DeepSeek, Gemini)
+- [x] Document deduplication by SHA-256 hash
+- [x] Redis caching (prompts, user statuses, token blacklist)
+- [x] Rate limiting with per-endpoint configuration
+- [x] JWT authentication (RS256) with token revocation
+- [x] Prompt versioning with admin panel
+- [x] Dead Letter Queues for failed analysis tasks
+- [x] Structured logging with `structlog` (JSON in prod)
+- [x] Architecture diagrams and detailed documentation
+
+### In Progress / Planned
+- [ ] **WebSockets** — real-time document status updates (replace polling)
+- [ ] **S3 / MinIO** — replace local temp storage for stateless architecture
+- [ ] **Email notifications** — notify users when analysis completes
+- [ ] **Telegram bot** — alternative UI on top of the existing API
+- [ ] **Observability stack** — Grafana + Prometheus + Loki
+- [ ] **CI/CD pipeline** — automated tests, image build, and deployment
+- [ ] **Extended functionality** — document comparison, OCR for scans, custom form parsing
+
+## 💡 Usage Examples
+
+Basic workflow: register → login → upload a document → check the result.
+
+### 1. Register a new user
+
+```bash
+curl -X POST http://localhost:8000/users/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "login": "john_doe",
+    "email": "john@example.com",
+    "password": "SecurePass123!"
+  }'
+```
+
+### 2. Login and get tokens
+
+```bash
+curl -X POST http://localhost:8000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "login": "john_doe",
+    "password": "SecurePass123!"
+  }'
+```
+
+Response:
+```json
+{
+  "access_token": "eyJ...",
+  "refresh_token": "eyJ...",
+  "token_type": "Bearer"
+}
+```
+
+### 3. Upload a document for analysis
+
+```bash
+curl -X POST http://localhost:8000/documents/ \
+  -H "Authorization: Bearer <access_token>" \
+  -F "file=@contract.pdf" \
+  -F "description=Q3 supplier contract" \
+  -F "provider=deepseek"
+```
+
+> [!NOTE]
+> - Supported formats: `.txt`, `.docx`, `.xlsx`, `.pdf`
+> - Max file size: 50 MB
+> - `provider` is optional — defaults to the value of `LLM_DEFAULT_PROVIDER`
+> - If the same file was already analyzed, extraction is skipped and the existing result is reused
+
+### 4. Get the list of your documents
+
+```bash
+curl -X GET "http://localhost:8000/documents/?page=1&limit=20" \
+  -H "Authorization: Bearer <access_token>"
+```
+
+### 5. Get a specific document with analysis result
+
+```bash
+curl -X GET http://localhost:8000/documents/42 \
+  -H "Authorization: Bearer <access_token>"
+```
+
+Response (once processing is complete):
+```json
+{
+  "id": 42,
+  "filename": "contract.pdf",
+  "description": "Q3 supplier contract",
+  "document_status": "success",
+  "provider": "deepseek",
+  "document_text": "Raw extracted text...",
+  "analysis": {
+    "summary": "Supplier contract for Q3...",
+    "keywords": ["contract", "supplier", "Q3"],
+    "document_type": "contract",
+    "entities": {
+      "organizations": ["Acme Corp"],
+      "persons": ["John Doe"],
+      "dates": ["2025-09-01"],
+      "amounts": ["$50,000"]
+    },
+    "confidence": 0.92
+  },
+  "analysis_version": "v1.0.0",
+  "created_at": "2025-01-15T10:30:00Z",
+  "updated_at": "2025-01-15T10:31:45Z"
+}
+```
+
+### 6. Refresh the access token
+
+```bash
+curl -X POST http://localhost:8000/auth/refresh \
+  -H "Authorization: Bearer <refresh_token>"
+```
+
+### 7. Logout (revoke the token)
+
+```bash
+curl -X POST http://localhost:8000/auth/logout \
+  -H "Authorization: Bearer <access_token>"
+```
+
+## 📄 License
+
+This project is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)** — see the [LICENSE](LICENSE) file for details.
+
+The AGPL-3.0 requires that if you modify this software and run it on a network server, you must make the source code of your modified version available to the users of that server.
