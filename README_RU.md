@@ -315,3 +315,142 @@ make migrate-down
 
 > [!IMPORTANT]
 > При запуске через `make up` миграции применяются автоматически через сервис `db-migrate`. Эти команды нужны только при локальной разработке.
+
+---
+
+## 🗺 Roadmap
+
+### Выполнено
+- [x] Асинхронный конвейер: FastAPI + Celery + FastStream
+- [x] Извлечение текста из множества форматов (TXT, DOCX, XLSX, PDF)
+- [x] Интеграция с LLM через Factory Pattern (DeepSeek, Gemini)
+- [x] Дедупликация документов по SHA-256 хэшу
+- [x] Кэширование в Redis (промпты, статусы пользователей, blacklist токенов)
+- [x] Rate limiting с настройкой для каждого эндпоинта
+- [x] JWT-аутентификация (RS256) с отзывом токенов
+- [x] Версионирование промптов с админ-панелью
+- [x] Dead Letter Queues для упавших задач анализа
+- [x] Структурированное логирование через `structlog` (JSON в продакшене)
+- [x] Диаграммы архитектуры и подробная документация
+
+### В планах
+- [ ] **WebSockets** — real-time обновление статусов документов (замена polling)
+- [ ] **S3 / MinIO** — замена локального temp-хранилища для stateless-архитектуры
+- [ ] **Email-уведомления** — уведомлять пользователей о завершении анализа
+- [ ] **Telegram-бот** — альтернативный UI поверх существующего API
+- [ ] **Стек наблюдаемости** — Grafana + Prometheus + Loki
+- [ ] **CI/CD пайплайн** — автоматические тесты, сборка образов и деплой
+- [ ] **Расширение функционала** — сравнение документов, OCR для сканов, парсинг специфичных форм
+
+## 💡 Примеры использования
+
+Базовый сценарий: регистрация → логин → загрузка документа → получение результата.
+
+### 1. Регистрация нового пользователя
+
+```bash
+curl -X POST http://localhost:8000/users/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "login": "john_doe",
+    "email": "john@example.com",
+    "password": "SecurePass123!"
+  }'
+```
+
+### 2. Логин и получение токенов
+
+```bash
+curl -X POST http://localhost:8000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "login": "john_doe",
+    "password": "SecurePass123!"
+  }'
+```
+
+Ответ:
+```json
+{
+  "access_token": "eyJ...",
+  "refresh_token": "eyJ...",
+  "token_type": "Bearer"
+}
+```
+
+### 3. Загрузка документа на анализ
+
+```bash
+curl -X POST http://localhost:8000/documents/ \
+  -H "Authorization: Bearer <access_token>" \
+  -F "file=@contract.pdf" \
+  -F "description=Договор с поставщиком за Q3" \
+  -F "provider=deepseek"
+```
+
+> [!NOTE]
+> - Поддерживаемые форматы: `.txt`, `.docx`, `.xlsx`, `.pdf`
+> - Максимальный размер файла: 50 МБ
+> - `provider` необязателен — по умолчанию используется значение `LLM_DEFAULT_PROVIDER`
+> - Если такой файл уже анализировался, извлечение пропускается и используется существующий результат
+
+### 4. Получение списка документов
+
+```bash
+curl -X GET "http://localhost:8000/documents/?page=1&limit=20" \
+  -H "Authorization: Bearer <access_token>"
+```
+
+### 5. Получение конкретного документа с результатом анализа
+
+```bash
+curl -X GET http://localhost:8000/documents/42 \
+  -H "Authorization: Bearer <access_token>"
+```
+
+Ответ (после завершения обработки):
+```json
+{
+  "id": 42,
+  "filename": "contract.pdf",
+  "description": "Договор с поставщиком за Q3",
+  "document_status": "success",
+  "provider": "deepseek",
+  "document_text": "Сырой извлечённый текст...",
+  "analysis": {
+    "summary": "Договор с поставщиком за Q3...",
+    "keywords": ["договор", "поставщик", "Q3"],
+    "document_type": "contract",
+    "entities": {
+      "organizations": ["Acme Corp"],
+      "persons": ["John Doe"],
+      "dates": ["2025-09-01"],
+      "amounts": ["$50,000"]
+    },
+    "confidence": 0.92
+  },
+  "analysis_version": "v1.0.0",
+  "created_at": "2025-01-15T10:30:00Z",
+  "updated_at": "2025-01-15T10:31:45Z"
+}
+```
+
+### 6. Обновление access-токена
+
+```bash
+curl -X POST http://localhost:8000/auth/refresh \
+  -H "Authorization: Bearer <refresh_token>"
+```
+
+### 7. Выход (отзыв токена)
+
+```bash
+curl -X POST http://localhost:8000/auth/logout \
+  -H "Authorization: Bearer <access_token>"
+```
+
+## 📄 Лицензия
+
+Проект распространяется под лицензией **GNU Affero General Public License v3.0 (AGPL-3.0)** — подробности в файле [LICENSE](LICENSE).
+
+AGPL-3.0 требует, что если вы модифицируете это ПО и запускаете его на сетевом сервере, вы обязаны предоставить исходный код вашей модифицированной версии пользователям этого сервера.
