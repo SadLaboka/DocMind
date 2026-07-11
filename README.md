@@ -18,6 +18,24 @@ The project is built on a microservices architecture: REST API accepts files, ba
 
 The system is designed for high fault tolerance, scalability, and strict separation of responsibilities between components.
 
+
+## 📑 Table of Contents
+
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Architecture](#architecture)
+- [Data Flow](#data-flow)
+- [Quick Start](#quick-start)
+- [Useful Commands](#useful-commands)
+- [Environment Variables](#environment-variables)
+- [Testing](#testing)
+- [Code Quality](#code-quality)
+- [Database Migrations](#database-migrations)
+- [Roadmap](#roadmap)
+- [Usage Examples](#usage-examples)
+- [License](#license)
+
+<a id="features"></a>
 ## ✨ Features
 
 - **Asynchronous pipeline processing**: Upload, text extraction, and analysis occur in separate processes without blocking the main API.
@@ -29,6 +47,7 @@ The system is designed for high fault tolerance, scalability, and strict separat
 - **Security**: JWT authentication (RS256) with token revocation mechanism (blacklist) and password hashing via Argon2.
 - **Prompt versioning**: Ability to upload new prompt versions for LLM via admin panel with automatic caching of the active version.
 
+<a id="tech-stack"></a>
 ## 🛠 Tech Stack
 
 ### Core & API
@@ -64,6 +83,7 @@ The system is designed for high fault tolerance, scalability, and strict separat
 - **GitHub Actions** — CI/CD, Codecov, SonarCloud
 - **pytest** — coverage for API, services, and workers
 
+<a id="architecture"></a>
 ## 🏗 Architecture
 
 ### Component Diagram
@@ -85,6 +105,7 @@ The system is designed for high fault tolerance, scalability, and strict separat
 
 ![Document Lifecycle](docs/images/sequence.svg)
 
+<a id="data-flow"></a>
 ## 📊 Data Flow
 
 ### Document Processing Pipeline
@@ -138,6 +159,7 @@ The system is designed for high fault tolerance, scalability, and strict separat
 - Current implementation uses local temp storage for simplicity
 - TODO: Migrate to S3/MinIO for stateless architecture and horizontal scaling
 
+<a id="quick-start"></a>
 ## 🚀 Quick Start
 
 ### Prerequisites
@@ -179,6 +201,7 @@ Once running, interactive API documentation is available at:
 
 ---
 
+<a id="useful-commands"></a>
 ## ⚡ Useful Commands
 
 | Command | Description |
@@ -196,6 +219,7 @@ Once running, interactive API documentation is available at:
 
 ---
 
+<a id="environment-variables"></a>
 ## ⚙️ Environment Variables
 
 The full list of variables is in `.env.example`. Key variables grouped by category:
@@ -255,6 +279,7 @@ The full list of variables is in `.env.example`. Key variables grouped by catego
 
 ---
 
+<a id="testing"></a>
 ## 🧪 Testing
 
 Tests run in an isolated Docker environment with a dedicated test database:
@@ -279,6 +304,7 @@ make cov-html
 
 ---
 
+<a id="code-quality"></a>
 ## 🔍 Code Quality
 
 Run linters and type checks:
@@ -290,6 +316,7 @@ make typecheck   # mypy
 
 ---
 
+<a id="database-migrations"></a>
 ## 🗄 Database Migrations
 
 PostgreSQL schema is managed via **Alembic**.
@@ -317,6 +344,7 @@ make migrate-down
 
 ---
 
+<a id="roadmap"></a>
 ## 🗺 Roadmap
 
 ### Completed
@@ -341,6 +369,7 @@ make migrate-down
 - [ ] **CI/CD pipeline** — automated tests, image build, and deployment
 - [ ] **Extended functionality** — document comparison, OCR for scans, custom form parsing
 
+<a id="usage-examples"></a>
 ## 💡 Usage Examples
 
 Basic workflow: register → login → upload a document → check the result.
@@ -448,6 +477,7 @@ curl -X POST http://localhost:8000/auth/logout \
   -H "Authorization: Bearer <access_token>"
 ```
 
+<a id="license"></a>
 ## 📄 License
 
 This project is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)** — see the [LICENSE](LICENSE) file for details.
