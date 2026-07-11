@@ -125,6 +125,7 @@ async def test_get_documents_empty(client: AsyncClient, test_password, create_to
 async def test_get_documents_unauthorized(client: AsyncClient):
     response = await client.get("/documents/")
     assert response.status_code == 401
+    assert response.json()["detail"] == "No credentials provided"
 
 
 @pytest.mark.asyncio

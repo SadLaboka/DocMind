@@ -167,7 +167,7 @@ async def test_upload_document_unauthorized(client: AsyncClient):
     )
 
     assert response.status_code == 401
-    assert response.json()["detail"] == "Invalid authentication credentials"
+    assert response.json()["detail"] == "No credentials provided"
 
 
 @pytest.mark.asyncio

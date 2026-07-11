@@ -90,7 +90,7 @@ async def test_cancel_document_unauthorized(client: AsyncClient):
     response = await client.delete("/documents/1")
 
     assert response.status_code == 401
-    assert response.json()["detail"] == "Invalid authentication credentials"
+    assert response.json()["detail"] == "No credentials provided"
 
 
 @pytest.mark.asyncio
