@@ -103,7 +103,6 @@ class AuthService(BaseService[UserRepository]):
     async def verify_refresh_token(self, refresh_token: str, jwt_manager: JWTManager) -> User:
         """Verifies refresh token and checks blacklist"""
         payload = jwt_manager.verify_token(refresh_token, REFRESH_TOKEN_TYPE)
-
         jti = payload.get("jti")
         if jti and await self.token_blacklist.is_blacklisted(jti):
             raise AuthenticationError(
@@ -117,4 +116,31 @@ class AuthService(BaseService[UserRepository]):
             )
 
         user_id = int(payload["sub"])
+
+        is_active = await self.user_active_cache.get_active(user_id)
+        if is_active is None:
+            user = await self.repository.get_user_by_id(user_id)
+            if not user:
+                raise AuthenticationError(
+                    error_code="user_not_found",
+                    message="User not found",
+                    log_context={
+                        "event_name": "token_refresh_failed",
+                        "reason": "user not found",
+                        "user_id": user_id,
+                    },
+                )
+            is_active = user.is_active
+            await self.user_active_cache.set_active(user_id, is_active)
+
+        if not is_active:
+            raise AuthenticationError(
+                error_code="user_deactivated",
+                message="User account has been deactivated",
+                log_context={
+                    "event_name": "refresh_failed_deactivated",
+                    "user_id": user_id,
+                },
+            )
+
         return await self.load_user_profile(user_id)
