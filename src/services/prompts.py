@@ -1,7 +1,8 @@
+import structlog
+
+from src.core.enums import PromptType
 from src.models.mongo_prompts import Prompt
 from src.repositories.mongo_prompts import MongoPromptsRepository
-from src.core.enums import PromptType
-import structlog
 
 logger = structlog.get_logger(__name__)
 

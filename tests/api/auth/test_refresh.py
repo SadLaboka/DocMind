@@ -67,9 +67,7 @@ async def test_refresh_token_blacklisted(
     mock_token_blacklist,
 ):
     _, hashed_pw = test_password
-    tokens = await create_token_pair(
-        login="blacklisted_user", email="blacklisted@test.com", password_hash=hashed_pw
-    )
+    tokens = await create_token_pair(login="blacklisted_user", email="blacklisted@test.com", password_hash=hashed_pw)
 
     mock_token_blacklist.is_blacklisted.return_value = True
 
@@ -97,17 +95,19 @@ async def test_refresh_deactivated_user(
         password_hash=hashed_pw,
     )
     from sqlalchemy import update
+
     from src.models.users import User
-    await test_db_session.execute(
-        update(User).where(User.id == user["id"]).values(is_active=False)
-    )
+
+    await test_db_session.execute(update(User).where(User.id == user["id"]).values(is_active=False))
     await test_db_session.commit()
 
     mock_user_active_cache.get_active.return_value = False
 
     from datetime import UTC, datetime, timedelta
-    from tests.conftest import get_test_jwt_manager
+
     import jwt
+
+    from tests.conftest import get_test_jwt_manager
 
     jwt_mgr = get_test_jwt_manager()
     now = datetime.now(UTC)

@@ -42,10 +42,10 @@ async def test_fallback_to_db_user_deactivated(
     )
 
     from sqlalchemy import update
+
     from src.models.users import User
-    await test_db_session.execute(
-        update(User).where(User.id == tokens["user_id"]).values(is_active=False)
-    )
+
+    await test_db_session.execute(update(User).where(User.id == tokens["user_id"]).values(is_active=False))
     await test_db_session.commit()
 
     mock_user_active_cache.get_active.return_value = None

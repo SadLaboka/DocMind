@@ -1,7 +1,9 @@
 from datetime import UTC, datetime
 from unittest.mock import MagicMock
-from httpx import AsyncClient
+
 import pytest
+from httpx import AsyncClient
+
 from src.core.exceptions import ConflictError
 
 
@@ -56,9 +58,7 @@ async def test_create_prompt_forbidden(
     test_password,
 ):
     _, hashed_pw = test_password
-    tokens = await create_token_pair(
-        login="regular", email="regular@test.com", password_hash=hashed_pw, is_admin=False
-    )
+    tokens = await create_token_pair(login="regular", email="regular@test.com", password_hash=hashed_pw, is_admin=False)
 
     response = await client.post(
         "/admin/prompts",

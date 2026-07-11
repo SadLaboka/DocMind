@@ -70,10 +70,10 @@ async def test_login_deactivated_user(
         password_hash=hashed_pw,
     )
     from sqlalchemy import update
+
     from src.models.users import User
-    await test_db_session.execute(
-        update(User).where(User.id == user["id"]).values(is_active=False)
-    )
+
+    await test_db_session.execute(update(User).where(User.id == user["id"]).values(is_active=False))
     await test_db_session.commit()
 
     response = await client.post(

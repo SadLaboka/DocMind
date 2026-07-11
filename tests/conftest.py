@@ -1,6 +1,7 @@
 from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import AsyncMock
+
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
@@ -10,6 +11,7 @@ from sqlalchemy.ext.asyncio import (
     AsyncSession,
     create_async_engine,
 )
+
 from src.core.config import settings
 from src.core.database import get_session
 from src.core.enums import DocumentStatus, LLMProvider, MimeType
@@ -249,6 +251,7 @@ def create_token_pair(create_user, test_db_session):
         is_admin: bool = False,
     ):
         from datetime import timedelta
+
         import jwt
 
         jwt_mgr = get_test_jwt_manager()
