@@ -1,0 +1,102 @@
+@startuml
+!theme cyborg
+
+skinparam backgroundColor #1A1A2E
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam sequenceArrowThickness 2
+skinparam sequenceParticipantBorderThickness 2
+skinparam sequenceLifeLineBorderColor #555555
+
+skinparam sequence {
+  ArrowColor #F8F8F2
+  ArrowFontColor #F8F8F2
+  ArrowFontSize 12
+
+  LifeLineBorderColor #666666
+  LifeLineBackgroundColor #2A2A3E
+
+  BoxBorderColor #44475A
+  BoxBackgroundColor #282A36
+  BoxFontColor #F8F8F2
+  BoxFontSize 12
+
+  NoteBorderColor #FFB86C
+  NoteBackgroundColor #44475A
+  NoteFontColor #F8F8F2
+  NoteFontSize 11
+
+  DividerBorderColor #6272A4
+  DividerBackgroundColor #44475A
+  DividerFontColor #F8F8F2
+  DividerFontSize 13
+}
+
+actor "Пользователь" as User #6272A4
+participant "FastAPI" as API #009688
+participant "PostgreSQL" as PG #336791
+participant "RabbitMQ" as RMQ #FF6600
+participant "Celery Worker" as Worker #37814A
+participant "MongoDB" as Mongo #47A248
+participant "FastStream" as Stream #6B46C1
+participant "LLM\n(DeepSeek/Gemini)" as LLM #44475A
+
+== Загрузка и валидация ==
+
+User -> API: POST /documents (Загрузка файла)
+activate API
+API -> PG: Сохранение метаданных\n(статус: created)
+activate PG
+deactivate PG
+API -> RMQ: Публикация задачи\nна извлечение
+activate RMQ
+deactivate RMQ
+API --> User: 201 Created\n(DocumentResponse)
+deactivate API
+
+== Асинхронно: Извлечение текста ==
+
+note over Worker: Асинхронная обработка
+
+RMQ -> Worker: Получение задачи
+activate Worker
+Worker -> Worker: Извлечение текста\n(txt/docx/xlsx/pdf)
+Worker -> Mongo: Сохранение raw_text
+activate Mongo
+deactivate Mongo
+Worker -> PG: Обновление статуса\n(extracted)
+activate PG
+deactivate PG
+Worker -> RMQ: Публикация события\n"documents.text.extracted"
+deactivate Worker
+
+== Асинхронно: Анализ через LLM ==
+
+note over Stream: Асинхронная обработка
+
+RMQ -> Stream: Получение события
+activate Stream
+Stream -> Mongo: Получение raw_text
+activate Mongo
+deactivate Mongo
+Stream -> Stream: Получение активного промпта
+Stream -> LLM: Анализ текста\n(текст + промпт)
+activate LLM
+LLM --> Stream: JSON-результат анализа
+deactivate LLM
+Stream -> Mongo: Сохранение анализа и версии
+activate Mongo
+deactivate Mongo
+Stream -> PG: Обновление статуса\n(success)
+activate PG
+deactivate PG
+deactivate Stream
+
+== Получение результата ==
+
+User -> API: GET /documents/{id}
+activate API
+API --> User: DocumentResponse\n(метаданные + текст + анализ)
+deactivate API
+
+@enduml

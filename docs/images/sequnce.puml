@@ -1,0 +1,101 @@
+@startuml
+!theme cyborg
+
+skinparam backgroundColor #1A1A2E
+skinparam shadowing false
+skinparam roundcorner 8
+skinparam sequenceArrowThickness 2
+skinparam sequenceParticipantBorderThickness 2
+skinparam sequenceLifeLineBorderColor #555555
+
+skinparam sequence {
+  ArrowColor #F8F8F2
+  ArrowFontColor #F8F8F2
+  ArrowFontSize 12
+
+  LifeLineBorderColor #666666
+  LifeLineBackgroundColor #2A2A3E
+
+  BoxBorderColor #44475A
+  BoxBackgroundColor #282A36
+  BoxFontColor #F8F8F2
+  BoxFontSize 12
+
+  NoteBorderColor #FFB86C
+  NoteBackgroundColor #44475A
+  NoteFontColor #F8F8F2
+  NoteFontSize 11
+
+  DividerBorderColor #6272A4
+  DividerBackgroundColor #44475A
+  DividerFontColor #F8F8F2
+  DividerFontSize 13
+}
+
+actor "User" as User #6272A4
+participant "FastAPI" as API #009688
+participant "PostgreSQL" as PG #336791
+participant "RabbitMQ" as RMQ #FF6600
+participant "Celery Worker" as Worker #37814A
+participant "MongoDB" as Mongo #47A248
+participant "FastStream" as Stream #6B46C1
+participant "LLM\n(DeepSeek/Gemini)" as LLM #44475A
+
+== Upload & Validation ==
+
+User -> API: POST /documents (Upload file)
+activate API
+API -> PG: Save metadata\n(status: created)
+activate PG
+deactivate PG
+API -> RMQ: Publish extraction task
+activate RMQ
+deactivate RMQ
+API --> User: 201 Created\n(DocumentResponse)
+deactivate API
+
+== Async: Text Extraction ==
+
+note over Worker: Async processing
+
+RMQ -> Worker: Consume task
+activate Worker
+Worker -> Worker: Extract text\n(txt/docx/xlsx/pdf)
+Worker -> Mongo: Save raw_text
+activate Mongo
+deactivate Mongo
+Worker -> PG: Update status\n(extracted)
+activate PG
+deactivate PG
+Worker -> RMQ: Publish event\n"documents.text.extracted"
+deactivate Worker
+
+== Async: LLM Analysis ==
+
+note over Stream: Async processing
+
+RMQ -> Stream: Consume event
+activate Stream
+Stream -> Mongo: Get raw_text
+activate Mongo
+deactivate Mongo
+Stream -> Stream: Get active prompt
+Stream -> LLM: Analyze text\n(text + prompt)
+activate LLM
+LLM --> Stream: JSON Analysis Result
+deactivate LLM
+Stream -> Mongo: Save analysis & version
+activate Mongo
+deactivate Mongo
+Stream -> PG: Update status\n(success)
+activate PG
+deactivate PG
+deactivate Stream
+
+== Result Retrieval ==
+
+User -> API: GET /documents/{id}
+activate API
+API --> User: DocumentResponse\n(metadata + text + analysis)
+deactivate API
+@enduml

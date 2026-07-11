@@ -1,0 +1,210 @@
+# === Клиент ===
+Client: {
+  shape: person
+  style.fill: "#E8E8E8"
+  style.stroke: "#555"
+  style.font-color: "#333"
+}
+
+# === FastAPI (контейнер) ===
+FastAPI: {
+  shape: rectangle
+  style.fill: "#009688"
+  style.font-color: "#fff"
+  style.bold: true
+  style.border-radius: 8
+
+  API: API Routers {
+    style.fill: "#4DB6AC"
+    style.font-color: "#fff"
+  }
+  Services: Business Logic {
+    style.fill: "#4DB6AC"
+    style.font-color: "#fff"
+  }
+}
+
+# === Async Workers (контейнер для Celery + FastStream) ===
+AsyncWorkers: {
+  style.fill: "#F5F5F5"
+  style.stroke: "#999"
+  style.border-radius: 12
+  style.bold: true
+  label: "Async Workers"
+
+  CeleryWorker: {
+    shape: rectangle
+    style.fill: "#37814A"
+    style.font-color: "#fff"
+    style.bold: true
+    style.border-radius: 8
+
+    Task: extract_text_task {
+      style.fill: "#5CA86D"
+      style.font-color: "#fff"
+    }
+    Extractors: Text Extractors {
+      style.fill: "#5CA86D"
+      style.font-color: "#fff"
+    }
+  }
+
+  FastStream: {
+    shape: rectangle
+    style.fill: "#6B46C1"
+    style.font-color: "#fff"
+    style.bold: true
+    style.border-radius: 8
+
+    Consumer: DocumentAnalysisConsumer {
+      style.fill: "#9F7AEA"
+      style.font-color: "#fff"
+    }
+    Factory: LLM Factory {
+      style.fill: "#9F7AEA"
+      style.font-color: "#fff"
+    }
+  }
+}
+
+# === Брокер очередей ===
+RabbitMQ: {
+  shape: hexagon
+  style.fill: "#FF6600"
+  style.font-color: "#fff"
+  style.bold: true
+}
+
+# === Базы данных (контейнер) ===
+DataStores: {
+  style.fill: "#F5F5F5"
+  style.stroke: "#999"
+  style.border-radius: 12
+  style.bold: true
+  label: "Data Stores"
+
+  PostgreSQL: {
+    shape: cylinder
+    style.fill: "#336791"
+    style.font-color: "#fff"
+    style.bold: true
+  }
+
+  MongoDB: {
+    shape: cylinder
+    style.fill: "#47A248"
+    style.font-color: "#fff"
+    style.bold: true
+  }
+
+  Redis: {
+    shape: cylinder
+    style.fill: "#DC382D"
+    style.font-color: "#fff"
+    style.bold: true
+  }
+}
+
+# === LLM (контейнер) ===
+LLM: {
+  shape: cloud
+  style.fill: "#1A1A2E"
+  style.font-color: "#fff"
+  style.bold: true
+
+  DeepSeek: DeepSeek {
+    style.fill: "#4A90E2"
+    style.font-color: "#fff"
+  }
+  Gemini: Gemini {
+    style.fill: "#4285F4"
+    style.font-color: "#fff"
+  }
+}
+
+# === Связи (с контрастными цветами) ===
+Client -> FastAPI.API: REST API {
+  style.stroke: "#888"
+  style.bold: true
+  style.stroke-width: 2
+}
+
+FastAPI.API -> DataStores.PostgreSQL: Metadata {
+  style.stroke: "#5A9FD4"
+  style.stroke-width: 2
+}
+
+FastAPI.Services -> DataStores.Redis: Cache {
+  style.stroke: "#FF6B6B"
+  style.stroke-width: 2
+}
+
+FastAPI.Services -> RabbitMQ: 1. Publish task {
+  style.stroke: "#FF8C42"
+  style.bold: true
+  style.stroke-width: 2
+}
+
+RabbitMQ -> AsyncWorkers.CeleryWorker.Task: 2. Consume {
+  style.stroke: "#6BCB77"
+  style.bold: true
+  style.stroke-width: 2
+}
+
+AsyncWorkers.CeleryWorker.Extractors -> DataStores.MongoDB: 3. Save text {
+  style.stroke: "#4ECDC4"
+  style.bold: true
+  style.stroke-width: 2
+}
+
+AsyncWorkers.CeleryWorker.Task -> RabbitMQ: 4. Publish event {
+  style.stroke: "#FF8C42"
+  style.bold: true
+  style.stroke-width: 2
+}
+
+RabbitMQ -> AsyncWorkers.FastStream.Consumer: 5. Consume {
+  style.stroke: "#A78BFA"
+  style.bold: true
+  style.stroke-width: 2
+}
+
+AsyncWorkers.FastStream.Consumer -> DataStores.MongoDB: 6. Get text {
+  style.stroke: "#4ECDC4"
+  style.stroke-width: 2
+}
+
+AsyncWorkers.FastStream.Factory -> DataStores.Redis: 7. Get prompt {
+  style.stroke: "#FF6B6B"
+  style.stroke-width: 2
+}
+
+AsyncWorkers.FastStream.Consumer -> LLM.DeepSeek: 8. Analyze {
+  style.stroke: "#667"
+  style.bold: true
+  style.stroke-width: 2
+}
+
+AsyncWorkers.FastStream.Consumer -> LLM.Gemini: 8. Analyze {
+  style.stroke: "#667"
+  style.bold: true
+  style.stroke-width: 2
+}
+
+LLM -> AsyncWorkers.FastStream.Consumer: 9. Return result {
+  style.stroke: "#999"
+  style.stroke-dash: 3
+  style.stroke-width: 2
+}
+
+AsyncWorkers.FastStream.Consumer -> DataStores.MongoDB: 10. Save analysis {
+  style.stroke: "#4ECDC4"
+  style.bold: true
+  style.stroke-width: 2
+}
+
+AsyncWorkers.FastStream.Consumer -> DataStores.PostgreSQL: 11. Update status {
+  style.stroke: "#5A9FD4"
+  style.bold: true
+  style.stroke-width: 2
+}
