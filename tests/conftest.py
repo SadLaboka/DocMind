@@ -1,7 +1,6 @@
 from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import AsyncMock
-
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
@@ -11,18 +10,28 @@ from sqlalchemy.ext.asyncio import (
     AsyncSession,
     create_async_engine,
 )
-
 from src.core.config import settings
 from src.core.database import get_session
 from src.core.enums import DocumentStatus, LLMProvider, MimeType
 from src.core.jwt import JWTManager
 from src.core.security import get_password_hash
-from src.DependencyInjection.auth import get_jwt_manager
+from src.core.token_blacklist import TokenBlackList
+from src.core.user_active_cache import UserActiveStatusCache
+from src.DependencyInjection.auth import (
+    get_jwt_manager,
+    get_token_blacklist,
+    get_user_active_cache,
+)
 from src.DependencyInjection.documents import get_mongo_document_repository
+from src.DependencyInjection.prompts import get_mongo_prompt_repository
 from src.repositories.mongo_documents import MongoDocumentRepository
+from src.repositories.mongo_prompts import MongoPromptsRepository
 
 TEST_DB_URL = settings.db.url
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
+
+
+# DB Fixtures
 
 
 @pytest_asyncio.fixture(scope="function")
@@ -32,9 +41,7 @@ async def db_engine():
         echo=False,
         future=True,
     )
-
     yield engine
-
     await engine.dispose()
 
 
@@ -42,18 +49,19 @@ async def db_engine():
 async def test_db_session(db_engine):
     async with db_engine.connect() as conn:
         transaction = await conn.begin()
-
         session = AsyncSession(
             bind=conn,
             expire_on_commit=False,
         )
-
         try:
             yield session
         finally:
             await session.close()
             if transaction.is_active:
                 await transaction.rollback()
+
+
+# Mongo mocks
 
 
 class MockMongoContent(BaseModel):
@@ -80,8 +88,41 @@ def mock_mongo_repo(mock_mongo_content):
     return mock_repo
 
 
+# Redis mocks
+
+
+@pytest.fixture
+def mock_token_blacklist():
+    mock = AsyncMock(spec=TokenBlackList)
+    mock.is_blacklisted = AsyncMock(return_value=False)
+    mock.add_to_blacklist = AsyncMock(return_value=None)
+    return mock
+
+
+@pytest.fixture
+def mock_user_active_cache():
+    mock = AsyncMock(spec=UserActiveStatusCache)
+    mock.get_active = AsyncMock(return_value=True)
+    mock.set_active = AsyncMock(return_value=None)
+    return mock
+
+
+@pytest.fixture
+def mock_mongo_prompt_repository():
+    return AsyncMock(spec=MongoPromptsRepository)
+
+
+# Client
+
+
 @pytest_asyncio.fixture(scope="function")
-async def client(test_db_session, mock_mongo_repo):
+async def client(
+    test_db_session,
+    mock_mongo_repo,
+    mock_token_blacklist,
+    mock_user_active_cache,
+    mock_mongo_prompt_repository,
+):
     async def override_get_session():
         yield test_db_session
 
@@ -91,6 +132,9 @@ async def client(test_db_session, mock_mongo_repo):
     app.dependency_overrides[get_mongo_document_repository] = override_get_mongo_repo
     app.dependency_overrides[get_session] = override_get_session
     app.dependency_overrides[get_jwt_manager] = get_test_jwt_manager
+    app.dependency_overrides[get_token_blacklist] = lambda: mock_token_blacklist
+    app.dependency_overrides[get_user_active_cache] = lambda: mock_user_active_cache
+    app.dependency_overrides[get_mongo_prompt_repository] = lambda: mock_mongo_prompt_repository
 
     async with AsyncClient(
         transport=ASGITransport(app=app),
@@ -99,6 +143,9 @@ async def client(test_db_session, mock_mongo_repo):
         yield ac
 
     app.dependency_overrides.clear()
+
+
+# Factories
 
 
 @pytest_asyncio.fixture(scope="function")
@@ -121,12 +168,9 @@ async def create_user():
             is_active=True,
             failed_login_attempts=0,
         )
-
         session.add(user)
-
         await session.flush()
         await session.refresh(user)
-
         return {
             "id": user.id,
             "login": user.login,
@@ -169,7 +213,6 @@ async def create_document():
         session.add(document)
         await session.flush()
         await session.refresh(document)
-
         return {
             "id": document.id,
             "user_id": document.user_id,
@@ -206,14 +249,12 @@ def create_token_pair(create_user, test_db_session):
         is_admin: bool = False,
     ):
         from datetime import timedelta
-
         import jwt
 
         jwt_mgr = get_test_jwt_manager()
-
         user_data = await create_user(test_db_session, login, email, password_hash)
-
         now = datetime.now(UTC)
+
         payload = {
             "sub": user_data["id"],
             "login": user_data["login"],
@@ -236,6 +277,28 @@ def create_token_pair(create_user, test_db_session):
             "user_id": user_data["id"],
             "login": user_data["login"],
         }
+
+    return _create
+
+
+@pytest.fixture
+def create_admin_token_pair(create_token_pair, test_password):
+    async def _create(
+        login: str = "admin",
+        email: str = "admin@test.com",
+        password_hash: str | None = None,
+        expired: bool = False,
+    ):
+        if password_hash is None:
+            _, password_hash = test_password
+
+        return await create_token_pair(
+            login=login,
+            email=email,
+            password_hash=password_hash,
+            expired=expired,
+            is_admin=True,
+        )
 
     return _create
 
