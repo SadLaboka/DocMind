@@ -63,3 +63,77 @@ The system is designed for high fault tolerance, scalability, and strict separat
 - **Alembic** — PostgreSQL migrations
 - **GitHub Actions** — CI/CD, Codecov, SonarCloud
 - **pytest** — coverage for API, services, and workers
+
+## 🏗 Architecture
+
+### Component Diagram
+![Component Diagram](docs/images/component_diagram.svg)
+
+**Flow:**
+1. Client uploads file via FastAPI
+2. FastAPI publishes extraction task to RabbitMQ
+3. Celery Worker extracts text and saves to MongoDB
+4. Worker publishes "text extracted" event
+5. FastStream consumes the event
+6. FastStream retrieves raw text from MongoDB
+7. FastStream sends text to LLM for analysis
+8. LLM returns analysis result
+9. FastStream saves analysis to MongoDB
+10. FastStream updates document status in PostgreSQL
+
+### Sequence Diagram: Document Lifecycle
+
+![Document Lifecycle](docs/images/sequence.svg)
+
+## 📊 Data Flow
+
+### Document Processing Pipeline
+
+1. **Upload & Validation** (FastAPI)
+   - User uploads file via `POST /documents`
+   - FastAPI validates file size (max 50MB), MIME type, and filename
+   - File is saved to temporary storage with SHA-256 hash calculation
+   - Deduplication check: if file with same hash exists, skip extraction
+
+2. **Metadata Storage** (PostgreSQL)
+   - Document metadata saved: filename, size, MIME type, hash, status
+   - Status: `created` → `queued`
+
+3. **Task Queue** (RabbitMQ)
+   - FastAPI publishes extraction task to RabbitMQ
+   - Task contains: document_id, temp_path, mime_type, user_id, request_id
+
+4. **Text Extraction** (Celery Worker)
+   - Worker consumes task from queue
+   - Extracts text based on MIME type (TXT, DOCX, XLSX, PDF)
+   - Saves raw text to MongoDB
+   - Updates document status: `extracted`
+   - Publishes event: `documents.text.extracted`
+
+5. **LLM Analysis** (FastStream Consumer)
+   - Consumer receives event from queue
+   - Retrieves raw text from MongoDB
+   - Fetches active prompt from Redis cache (or MongoDB)
+   - Sends text + prompt to LLM (DeepSeek/Gemini)
+   - Parses JSON response, validates structure
+   - Saves analysis result to MongoDB
+   - Updates document status: `success`
+
+6. **Result Retrieval** (FastAPI)
+   - User polls `GET /documents/{id}` to check status
+   - Response includes: metadata, raw text, analysis result, version
+
+### Key Architectural Decisions
+
+**Why PostgreSQL + MongoDB + Redis?**
+- **PostgreSQL**: Relational data with strict schema (users, documents metadata, transactions)
+- **MongoDB**: Unstructured content (raw text, LLM analysis results, prompts) — flexible schema, large documents
+- **Redis**: High-performance caching (prompts, user status), rate limiting, token blacklist
+
+**Why Celery + FastStream?**
+- **Celery**: Heavy I/O-bound tasks (text extraction from files) — proven, reliable, supports retries
+- **FastStream**: Modern async consumers for LLM analysis — native async/await, better integration with async codebase
+
+**Why local files instead of S3?**
+- Current implementation uses local temp storage for simplicity
+- TODO: Migrate to S3/MinIO for stateless architecture and horizontal scaling
