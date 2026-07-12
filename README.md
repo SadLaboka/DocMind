@@ -11,7 +11,7 @@
 
 🇷🇺 [Читать на русском](README_RU.md)
 
-## 📋 Overview
+## Overview
 
 **DocMind** is an asynchronous document analysis system using Large Language Models (LLM).
 The project is built on a microservices architecture: REST API accepts files, background workers extract text from them, and a separate consumer sends it for analysis to neural networks.
@@ -19,7 +19,7 @@ The project is built on a microservices architecture: REST API accepts files, ba
 The system is designed for high fault tolerance, scalability, and strict separation of responsibilities between components.
 
 
-## 📑 Table of Contents
+## Table of Contents
 
 - [Features](#features)
 - [Tech Stack](#tech-stack)
@@ -36,7 +36,7 @@ The system is designed for high fault tolerance, scalability, and strict separat
 - [License](#license)
 
 <a id="features"></a>
-## ✨ Features
+## Features
 
 - **Asynchronous pipeline processing**: Upload, text extraction, and analysis occur in separate processes without blocking the main API.
 - **Multiple format support**: Text extraction from `.txt`, `.docx`, `.xlsx`, and `.pdf` (including tables in documents).
@@ -48,7 +48,7 @@ The system is designed for high fault tolerance, scalability, and strict separat
 - **Prompt versioning**: Ability to upload new prompt versions for LLM via admin panel with automatic caching of the active version.
 
 <a id="tech-stack"></a>
-## 🛠 Tech Stack
+## Tech Stack
 
 ### Core & API
 <img src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/python/default.svg" alt="Python" width="32" height="32"/> **Python 3.13**
@@ -84,7 +84,7 @@ The system is designed for high fault tolerance, scalability, and strict separat
 - **pytest** — coverage for API, services, and workers
 
 <a id="architecture"></a>
-## 🏗 Architecture
+## Architecture
 
 ### Component Diagram
 ![Component Diagram](docs/images/component_diagram.svg)
@@ -106,7 +106,7 @@ The system is designed for high fault tolerance, scalability, and strict separat
 ![Document Lifecycle](docs/images/sequence.svg)
 
 <a id="data-flow"></a>
-## 📊 Data Flow
+## Data Flow
 
 ### Document Processing Pipeline
 
@@ -160,7 +160,7 @@ The system is designed for high fault tolerance, scalability, and strict separat
 - TODO: Migrate to S3/MinIO for stateless architecture and horizontal scaling
 
 <a id="quick-start"></a>
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - **Docker & Docker Compose** (v2.0+)
@@ -202,7 +202,7 @@ Once running, interactive API documentation is available at:
 ---
 
 <a id="useful-commands"></a>
-## ⚡ Useful Commands
+## Useful Commands
 
 | Command | Description |
 |---------|-------------|
@@ -220,7 +220,7 @@ Once running, interactive API documentation is available at:
 ---
 
 <a id="environment-variables"></a>
-## ⚙️ Environment Variables
+## Environment Variables
 
 The full list of variables is in `.env.example`. Key variables grouped by category:
 
@@ -280,7 +280,7 @@ The full list of variables is in `.env.example`. Key variables grouped by catego
 ---
 
 <a id="testing"></a>
-## 🧪 Testing
+## Testing
 
 Tests run in an isolated Docker environment with a dedicated test database:
 
@@ -305,7 +305,7 @@ make cov-html
 ---
 
 <a id="code-quality"></a>
-## 🔍 Code Quality
+## Code Quality
 
 Run linters and type checks:
 ```bash
@@ -345,7 +345,7 @@ make migrate-down
 ---
 
 <a id="roadmap"></a>
-## 🗺 Roadmap
+## Roadmap
 
 ### Completed
 - [x] Async pipeline: FastAPI + Celery + FastStream
@@ -370,7 +370,7 @@ make migrate-down
 - [ ] **Extended functionality** — document comparison, OCR for scans, custom form parsing
 
 <a id="usage-examples"></a>
-## 💡 Usage Examples
+## Usage Examples
 
 Basic workflow: register → login → upload a document → check the result.
 
@@ -478,7 +478,7 @@ curl -X POST http://localhost:8000/auth/logout \
 ```
 
 <a id="license"></a>
-## 📄 License
+## License
 
 This project is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)** — see the [LICENSE](LICENSE) file for details.
 
