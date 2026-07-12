@@ -64,6 +64,17 @@ class LogsSettings(SettingsBase):
     level: int = 10
 
 
+class AntivirusSettings(SettingsBase):
+    model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="ANTIVIRUS_")
+
+    enabled: bool = True
+    host: str = "localhost"
+    port: int = 3310
+    timeout: int = 60
+    fail_on_unavailable: bool = False
+    chunk_size: int = 4096
+
+
 class RabbitSettings(SettingsBase):
     model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="RABBITMQ_")
 
@@ -168,6 +179,7 @@ class Settings(BaseSettings):
     db: DatabaseSettings = Field(default_factory=DatabaseSettings)
     jwt: JWTSettings = Field(default_factory=JWTSettings)
     logs: LogsSettings = Field(default_factory=LogsSettings)
+    antivirus: AntivirusSettings = Field(default_factory=AntivirusSettings)
     server: ServerSettings = Field(default_factory=ServerSettings)
     rabbit: RabbitSettings = Field(default_factory=RabbitSettings)
     mongo: MongoSettings = Field(default_factory=MongoSettings)
