@@ -89,17 +89,6 @@ The system is designed for high fault tolerance, scalability, and strict separat
 ### Component Diagram
 ![Component Diagram](docs/images/component_diagram.svg)
 
-**Flow:**
-1. Client uploads file via FastAPI
-2. FastAPI publishes extraction task to RabbitMQ
-3. Celery Worker extracts text and saves to MongoDB
-4. Worker publishes "text extracted" event
-5. FastStream consumes the event
-6. FastStream retrieves raw text from MongoDB
-7. FastStream sends text to LLM for analysis
-8. LLM returns analysis result
-9. FastStream saves analysis to MongoDB
-10. FastStream updates document status in PostgreSQL
 
 ### Sequence Diagram: Document Lifecycle
 
