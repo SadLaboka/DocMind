@@ -1,4 +1,25 @@
 services:
+  clamav:
+    image: clamav/clamav:stable
+    container_name: docmind-clamav
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "${ANTIVIRUS_PORT:-3310}:3310"
+    volumes:
+      - clamav_signatures:/var/lib/clamav
+    environment:
+      - CLAMD_STARTUP_TIMEOUT=300
+    networks:
+      - DocMind_network
+    healthcheck:
+      test: [ "CMD-SHELL", "clamdcheck || exit 1" ]
+      interval: 30s
+      timeout: 30s
+      retries: 5
+      start_period: 300s
+
   redis:
     image: redis:8-alpine
     env_file:
@@ -191,3 +212,4 @@ networks:
 
 volumes:
   temp_data:
+  clamav_signatures:
