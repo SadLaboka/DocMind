@@ -1,4 +1,4 @@
-.PHONY: up down logs migrate-up migrate-down migrate-new lint test test-cov
+.PHONY: up down logs migrate-up migrate-down migrate-new lint test test-cov down-soft
 
 # Docker
 up:
@@ -6,6 +6,9 @@ up:
 
 down:
 	docker compose down -v
+
+down-soft:
+	docker compose down
 
 logs:
 	docker compose logs -f --no-log-prefix application
