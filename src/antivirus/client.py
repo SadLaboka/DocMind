@@ -11,16 +11,6 @@ class ClamAVClient:
         self.timeout = timeout
         self.chunk_size = chunk_size
 
-    def ping(self) -> bool:
-        """Check if clamd is available"""
-        try:
-            with self._create_socket() as sock:
-                sock.sendall(b"zPING\0")
-                response = sock.recv(1024)
-                return response.startswith(b"PONG")
-        except (socket.error, OSError):
-            return False
-
     def scan_file(self, file_path: Path) -> str:
         """Scan file with INSTREAM command"""
         if not file_path.exists():

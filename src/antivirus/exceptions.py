@@ -30,17 +30,3 @@ class AntivirusUnavailableError(AntivirusException):
         self.host = host
         self.port = port
         self.original_error = original_error
-
-
-class InfectedError(AntivirusException):
-    message: str = "File infected"
-    error_code: str = "file_infected"
-
-    def __init__(
-            self,
-            signature: str | None = None,
-            log_context: dict | None = None,
-    ):
-        message = f"File infected: {signature}"
-        super().__init__(error_code="file_infected", message=message, log_context=log_context)
-        self.signature = signature
