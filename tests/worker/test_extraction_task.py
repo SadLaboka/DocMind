@@ -11,7 +11,7 @@ from src.worker.extraction_tasks import DocumentExtractionTask
 
 @pytest.fixture
 def mock_celery_session():
-    with patch("src.worker.tasks.celery_session_factory") as mock_factory:
+    with patch("src.worker.base_task.celery_session_factory") as mock_factory:
         mock_session = AsyncMock()
         mock_factory.return_value.__aenter__.return_value = mock_session
         yield mock_session, mock_factory
@@ -19,15 +19,19 @@ def mock_celery_session():
 
 @pytest.fixture
 def mock_repo():
-    with patch("src.worker.tasks.DocumentRepository") as mock_repo_class:
+    with (
+        patch("src.worker.base_task.DocumentRepository") as mock_base,
+        patch("src.worker.extraction_tasks.DocumentRepository") as mock_extraction,
+    ):
         mock_instance = AsyncMock()
-        mock_repo_class.return_value = mock_instance
+        mock_base.return_value = mock_instance
+        mock_extraction.return_value = mock_instance
         yield mock_instance
 
 
 @pytest.fixture
 def mock_mongo_repo():
-    with patch("src.worker.tasks.MongoDocumentRepository") as mock_repo_class:
+    with patch("src.worker.extraction_tasks.MongoDocumentRepository") as mock_repo_class:
         mock_instance = AsyncMock()
         mock_repo_class.return_value = mock_instance
         yield mock_instance
@@ -35,14 +39,14 @@ def mock_mongo_repo():
 
 @pytest.fixture
 def mock_init_mongo():
-    with patch("src.worker.tasks.init_mongo_for_worker") as mock_init:
+    with patch("src.worker.extraction_tasks.init_mongo_for_worker") as mock_init:
         mock_init.return_value = None
         yield mock_init
 
 
 @pytest.fixture
 def mock_publisher():
-    with patch("src.worker.tasks.publish_document_text_extracted") as mock_pub:
+    with patch("src.worker.extraction_tasks.publish_document_text_extracted") as mock_pub:
         yield mock_pub
 
 
@@ -64,7 +68,7 @@ async def test_execute_success(
 ):
     _, mock_unlink = mock_path_operations
 
-    with patch("src.worker.tasks.TextExtractor.extract", return_value="Mocked extracted text"):
+    with patch("src.worker.extraction_tasks.TextExtractor.extract", return_value="Mocked extracted text"):
         task = DocumentExtractionTask(
             document_id=1,
             temp_path="/tmp/test.txt",
@@ -106,7 +110,7 @@ async def test_execute_document_already_cancelled(
 
     mock_repo.get_document_by_id.return_value = MagicMock(document_status=DocumentStatus.cancelled)
 
-    with patch("src.worker.tasks.TextExtractor.extract") as mock_extract:
+    with patch("src.worker.extraction_tasks.TextExtractor.extract") as mock_extract:
         task = DocumentExtractionTask(
             document_id=1,
             temp_path="/tmp/test.txt",
@@ -135,7 +139,7 @@ async def test_process_extraction_hard_fail(
 
     mock_error = ExtractionError(error_code="invalid_file", log_context={"detail": "bad pdf structure"})
 
-    with patch("src.worker.tasks.TextExtractor.extract", side_effect=mock_error):
+    with patch("src.worker.extraction_tasks.TextExtractor.extract", side_effect=mock_error):
         task = DocumentExtractionTask(
             document_id=1,
             temp_path="/tmp/bad.pdf",
@@ -164,7 +168,7 @@ async def test_process_extraction_soft_fail(
 ):
     _, mock_unlink = mock_path_operations
 
-    with patch("src.worker.tasks.TextExtractor.extract", side_effect=RuntimeError("Connection lost")):
+    with patch("src.worker.extraction_tasks.TextExtractor.extract", side_effect=RuntimeError("Connection lost")):
         task = DocumentExtractionTask(
             document_id=1,
             temp_path="/tmp/test.txt",
