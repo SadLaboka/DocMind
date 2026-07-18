@@ -4,7 +4,7 @@ import pytest
 
 from src.core.enums import DocumentStatus
 from src.core.exceptions import ExtractionError
-from src.worker.tasks import DocumentExtractionTask
+from src.worker.extraction_tasks import DocumentExtractionTask
 
 # FIXTURES
 

@@ -19,7 +19,7 @@ from src.models.documents import Document
 from src.repositories.documents import DocumentRepository
 from src.schemas.documents import DocumentData, DocumentResponse
 from src.services.base import BaseService
-from src.worker.tasks import extract_text_task
+from src.worker.extraction_tasks import extract_text_task
 
 logger = structlog.get_logger(__name__)
 
