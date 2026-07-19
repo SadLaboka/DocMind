@@ -39,6 +39,7 @@ The system is designed for high fault tolerance, scalability, and strict separat
 ## Features
 
 - **Asynchronous pipeline processing**: Upload, text extraction, and analysis occur in separate processes without blocking the main API.
+- **Antivirus scanning**: All uploaded files are scanned by ClamAV before text extraction. Infected files are rejected with status `infected`. Configurable fallback behavior when ClamAV is unavailable.
 - **Multiple format support**: Text extraction from `.txt`, `.docx`, `.xlsx`, and `.pdf` (including tables in documents).
 - **Document deduplication**: The system calculates the SHA-256 hash of the file. If such a file has already been processed, re-analysis is not launched — the result is taken from the database.
 - **LLM integration (Factory Pattern)**: Support for DeepSeek and Gemini. The provider is selected dynamically, and raw responses are mapped to a strict Pydantic schema.
@@ -78,6 +79,7 @@ The system is designed for high fault tolerance, scalability, and strict separat
 
 ### Infrastructure & DevOps
 - **Docker & Docker Compose** — orchestration of all services
+- **ClamAV** — antivirus scanning of uploaded files
 - **Poetry** — dependency management
 - **Alembic** — PostgreSQL migrations
 - **GitHub Actions** — CI/CD, Codecov, SonarCloud
@@ -107,20 +109,27 @@ The system is designed for high fault tolerance, scalability, and strict separat
 
 2. **Metadata Storage** (PostgreSQL)
    - Document metadata saved: filename, size, MIME type, hash, status
-   - Status: `created` → `queued`
+   - Status: `created` → `scanning`/`extracting`
 
 3. **Task Queue** (RabbitMQ)
    - FastAPI publishes extraction task to RabbitMQ
    - Task contains: document_id, temp_path, mime_type, user_id, request_id
 
-4. **Text Extraction** (Celery Worker)
+4. **Antivirus Scan** (Celery Worker + ClamAV)
+   - Worker consumes scan task from queue
+   - File is streamed to ClamAV for scanning
+   - If clean: update status to `extracting`, publish extract task
+   - If infected: update status to `infected`, delete file
+   - If ClamAV unavailable: configurable fallback (skip or fail)
+
+5. **Text Extraction** (Celery Worker)
    - Worker consumes task from queue
    - Extracts text based on MIME type (TXT, DOCX, XLSX, PDF)
    - Saves raw text to MongoDB
    - Updates document status: `extracted`
    - Publishes event: `documents.text.extracted`
 
-5. **LLM Analysis** (FastStream Consumer)
+6. **LLM Analysis** (FastStream Consumer)
    - Consumer receives event from queue
    - Retrieves raw text from MongoDB
    - Fetches active prompt from Redis cache (or MongoDB)
@@ -129,7 +138,7 @@ The system is designed for high fault tolerance, scalability, and strict separat
    - Saves analysis result to MongoDB
    - Updates document status: `success`
 
-6. **Result Retrieval** (FastAPI)
+7. **Result Retrieval** (FastAPI)
    - User polls `GET /documents/{id}` to check status
    - Response includes: metadata, raw text, analysis result, version
 
@@ -242,6 +251,16 @@ The full list of variables is in `.env.example`. Key variables grouped by catego
 | `JWT_TIMEDELTA` | Access token lifetime (minutes) | `15` |
 | `JWT_REFRESH_TIMEDELTA` | Refresh token lifetime (days) | `7` |
 
+### Antivirus (ClamAV)
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `ANTIVIRUS_ENABLED` | Enable antivirus scanning | `true` |
+| `ANTIVIRUS_HOST` | ClamAV host | `clamav` |
+| `ANTIVIRUS_PORT` | ClamAV port | `3310` |
+| `ANTIVIRUS_TIMEOUT` | Scan timeout (seconds) | `60` |
+| `ANTIVIRUS_FAIL_ON_UNAVAILABLE` | Fail if ClamAV is unavailable | `false` |
+| `ANTIVIRUS_CHUNK_SIZE` | Stream chunk size (bytes) | `4096` |
+
 ### LLM Providers
 | Variable | Description | Default |
 |----------|-------------|---------|
@@ -348,6 +367,7 @@ make migrate-down
 - [x] Dead Letter Queues for failed analysis tasks
 - [x] Structured logging with `structlog` (JSON in prod)
 - [x] Architecture diagrams and detailed documentation
+- [x] Antivirus scanning with ClamAV (two-stage pipeline: scan → extract)
 
 ### In Progress / Planned
 - [ ] **WebSockets** — real-time document status updates (replace polling)
