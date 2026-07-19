@@ -1,4 +1,4 @@
-# === Клиент ===
+# === Client ===
 Client: {
   shape: person
   style.fill: "#E8E8E8"
@@ -6,7 +6,7 @@ Client: {
   style.font-color: "#333"
 }
 
-# === FastAPI (контейнер) ===
+# === FastAPI (container) ===
 FastAPI: {
   shape: rectangle
   style.fill: "#009688"
@@ -24,7 +24,7 @@ FastAPI: {
   }
 }
 
-# === Async Workers (контейнер для Celery + FastStream) ===
+# === Async Workers (container for Celery + FastStream) ===
 AsyncWorkers: {
   style.fill: "#F5F5F5"
   style.stroke: "#999"
@@ -39,7 +39,11 @@ AsyncWorkers: {
     style.bold: true
     style.border-radius: 8
 
-    Task: extract_text_task {
+    ScanTask: Scan Task {
+      style.fill: "#5CA86D"
+      style.font-color: "#fff"
+    }
+    ExtractTask: Extract Task {
       style.fill: "#5CA86D"
       style.font-color: "#fff"
     }
@@ -56,7 +60,7 @@ AsyncWorkers: {
     style.bold: true
     style.border-radius: 8
 
-    Consumer: DocumentAnalysisConsumer {
+    Consumer: Analysis Consumer {
       style.fill: "#9F7AEA"
       style.font-color: "#fff"
     }
@@ -67,7 +71,17 @@ AsyncWorkers: {
   }
 }
 
-# === Брокер очередей ===
+# === Antivirus ===
+ClamAV: {
+  shape: rectangle
+  style.fill: "#B91C1C"
+  style.font-color: "#fff"
+  style.bold: true
+  style.border-radius: 8
+  label: "ClamAV"
+}
+
+# === Message Broker ===
 RabbitMQ: {
   shape: hexagon
   style.fill: "#FF6600"
@@ -75,7 +89,7 @@ RabbitMQ: {
   style.bold: true
 }
 
-# === Базы данных (контейнер) ===
+# === Data Stores (container) ===
 DataStores: {
   style.fill: "#F5F5F5"
   style.stroke: "#999"
@@ -89,14 +103,12 @@ DataStores: {
     style.font-color: "#fff"
     style.bold: true
   }
-
   MongoDB: {
     shape: cylinder
     style.fill: "#47A248"
     style.font-color: "#fff"
     style.bold: true
   }
-
   Redis: {
     shape: cylinder
     style.fill: "#DC382D"
@@ -105,24 +117,16 @@ DataStores: {
   }
 }
 
-# === LLM (контейнер) ===
+# === LLM ===
 LLM: {
   shape: cloud
   style.fill: "#1A1A2E"
   style.font-color: "#fff"
   style.bold: true
-
-  DeepSeek: DeepSeek {
-    style.fill: "#4A90E2"
-    style.font-color: "#fff"
-  }
-  Gemini: Gemini {
-    style.fill: "#4285F4"
-    style.font-color: "#fff"
-  }
+  label: "LLM"
 }
 
-# === Связи (с контрастными цветами) ===
+# === Connections ===
 Client -> FastAPI.API: REST API {
   style.stroke: "#888"
   style.bold: true
@@ -139,71 +143,89 @@ FastAPI.Services -> DataStores.Redis: Cache {
   style.stroke-width: 2
 }
 
-FastAPI.Services -> RabbitMQ: 1. Publish task {
+FastAPI.Services -> RabbitMQ: 1. Publish scan task {
   style.stroke: "#FF8C42"
   style.bold: true
   style.stroke-width: 2
 }
 
-RabbitMQ -> AsyncWorkers.CeleryWorker.Task: 2. Consume {
+RabbitMQ -> AsyncWorkers.CeleryWorker.ScanTask: 2. Consume {
   style.stroke: "#6BCB77"
   style.bold: true
   style.stroke-width: 2
 }
 
-AsyncWorkers.CeleryWorker.Extractors -> DataStores.MongoDB: 3. Save text {
-  style.stroke: "#4ECDC4"
+AsyncWorkers.CeleryWorker.ScanTask -> ClamAV: 3. Scan file {
+  style.stroke: "#E53E3E"
   style.bold: true
   style.stroke-width: 2
 }
 
-AsyncWorkers.CeleryWorker.Task -> RabbitMQ: 4. Publish event {
+ClamAV -> AsyncWorkers.CeleryWorker.ScanTask: 4. Result {
+  style.stroke: "#E53E3E"
+  style.stroke-dash: 3
+  style.stroke-width: 2
+}
+
+AsyncWorkers.CeleryWorker.ScanTask -> RabbitMQ: 5. Publish extract task {
   style.stroke: "#FF8C42"
   style.bold: true
   style.stroke-width: 2
 }
 
-RabbitMQ -> AsyncWorkers.FastStream.Consumer: 5. Consume {
+RabbitMQ -> AsyncWorkers.CeleryWorker.ExtractTask: 6. Consume {
+  style.stroke: "#6BCB77"
+  style.bold: true
+  style.stroke-width: 2
+}
+
+AsyncWorkers.CeleryWorker.Extractors -> DataStores.MongoDB: 7. Save text {
+  style.stroke: "#4ECDC4"
+  style.bold: true
+  style.stroke-width: 2
+}
+
+AsyncWorkers.CeleryWorker.ExtractTask -> RabbitMQ: 8. Publish event {
+  style.stroke: "#FF8C42"
+  style.bold: true
+  style.stroke-width: 2
+}
+
+RabbitMQ -> AsyncWorkers.FastStream.Consumer: 9. Consume {
   style.stroke: "#A78BFA"
   style.bold: true
   style.stroke-width: 2
 }
 
-AsyncWorkers.FastStream.Consumer -> DataStores.MongoDB: 6. Get text {
+AsyncWorkers.FastStream.Consumer -> DataStores.MongoDB: 10. Get text {
   style.stroke: "#4ECDC4"
   style.stroke-width: 2
 }
 
-AsyncWorkers.FastStream.Factory -> DataStores.Redis: 7. Get prompt {
+AsyncWorkers.FastStream.Factory -> DataStores.Redis: 11. Get prompt {
   style.stroke: "#FF6B6B"
   style.stroke-width: 2
 }
 
-AsyncWorkers.FastStream.Consumer -> LLM.DeepSeek: 8. Analyze {
+AsyncWorkers.FastStream.Consumer -> LLM: 12. Analyze {
   style.stroke: "#667"
   style.bold: true
   style.stroke-width: 2
 }
 
-AsyncWorkers.FastStream.Consumer -> LLM.Gemini: 8. Analyze {
-  style.stroke: "#667"
-  style.bold: true
-  style.stroke-width: 2
-}
-
-LLM -> AsyncWorkers.FastStream.Consumer: 9. Return result {
+LLM -> AsyncWorkers.FastStream.Consumer: 13. Return result {
   style.stroke: "#999"
   style.stroke-dash: 3
   style.stroke-width: 2
 }
 
-AsyncWorkers.FastStream.Consumer -> DataStores.MongoDB: 10. Save analysis {
+AsyncWorkers.FastStream.Consumer -> DataStores.MongoDB: 14. Save analysis {
   style.stroke: "#4ECDC4"
   style.bold: true
   style.stroke-width: 2
 }
 
-AsyncWorkers.FastStream.Consumer -> DataStores.PostgreSQL: 11. Update status {
+AsyncWorkers.FastStream.Consumer -> DataStores.PostgreSQL: 15. Update status {
   style.stroke: "#5A9FD4"
   style.bold: true
   style.stroke-width: 2

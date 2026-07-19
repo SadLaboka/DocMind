@@ -1,20 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1"
-     data-diagram-type="SEQUENCE" style="width:1644px;height:1125px;background:#1A1A2E;" width="1644.792px"
-     height="1125px" viewBox="0 0 1644 1125" zoomAndPan="magnify" preserveAspectRatio="none"
+     data-diagram-type="SEQUENCE" style="width:1732px;height:1571px;background:#1A1A2E;" width="1732.292px"
+     height="1571.875px" viewBox="0 0 1732 1571" zoomAndPan="magnify" preserveAspectRatio="none"
      contentStyleType="text/css"><?plantuml 1.2026.7beta8?>
     <defs/>
     <g font-family="sans-serif" lengthAdjust="spacing">
-        <rect x="0" y="0" width="1644.792" height="1125" fill="#1A1A2E" style="stroke:none;"/>
+        <rect x="0" y="0" width="1732.292" height="1571.875" fill="#1A1A2E" style="stroke:none;"/>
+        <rect x="427.063" y="464.502" width="499.477" height="260.091" fill="#555"
+              style="stroke:#555;stroke-width:1.042;" rx="4.167" ry="4.167"/>
         <g>
             <title>User</title>
-            <rect x="29.35" y="93.717" width="8.333" height="937.142" fill="#000" fill-opacity="0"/>
-            <line x1="32.996" y1="93.717" x2="32.996" y2="1030.859"
+            <rect x="29.35" y="93.717" width="8.333" height="1383.7" fill="#000" fill-opacity="0"/>
+            <line x1="32.996" y1="93.717" x2="32.996" y2="1477.417"
                   style="stroke:#666;stroke-width:1.042;stroke-dasharray:5.208,5.208;"/>
         </g>
         <g>
             <title>FastAPI</title>
-            <rect x="250.806" y="93.717" width="8.333" height="937.142" fill="#000" fill-opacity="0"/>
-            <line x1="254.451" y1="93.717" x2="254.451" y2="1030.859"
+            <rect x="250.806" y="93.717" width="8.333" height="1383.7" fill="#000" fill-opacity="0"/>
+            <line x1="254.451" y1="93.717" x2="254.451" y2="1477.417"
                   style="stroke:#666;stroke-width:1.042;stroke-dasharray:5.208,5.208;"/>
         </g>
         <g>
@@ -24,13 +26,13 @@
         </g>
         <g>
             <title></title>
-            <rect x="249.243" y="968.424" width="10.417" height="43.685" fill="#2A2A3E"
+            <rect x="249.243" y="1414.982" width="10.417" height="43.685" fill="#2A2A3E"
                   style="stroke:#55B2DE;stroke-width:1.042;"/>
         </g>
         <g>
             <title>PostgreSQL</title>
-            <rect x="445.292" y="93.717" width="8.333" height="937.142" fill="#000" fill-opacity="0"/>
-            <line x1="448.938" y1="93.717" x2="448.938" y2="1030.859"
+            <rect x="445.292" y="93.717" width="8.333" height="1383.7" fill="#000" fill-opacity="0"/>
+            <line x1="448.938" y1="93.717" x2="448.938" y2="1477.417"
                   style="stroke:#666;stroke-width:1.042;stroke-dasharray:5.208,5.208;"/>
         </g>
         <g>
@@ -40,18 +42,33 @@
         </g>
         <g>
             <title></title>
-            <rect x="443.73" y="523.779" width="10.417" height="13.542" fill="#2A2A3E"
+            <rect x="443.73" y="526.904" width="10.417" height="13.542" fill="#2A2A3E"
                   style="stroke:#55B2DE;stroke-width:1.042;"/>
         </g>
         <g>
             <title></title>
-            <rect x="443.73" y="894.36" width="10.417" height="13.542" fill="#2A2A3E"
+            <rect x="443.73" y="603.89" width="10.417" height="13.542" fill="#2A2A3E"
+                  style="stroke:#55B2DE;stroke-width:1.042;"/>
+        </g>
+        <g>
+            <title></title>
+            <rect x="443.73" y="716.26" width="10.417" height="13.542" fill="#2A2A3E"
+                  style="stroke:#55B2DE;stroke-width:1.042;"/>
+        </g>
+        <g>
+            <title></title>
+            <rect x="443.73" y="970.337" width="10.417" height="13.542" fill="#2A2A3E"
+                  style="stroke:#55B2DE;stroke-width:1.042;"/>
+        </g>
+        <g>
+            <title></title>
+            <rect x="443.73" y="1340.918" width="10.417" height="13.542" fill="#2A2A3E"
                   style="stroke:#55B2DE;stroke-width:1.042;"/>
         </g>
         <g>
             <title>RabbitMQ</title>
-            <rect x="647.365" y="93.717" width="8.333" height="937.142" fill="#000" fill-opacity="0"/>
-            <line x1="651.011" y1="93.717" x2="651.011" y2="1030.859"
+            <rect x="647.365" y="93.717" width="8.333" height="1383.7" fill="#000" fill-opacity="0"/>
+            <line x1="651.011" y1="93.717" x2="651.011" y2="1477.417"
                   style="stroke:#666;stroke-width:1.042;stroke-dasharray:5.208,5.208;"/>
         </g>
         <g>
@@ -61,56 +78,72 @@
         </g>
         <g>
             <title>Celery Worker</title>
-            <rect x="858.041" y="93.717" width="8.333" height="937.142" fill="#000" fill-opacity="0"/>
-            <line x1="861.687" y1="93.717" x2="861.687" y2="1030.859"
+            <rect x="858.041" y="93.717" width="8.333" height="1383.7" fill="#000" fill-opacity="0"/>
+            <line x1="861.687" y1="93.717" x2="861.687" y2="1477.417"
                   style="stroke:#666;stroke-width:1.042;stroke-dasharray:5.208,5.208;"/>
         </g>
         <g>
             <title></title>
-            <rect x="856.479" y="393.734" width="10.417" height="173.73" fill="#2A2A3E"
+            <rect x="856.479" y="393.734" width="10.417" height="210.156" fill="#2A2A3E"
+                  style="stroke:#55B2DE;stroke-width:1.042;"/>
+        </g>
+        <g>
+            <title></title>
+            <rect x="856.479" y="840.291" width="10.417" height="173.73" fill="#2A2A3E"
+                  style="stroke:#55B2DE;stroke-width:1.042;"/>
+        </g>
+        <g>
+            <title>ClamAV</title>
+            <rect x="1062.681" y="93.717" width="8.333" height="1383.7" fill="#000" fill-opacity="0"/>
+            <line x1="1066.327" y1="93.717" x2="1066.327" y2="1477.417"
+                  style="stroke:#666;stroke-width:1.042;stroke-dasharray:5.208,5.208;"/>
+        </g>
+        <g>
+            <title></title>
+            <rect x="1061.119" y="422.868" width="10.417" height="29.134" fill="#2A2A3E"
                   style="stroke:#55B2DE;stroke-width:1.042;"/>
         </g>
         <g>
             <title>MongoDB</title>
-            <rect x="1068.18" y="93.717" width="8.333" height="937.142" fill="#000" fill-opacity="0"/>
-            <line x1="1071.826" y1="93.717" x2="1071.826" y2="1030.859"
+            <rect x="1252.736" y="93.717" width="8.333" height="1383.7" fill="#000" fill-opacity="0"/>
+            <line x1="1256.382" y1="93.717" x2="1256.382" y2="1477.417"
                   style="stroke:#666;stroke-width:1.042;stroke-dasharray:5.208,5.208;"/>
         </g>
         <g>
             <title></title>
-            <rect x="1066.618" y="480.094" width="10.417" height="13.542" fill="#2A2A3E"
+            <rect x="1251.174" y="926.652" width="10.417" height="13.542" fill="#2A2A3E"
                   style="stroke:#55B2DE;stroke-width:1.042;"/>
         </g>
         <g>
             <title></title>
-            <rect x="1066.618" y="706.047" width="10.417" height="13.542" fill="#2A2A3E"
+            <rect x="1251.174" y="1152.604" width="10.417" height="13.542" fill="#2A2A3E"
                   style="stroke:#55B2DE;stroke-width:1.042;"/>
         </g>
         <g>
             <title></title>
-            <rect x="1066.618" y="850.675" width="10.417" height="13.542" fill="#2A2A3E"
+            <rect x="1251.174" y="1297.233" width="10.417" height="13.542" fill="#2A2A3E"
                   style="stroke:#55B2DE;stroke-width:1.042;"/>
         </g>
         <g>
             <title>FastStream</title>
-            <rect x="1269.549" y="93.717" width="8.333" height="937.142" fill="#000" fill-opacity="0"/>
-            <line x1="1273.194" y1="93.717" x2="1273.194" y2="1030.859"
+            <rect x="1454.105" y="93.717" width="8.333" height="1383.7" fill="#000" fill-opacity="0"/>
+            <line x1="1457.75" y1="93.717" x2="1457.75" y2="1477.417"
                   style="stroke:#666;stroke-width:1.042;stroke-dasharray:5.208,5.208;"/>
         </g>
         <g>
             <title></title>
-            <rect x="1267.986" y="676.912" width="10.417" height="217.448" fill="#2A2A3E"
+            <rect x="1452.542" y="1123.47" width="10.417" height="217.448" fill="#2A2A3E"
                   style="stroke:#55B2DE;stroke-width:1.042;"/>
         </g>
         <g>
             <title>LLM</title>
-            <rect x="1501.788" y="93.717" width="8.333" height="937.142" fill="#000" fill-opacity="0"/>
-            <line x1="1505.434" y1="93.717" x2="1505.434" y2="1030.859"
+            <rect x="1637.76" y="93.717" width="8.333" height="1383.7" fill="#000" fill-opacity="0"/>
+            <line x1="1641.406" y1="93.717" x2="1641.406" y2="1477.417"
                   style="stroke:#666;stroke-width:1.042;stroke-dasharray:5.208,5.208;"/>
         </g>
         <g>
             <title></title>
-            <rect x="1500.226" y="792.407" width="10.417" height="29.134" fill="#2A2A3E"
+            <rect x="1636.198" y="1238.965" width="10.417" height="29.134" fill="#2A2A3E"
                   style="stroke:#55B2DE;stroke-width:1.042;"/>
         </g>
         <text x="15.625" y="90.769" fill="#ADAFAE" font-size="12.5" textLength="28.491" font-family="'Verdana'">User
@@ -136,72 +169,74 @@
         <text x="817.034" y="68.894" fill="#FFF" font-size="12.5" textLength="89.307" font-family="'Verdana'">Celery
             Worker
         </text>
-        <rect x="1020.924" y="41.667" width="101.805" height="45.801" fill="#47A248"
+        <rect x="1020.924" y="41.667" width="90.806" height="45.801" fill="#B91C1C"
               style="stroke:#55B2DE;stroke-width:2.083;" rx="4.167" ry="4.167"/>
-        <text x="1041.757" y="68.894" fill="#FFF" font-size="12.5" textLength="60.138" font-family="'Verdana'">MongoDB
+        <text x="1041.757" y="68.894" fill="#FFF" font-size="12.5" textLength="49.139" font-family="'Verdana'">ClamAV
         </text>
-        <rect x="1216.478" y="41.667" width="113.432" height="45.801" fill="#6B46C1"
+        <rect x="1205.48" y="41.667" width="101.805" height="45.801" fill="#47A248"
               style="stroke:#55B2DE;stroke-width:2.083;" rx="4.167" ry="4.167"/>
-        <text x="1237.312" y="68.894" fill="#FFF" font-size="12.5" textLength="71.765" font-family="'Verdana'">
+        <text x="1226.313" y="68.894" fill="#FFF" font-size="12.5" textLength="60.138" font-family="'Verdana'">MongoDB
+        </text>
+        <rect x="1401.035" y="41.667" width="113.432" height="45.801" fill="#6B46C1"
+              style="stroke:#55B2DE;stroke-width:2.083;" rx="4.167" ry="4.167"/>
+        <text x="1421.868" y="68.894" fill="#FFF" font-size="12.5" textLength="71.765" font-family="'Verdana'">
             FastStream
         </text>
-        <rect x="1423.66" y="27.116" width="163.548" height="60.352" fill="#44475A"
+        <rect x="1608.216" y="41.667" width="66.38" height="45.801" fill="#44475A"
               style="stroke:#55B2DE;stroke-width:2.083;" rx="4.167" ry="4.167"/>
-        <text x="1493.078" y="54.344" fill="#FFF" font-size="12.5" textLength="24.713" font-family="'Verdana'">LLM
+        <text x="1629.05" y="68.894" fill="#FFF" font-size="12.5" textLength="24.713" font-family="'Verdana'">LLM</text>
+        <text x="15.625" y="1489.02" fill="#ADAFAE" font-size="12.5" textLength="28.491" font-family="'Verdana'">User
         </text>
-        <text x="1444.494" y="68.894" fill="#FFF" font-size="12.5" textLength="121.881" font-family="'Verdana'">
-            (DeepSeek/Gemini)
-        </text>
-        <text x="15.625" y="1042.462" fill="#ADAFAE" font-size="12.5" textLength="28.491" font-family="'Verdana'">User
-        </text>
-        <ellipse cx="32.996" cy="1054.785" rx="8.333" ry="8.333" fill="#6272A4"
+        <ellipse cx="32.996" cy="1501.343" rx="8.333" ry="8.333" fill="#6272A4"
                  style="stroke:#55B2DE;stroke-width:1.042;"/>
-        <path d="M32.996,1063.118 L32.996,1091.243 M19.454,1071.452 L46.537,1071.452 M32.996,1091.243 L19.454,1106.868 M32.996,1091.243 L46.537,1106.868"
+        <path d="M32.996,1509.676 L32.996,1537.801 M19.454,1518.009 L46.537,1518.009 M32.996,1537.801 L19.454,1553.426 M32.996,1537.801 L46.537,1553.426"
               style="stroke:#55B2DE;stroke-width:1.042;" fill="none"/>
-        <rect x="210.599" y="1036.068" width="87.705" height="45.801" fill="#009688"
+        <rect x="210.599" y="1482.625" width="87.705" height="45.801" fill="#009688"
               style="stroke:#55B2DE;stroke-width:2.083;" rx="4.167" ry="4.167"/>
-        <text x="231.432" y="1063.295" fill="#FFF" font-size="12.5" textLength="46.039" font-family="'Verdana'">
+        <text x="231.432" y="1509.853" fill="#FFF" font-size="12.5" textLength="46.039" font-family="'Verdana'">
             FastAPI
         </text>
-        <rect x="392.054" y="1036.068" width="113.767" height="45.801" fill="#336791"
+        <rect x="392.054" y="1482.625" width="113.767" height="45.801" fill="#336791"
               style="stroke:#55B2DE;stroke-width:2.083;" rx="4.167" ry="4.167"/>
-        <text x="412.888" y="1063.295" fill="#FFF" font-size="12.5" textLength="72.101" font-family="'Verdana'">
+        <text x="412.888" y="1509.853" fill="#FFF" font-size="12.5" textLength="72.101" font-family="'Verdana'">
             PostgreSQL
         </text>
-        <rect x="599.572" y="1036.068" width="102.879" height="45.801" fill="#F60"
+        <rect x="599.572" y="1482.625" width="102.879" height="45.801" fill="#F60"
               style="stroke:#55B2DE;stroke-width:2.083;" rx="4.167" ry="4.167"/>
-        <text x="620.405" y="1063.295" fill="#FFF" font-size="12.5" textLength="61.212" font-family="'Verdana'">
+        <text x="620.405" y="1509.853" fill="#FFF" font-size="12.5" textLength="61.212" font-family="'Verdana'">
             RabbitMQ
         </text>
-        <rect x="796.201" y="1036.068" width="130.973" height="45.801" fill="#37814A"
+        <rect x="796.201" y="1482.625" width="130.973" height="45.801" fill="#37814A"
               style="stroke:#55B2DE;stroke-width:2.083;" rx="4.167" ry="4.167"/>
-        <text x="817.034" y="1063.295" fill="#FFF" font-size="12.5" textLength="89.307" font-family="'Verdana'">Celery
+        <text x="817.034" y="1509.853" fill="#FFF" font-size="12.5" textLength="89.307" font-family="'Verdana'">Celery
             Worker
         </text>
-        <rect x="1020.924" y="1036.068" width="101.805" height="45.801" fill="#47A248"
+        <rect x="1020.924" y="1482.625" width="90.806" height="45.801" fill="#B91C1C"
               style="stroke:#55B2DE;stroke-width:2.083;" rx="4.167" ry="4.167"/>
-        <text x="1041.757" y="1063.295" fill="#FFF" font-size="12.5" textLength="60.138" font-family="'Verdana'">
+        <text x="1041.757" y="1509.853" fill="#FFF" font-size="12.5" textLength="49.139" font-family="'Verdana'">
+            ClamAV
+        </text>
+        <rect x="1205.48" y="1482.625" width="101.805" height="45.801" fill="#47A248"
+              style="stroke:#55B2DE;stroke-width:2.083;" rx="4.167" ry="4.167"/>
+        <text x="1226.313" y="1509.853" fill="#FFF" font-size="12.5" textLength="60.138" font-family="'Verdana'">
             MongoDB
         </text>
-        <rect x="1216.478" y="1036.068" width="113.432" height="45.801" fill="#6B46C1"
+        <rect x="1401.035" y="1482.625" width="113.432" height="45.801" fill="#6B46C1"
               style="stroke:#55B2DE;stroke-width:2.083;" rx="4.167" ry="4.167"/>
-        <text x="1237.312" y="1063.295" fill="#FFF" font-size="12.5" textLength="71.765" font-family="'Verdana'">
+        <text x="1421.868" y="1509.853" fill="#FFF" font-size="12.5" textLength="71.765" font-family="'Verdana'">
             FastStream
         </text>
-        <rect x="1423.66" y="1036.068" width="163.548" height="60.352" fill="#44475A"
+        <rect x="1608.216" y="1482.625" width="66.38" height="45.801" fill="#44475A"
               style="stroke:#55B2DE;stroke-width:2.083;" rx="4.167" ry="4.167"/>
-        <text x="1493.078" y="1063.295" fill="#FFF" font-size="12.5" textLength="24.713" font-family="'Verdana'">LLM
+        <text x="1629.05" y="1509.853" fill="#FFF" font-size="12.5" textLength="24.713" font-family="'Verdana'">LLM
         </text>
-        <text x="1444.494" y="1077.846" fill="#FFF" font-size="12.5" textLength="121.881" font-family="'Verdana'">
-            (DeepSeek/Gemini)
-        </text>
-        <rect x="15.625" y="123.474" width="1613.25" height="3.125" fill="#44475A"
+        <rect x="15.625" y="123.474" width="1700.638" height="3.125" fill="#44475A"
               style="stroke:#44475A;stroke-width:1.042;" rx="4.167" ry="4.167"/>
-        <line x1="15.625" y1="123.474" x2="1628.875" y2="123.474" style="stroke:#6272A4;stroke-width:1.042;"/>
-        <line x1="15.625" y1="126.599" x2="1628.875" y2="126.599" style="stroke:#6272A4;stroke-width:1.042;"/>
-        <rect x="736.353" y="112.467" width="171.794" height="24.097" fill="#44475A"
+        <line x1="15.625" y1="123.474" x2="1716.263" y2="123.474" style="stroke:#6272A4;stroke-width:1.042;"/>
+        <line x1="15.625" y1="126.599" x2="1716.263" y2="126.599" style="stroke:#6272A4;stroke-width:1.042;"/>
+        <rect x="780.047" y="112.467" width="171.794" height="24.097" fill="#44475A"
               style="stroke:#6272A4;stroke-width:2.083;" rx="4.167" ry="4.167"/>
-        <text x="742.603" y="129.204" fill="#F8F8F2" font-size="13.542" textLength="152.496" font-weight="700"
+        <text x="786.297" y="129.204" fill="#F8F8F2" font-size="13.542" textLength="152.496" font-weight="700"
               font-family="'Verdana'">Upload &amp; Validation
         </text>
         <polygon points="236.743,163.615,247.16,167.782,236.743,171.948,240.91,167.782" fill="#F8F8F2"
@@ -222,8 +257,8 @@
         <polygon points="633.303,236.434,643.719,240.601,633.303,244.767,637.469,240.601" fill="#F8F8F2"
                  style="stroke:#F8F8F2;stroke-width:1.042;stroke-linejoin:miter;stroke-miterlimit:10;"/>
         <line x1="259.66" y1="240.601" x2="639.553" y2="240.601" style="stroke:#F8F8F2;stroke-width:2.083;"/>
-        <text x="266.951" y="235.569" fill="#F8F8F2" font-size="12.5" textLength="142.639" font-family="'Verdana'">
-            Publish extraction task
+        <text x="266.951" y="235.569" fill="#F8F8F2" font-size="12.5" textLength="108.002" font-family="'Verdana'">
+            Publish scan task
         </text>
         <polygon points="44.454,280.119,34.037,284.285,44.454,288.452,40.287,284.285" fill="#F8F8F2"
                  style="stroke:#F8F8F2;stroke-width:1.042;stroke-linejoin:miter;stroke-miterlimit:10;"/>
@@ -235,14 +270,14 @@
         <text x="50.704" y="279.254" fill="#F8F8F2" font-size="12.5" textLength="135.107" font-family="'Verdana'">
             (DocumentResponse)
         </text>
-        <rect x="15.625" y="314.042" width="1613.25" height="3.125" fill="#44475A"
+        <rect x="15.625" y="314.042" width="1700.638" height="3.125" fill="#44475A"
               style="stroke:#44475A;stroke-width:1.042;" rx="4.167" ry="4.167"/>
-        <line x1="15.625" y1="314.042" x2="1628.875" y2="314.042" style="stroke:#6272A4;stroke-width:1.042;"/>
-        <line x1="15.625" y1="317.167" x2="1628.875" y2="317.167" style="stroke:#6272A4;stroke-width:1.042;"/>
-        <rect x="726.666" y="303.035" width="191.167" height="24.097" fill="#44475A"
+        <line x1="15.625" y1="314.042" x2="1716.263" y2="314.042" style="stroke:#6272A4;stroke-width:1.042;"/>
+        <line x1="15.625" y1="317.167" x2="1716.263" y2="317.167" style="stroke:#6272A4;stroke-width:1.042;"/>
+        <rect x="773.534" y="303.035" width="184.82" height="24.097" fill="#44475A"
               style="stroke:#6272A4;stroke-width:2.083;" rx="4.167" ry="4.167"/>
-        <text x="732.916" y="319.772" fill="#F8F8F2" font-size="13.542" textLength="171.869" font-weight="700"
-              font-family="'Verdana'">Async: Text Extraction
+        <text x="779.784" y="319.772" fill="#F8F8F2" font-size="13.542" textLength="165.522" font-weight="700"
+              font-family="'Verdana'">Async: Antivirus Scan
         </text>
         <path d="M796.316,346.924 L796.316,362.549 A4.167,4.167 0 0 0 800.482,366.715 L922.357,366.715 A4.167,4.167 0 0 0 926.524,362.549 L926.524,353.174 L916.107,342.757 L800.482,342.757 A4.167,4.167 0 0 0 796.316,346.924"
               style="stroke:#AD5CD6;stroke-width:1.042;" fill="#93C"/>
@@ -254,136 +289,225 @@
         <polygon points="843.979,389.567,854.396,393.734,843.979,397.9,848.146,393.734" fill="#F8F8F2"
                  style="stroke:#F8F8F2;stroke-width:1.042;stroke-linejoin:miter;stroke-miterlimit:10;"/>
         <line x1="651.011" y1="393.734" x2="850.229" y2="393.734" style="stroke:#F8F8F2;stroke-width:2.083;"/>
-        <text x="658.303" y="388.702" fill="#F8F8F2" font-size="12.5" textLength="88.885" font-family="'Verdana'">
-            Consume task
+        <text x="658.303" y="388.702" fill="#F8F8F2" font-size="12.5" textLength="121.826" font-family="'Verdana'">
+            Consume scan task
         </text>
-        <line x1="866.896" y1="437.419" x2="910.646" y2="437.419" style="stroke:#F8F8F2;stroke-width:2.083;"/>
-        <line x1="910.646" y1="437.419" x2="910.646" y2="450.96" style="stroke:#F8F8F2;stroke-width:2.083;"/>
-        <line x1="867.937" y1="450.96" x2="910.646" y2="450.96" style="stroke:#F8F8F2;stroke-width:2.083;"/>
-        <polygon points="878.354,446.794,867.937,450.96,878.354,455.127,874.187,450.96" fill="#F8F8F2"
+        <polygon points="1048.619,418.701,1059.035,422.868,1048.619,427.035,1052.785,422.868" fill="#F8F8F2"
                  style="stroke:#F8F8F2;stroke-width:1.042;stroke-linejoin:miter;stroke-miterlimit:10;"/>
-        <text x="874.187" y="417.837" fill="#F8F8F2" font-size="12.5" textLength="73.633" font-family="'Verdana'">
-            Extract text
+        <line x1="866.896" y1="422.868" x2="1054.869" y2="422.868" style="stroke:#F8F8F2;stroke-width:2.083;"/>
+        <text x="874.187" y="417.837" fill="#F8F8F2" font-size="12.5" textLength="131.653" font-family="'Verdana'">Scan
+            file (INSTREAM)
         </text>
-        <text x="874.187" y="432.387" fill="#F8F8F2" font-size="12.5" textLength="114.49" font-family="'Verdana'">
-            (txt/docx/xlsx/pdf)
-        </text>
-        <polygon points="1054.118,475.928,1064.535,480.094,1054.118,484.261,1058.285,480.094" fill="#F8F8F2"
+        <polygon points="878.354,447.835,867.937,452.002,878.354,456.169,874.187,452.002" fill="#F8F8F2"
                  style="stroke:#F8F8F2;stroke-width:1.042;stroke-linejoin:miter;stroke-miterlimit:10;"/>
-        <line x1="866.896" y1="480.094" x2="1060.368" y2="480.094" style="stroke:#F8F8F2;stroke-width:2.083;"/>
-        <text x="874.187" y="475.063" fill="#F8F8F2" font-size="12.5" textLength="88.818" font-family="'Verdana'">Save
-            raw_text
+        <line x1="872.104" y1="452.002" x2="1060.077" y2="452.002"
+              style="stroke:#F8F8F2;stroke-width:2.083;stroke-dasharray:2.083,2.083;"/>
+        <text x="884.604" y="446.971" fill="#F8F8F2" font-size="12.5" textLength="70.001" font-family="'Verdana'">Scan
+            result
         </text>
-        <polygon points="465.605,519.613,455.188,523.779,465.605,527.946,461.438,523.779" fill="#F8F8F2"
+        <path d="M431.23,464.502 L492.633,464.502 L492.633,470.719 L482.216,481.136 L427.063,481.136 L427.063,468.669 A4.167,4.167 0 0 1 431.23,464.502"
+              fill="#555"/>
+        <rect x="427.063" y="464.502" width="499.477" height="260.091" fill="none"
+              style="stroke:#2A9FD6;stroke-width:1.042;" rx="4.167" ry="4.167"/>
+        <text x="442.688" y="477.146" fill="#93C" font-size="12.5" textLength="18.695" font-weight="700"
+              font-family="'Verdana'">alt
+        </text>
+        <text x="508.258" y="478.188" fill="#ADAFAE" font-size="12.5" textLength="94.946" font-weight="700"
+              font-family="'Verdana'">[File is clean]
+        </text>
+        <line x1="427.063" y1="546.696" x2="926.54" y2="546.696"
+              style="stroke:#2A9FD6;stroke-width:1.042;stroke-dasharray:2.083,2.083;"/>
+        <text x="432.271" y="560.382" fill="#ADAFAE" font-size="12.5" textLength="115.35" font-weight="700"
+              font-family="'Verdana'">[File is infected]
+        </text>
+        <line x1="427.063" y1="659.066" x2="926.54" y2="659.066"
+              style="stroke:#2A9FD6;stroke-width:1.042;stroke-dasharray:2.083,2.083;"/>
+        <text x="432.271" y="672.752" fill="#ADAFAE" font-size="12.5" textLength="161.078" font-weight="700"
+              font-family="'Verdana'">[Antivirus unavailable]
+        </text>
+        <polygon points="465.605,522.738,455.188,526.904,465.605,531.071,461.438,526.904" fill="#F8F8F2"
                  style="stroke:#F8F8F2;stroke-width:1.042;stroke-linejoin:miter;stroke-miterlimit:10;"/>
-        <line x1="459.355" y1="523.779" x2="855.437" y2="523.779" style="stroke:#F8F8F2;stroke-width:2.083;"/>
-        <text x="471.855" y="504.197" fill="#F8F8F2" font-size="12.5" textLength="87.653" font-family="'Verdana'">Update
+        <line x1="459.355" y1="526.904" x2="855.437" y2="526.904" style="stroke:#F8F8F2;stroke-width:2.083;"/>
+        <text x="471.855" y="507.322" fill="#F8F8F2" font-size="12.5" textLength="87.653" font-family="'Verdana'">Update
             status
         </text>
-        <text x="471.855" y="518.748" fill="#F8F8F2" font-size="12.5" textLength="69.94" font-family="'Verdana'">
-            (extracted)
+        <text x="471.855" y="521.873" fill="#F8F8F2" font-size="12.5" textLength="120.239" font-family="'Verdana'">
+            (status: extracting)
         </text>
-        <polygon points="662.469,563.298,652.053,567.464,662.469,571.631,658.303,567.464" fill="#F8F8F2"
+        <polygon points="465.605,599.723,455.188,603.89,465.605,608.057,461.438,603.89" fill="#F8F8F2"
                  style="stroke:#F8F8F2;stroke-width:1.042;stroke-linejoin:miter;stroke-miterlimit:10;"/>
-        <line x1="656.219" y1="567.464" x2="855.437" y2="567.464" style="stroke:#F8F8F2;stroke-width:2.083;"/>
-        <text x="668.719" y="547.882" fill="#F8F8F2" font-size="12.5" textLength="84.351" font-family="'Verdana'">
-            Publish event
+        <line x1="459.355" y1="603.89" x2="855.437" y2="603.89" style="stroke:#F8F8F2;stroke-width:2.083;"/>
+        <text x="471.855" y="584.308" fill="#F8F8F2" font-size="12.5" textLength="87.653" font-family="'Verdana'">Update
+            status
         </text>
-        <text x="668.719" y="562.433" fill="#F8F8F2" font-size="12.5" textLength="174.103" font-family="'Verdana'">
-            "documents.text.extracted"
+        <text x="471.855" y="598.859" fill="#F8F8F2" font-size="12.5" textLength="107.233" font-family="'Verdana'">
+            (status: infected)
         </text>
-        <rect x="15.625" y="597.221" width="1613.25" height="3.125" fill="#44475A"
+        <path d="M818.709,621.598 L818.709,637.223 A4.167,4.167 0 0 0 822.876,641.39 L899.959,641.39 A4.167,4.167 0 0 0 904.126,637.223 L904.126,627.848 L893.709,617.432 L822.876,617.432 A4.167,4.167 0 0 0 818.709,621.598"
+              style="stroke:#AD5CD6;stroke-width:1.042;" fill="#93C"/>
+        <path d="M893.709,617.432 L893.709,625.765 A2.083,2.083 0 0 0 895.793,627.848 L904.126,627.848 L893.709,617.432"
+              style="stroke:#AD5CD6;stroke-width:1.042;" fill="#93C"/>
+        <text x="824.959" y="634.243" fill="#FFF" font-size="12.5" textLength="64.081" font-family="'Verdana'">Delete
+            file
+        </text>
+        <polygon points="465.605,712.093,455.188,716.26,465.605,720.426,461.438,716.26" fill="#F8F8F2"
+                 style="stroke:#F8F8F2;stroke-width:1.042;stroke-linejoin:miter;stroke-miterlimit:10;"/>
+        <line x1="459.355" y1="716.26" x2="860.646" y2="716.26" style="stroke:#F8F8F2;stroke-width:2.083;"/>
+        <text x="471.855" y="696.678" fill="#F8F8F2" font-size="12.5" textLength="87.653" font-family="'Verdana'">Update
+            status
+        </text>
+        <text x="471.855" y="711.228" fill="#F8F8F2" font-size="12.5" textLength="167.029" font-family="'Verdana'">
+            (status: extracting / failed)
+        </text>
+        <rect x="15.625" y="760.6" width="1700.638" height="3.125" fill="#44475A"
               style="stroke:#44475A;stroke-width:1.042;" rx="4.167" ry="4.167"/>
-        <line x1="15.625" y1="597.221" x2="1628.875" y2="597.221" style="stroke:#6272A4;stroke-width:1.042;"/>
-        <line x1="15.625" y1="600.346" x2="1628.875" y2="600.346" style="stroke:#6272A4;stroke-width:1.042;"/>
-        <rect x="735.55" y="586.214" width="173.4" height="24.097" fill="#44475A"
+        <line x1="15.625" y1="760.6" x2="1716.263" y2="760.6" style="stroke:#6272A4;stroke-width:1.042;"/>
+        <line x1="15.625" y1="763.725" x2="1716.263" y2="763.725" style="stroke:#6272A4;stroke-width:1.042;"/>
+        <rect x="770.36" y="749.593" width="191.167" height="24.097" fill="#44475A"
               style="stroke:#6272A4;stroke-width:2.083;" rx="4.167" ry="4.167"/>
-        <text x="741.8" y="602.951" fill="#F8F8F2" font-size="13.542" textLength="154.103" font-weight="700"
-              font-family="'Verdana'">Async: LLM Analysis
+        <text x="776.61" y="766.329" fill="#F8F8F2" font-size="13.542" textLength="171.869" font-weight="700"
+              font-family="'Verdana'">Async: Text Extraction
         </text>
-        <path d="M1207.823,630.103 L1207.823,645.728 A4.167,4.167 0 0 0 1211.989,649.894 L1333.864,649.894 A4.167,4.167 0 0 0 1338.031,645.728 L1338.031,636.353 L1327.614,625.936 L1211.989,625.936 A4.167,4.167 0 0 0 1207.823,630.103"
+        <path d="M796.316,793.481 L796.316,809.106 A4.167,4.167 0 0 0 800.482,813.273 L922.357,813.273 A4.167,4.167 0 0 0 926.524,809.106 L926.524,799.731 L916.107,789.315 L800.482,789.315 A4.167,4.167 0 0 0 796.316,793.481"
               style="stroke:#AD5CD6;stroke-width:1.042;" fill="#93C"/>
-        <path d="M1327.614,625.936 L1327.614,634.269 A2.083,2.083 0 0 0 1329.698,636.353 L1338.031,636.353 L1327.614,625.936"
+        <path d="M916.107,789.315 L916.107,797.648 A2.083,2.083 0 0 0 918.191,799.731 L926.524,799.731 L916.107,789.315"
               style="stroke:#AD5CD6;stroke-width:1.042;" fill="#93C"/>
-        <text x="1214.073" y="642.747" fill="#FFF" font-size="12.5" textLength="108.868" font-family="'Verdana'">Async
+        <text x="802.566" y="806.126" fill="#FFF" font-size="12.5" textLength="108.868" font-family="'Verdana'">Async
             processing
         </text>
-        <polygon points="1255.486,672.746,1265.903,676.912,1255.486,681.079,1259.653,676.912" fill="#F8F8F2"
+        <polygon points="843.979,836.125,854.396,840.291,843.979,844.458,848.146,840.291" fill="#F8F8F2"
                  style="stroke:#F8F8F2;stroke-width:1.042;stroke-linejoin:miter;stroke-miterlimit:10;"/>
-        <line x1="651.011" y1="676.912" x2="1261.736" y2="676.912" style="stroke:#F8F8F2;stroke-width:2.083;"/>
-        <text x="658.303" y="671.881" fill="#F8F8F2" font-size="12.5" textLength="98.175" font-family="'Verdana'">
-            Consume event
+        <line x1="651.011" y1="840.291" x2="850.229" y2="840.291" style="stroke:#F8F8F2;stroke-width:2.083;"/>
+        <text x="658.303" y="835.26" fill="#F8F8F2" font-size="12.5" textLength="137.421" font-family="'Verdana'">
+            Consume extract task
         </text>
-        <polygon points="1088.493,701.88,1078.076,706.047,1088.493,710.213,1084.326,706.047" fill="#F8F8F2"
+        <line x1="866.896" y1="883.976" x2="910.646" y2="883.976" style="stroke:#F8F8F2;stroke-width:2.083;"/>
+        <line x1="910.646" y1="883.976" x2="910.646" y2="897.518" style="stroke:#F8F8F2;stroke-width:2.083;"/>
+        <line x1="867.937" y1="897.518" x2="910.646" y2="897.518" style="stroke:#F8F8F2;stroke-width:2.083;"/>
+        <polygon points="878.354,893.351,867.937,897.518,878.354,901.685,874.187,897.518" fill="#F8F8F2"
                  style="stroke:#F8F8F2;stroke-width:1.042;stroke-linejoin:miter;stroke-miterlimit:10;"/>
-        <line x1="1082.243" y1="706.047" x2="1266.944" y2="706.047" style="stroke:#F8F8F2;stroke-width:2.083;"/>
-        <text x="1094.743" y="701.015" fill="#F8F8F2" font-size="12.5" textLength="80.414" font-family="'Verdana'">Get
+        <text x="874.187" y="864.394" fill="#F8F8F2" font-size="12.5" textLength="73.633" font-family="'Verdana'">
+            Extract text
+        </text>
+        <text x="874.187" y="878.945" fill="#F8F8F2" font-size="12.5" textLength="114.49" font-family="'Verdana'">
+            (txt/docx/xlsx/pdf)
+        </text>
+        <polygon points="1238.674,922.485,1249.091,926.652,1238.674,930.819,1242.841,926.652" fill="#F8F8F2"
+                 style="stroke:#F8F8F2;stroke-width:1.042;stroke-linejoin:miter;stroke-miterlimit:10;"/>
+        <line x1="866.896" y1="926.652" x2="1244.924" y2="926.652" style="stroke:#F8F8F2;stroke-width:2.083;"/>
+        <text x="874.187" y="921.621" fill="#F8F8F2" font-size="12.5" textLength="88.818" font-family="'Verdana'">Save
             raw_text
         </text>
-        <line x1="1278.403" y1="735.181" x2="1322.153" y2="735.181" style="stroke:#F8F8F2;stroke-width:2.083;"/>
-        <line x1="1322.153" y1="735.181" x2="1322.153" y2="748.722" style="stroke:#F8F8F2;stroke-width:2.083;"/>
-        <line x1="1279.444" y1="748.722" x2="1322.153" y2="748.722" style="stroke:#F8F8F2;stroke-width:2.083;"/>
-        <polygon points="1289.861,744.556,1279.444,748.722,1289.861,752.889,1285.694,748.722" fill="#F8F8F2"
+        <polygon points="465.605,966.17,455.188,970.337,465.605,974.504,461.438,970.337" fill="#F8F8F2"
                  style="stroke:#F8F8F2;stroke-width:1.042;stroke-linejoin:miter;stroke-miterlimit:10;"/>
-        <text x="1285.694" y="730.149" fill="#F8F8F2" font-size="12.5" textLength="113.953" font-family="'Verdana'">Get
-            active prompt
-        </text>
-        <polygon points="1487.726,788.241,1498.142,792.407,1487.726,796.574,1491.892,792.407" fill="#F8F8F2"
-                 style="stroke:#F8F8F2;stroke-width:1.042;stroke-linejoin:miter;stroke-miterlimit:10;"/>
-        <line x1="1278.403" y1="792.407" x2="1493.976" y2="792.407" style="stroke:#F8F8F2;stroke-width:2.083;"/>
-        <text x="1285.694" y="772.825" fill="#F8F8F2" font-size="12.5" textLength="78.119" font-family="'Verdana'">
-            Analyze text
-        </text>
-        <text x="1285.694" y="787.376" fill="#F8F8F2" font-size="12.5" textLength="98.798" font-family="'Verdana'">(text
-            + prompt)
-        </text>
-        <polygon points="1289.861,817.375,1279.444,821.541,1289.861,825.708,1285.694,821.541" fill="#F8F8F2"
-                 style="stroke:#F8F8F2;stroke-width:1.042;stroke-linejoin:miter;stroke-miterlimit:10;"/>
-        <line x1="1283.611" y1="821.541" x2="1499.184" y2="821.541"
-              style="stroke:#F8F8F2;stroke-width:2.083;stroke-dasharray:2.083,2.083;"/>
-        <text x="1296.111" y="816.51" fill="#F8F8F2" font-size="12.5" textLength="129.443" font-family="'Verdana'">JSON
-            Analysis Result
-        </text>
-        <polygon points="1088.493,846.509,1078.076,850.675,1088.493,854.842,1084.326,850.675" fill="#F8F8F2"
-                 style="stroke:#F8F8F2;stroke-width:1.042;stroke-linejoin:miter;stroke-miterlimit:10;"/>
-        <line x1="1082.243" y1="850.675" x2="1266.944" y2="850.675" style="stroke:#F8F8F2;stroke-width:2.083;"/>
-        <text x="1094.743" y="845.644" fill="#F8F8F2" font-size="12.5" textLength="148.743" font-family="'Verdana'">Save
-            analysis &amp; version
-        </text>
-        <polygon points="465.605,890.194,455.188,894.36,465.605,898.527,461.438,894.36" fill="#F8F8F2"
-                 style="stroke:#F8F8F2;stroke-width:1.042;stroke-linejoin:miter;stroke-miterlimit:10;"/>
-        <line x1="459.355" y1="894.36" x2="1266.944" y2="894.36" style="stroke:#F8F8F2;stroke-width:2.083;"/>
-        <text x="471.855" y="874.778" fill="#F8F8F2" font-size="12.5" textLength="87.653" font-family="'Verdana'">Update
+        <line x1="459.355" y1="970.337" x2="855.437" y2="970.337" style="stroke:#F8F8F2;stroke-width:2.083;"/>
+        <text x="471.855" y="950.755" fill="#F8F8F2" font-size="12.5" textLength="87.653" font-family="'Verdana'">Update
             status
         </text>
-        <text x="471.855" y="889.329" fill="#F8F8F2" font-size="12.5" textLength="58.649" font-family="'Verdana'">
-            (success)
+        <text x="471.855" y="965.306" fill="#F8F8F2" font-size="12.5" textLength="116.534" font-family="'Verdana'">
+            (status: extracted)
         </text>
-        <rect x="15.625" y="924.117" width="1613.25" height="3.125" fill="#44475A"
+        <polygon points="662.469,1009.855,652.053,1014.022,662.469,1018.188,658.303,1014.022" fill="#F8F8F2"
+                 style="stroke:#F8F8F2;stroke-width:1.042;stroke-linejoin:miter;stroke-miterlimit:10;"/>
+        <line x1="656.219" y1="1014.022" x2="855.437" y2="1014.022" style="stroke:#F8F8F2;stroke-width:2.083;"/>
+        <text x="668.719" y="994.44" fill="#F8F8F2" font-size="12.5" textLength="84.351" font-family="'Verdana'">Publish
+            event
+        </text>
+        <text x="668.719" y="1008.99" fill="#F8F8F2" font-size="12.5" textLength="174.103" font-family="'Verdana'">
+            "documents.text.extracted"
+        </text>
+        <rect x="15.625" y="1043.778" width="1700.638" height="3.125" fill="#44475A"
               style="stroke:#44475A;stroke-width:1.042;" rx="4.167" ry="4.167"/>
-        <line x1="15.625" y1="924.117" x2="1628.875" y2="924.117" style="stroke:#6272A4;stroke-width:1.042;"/>
-        <line x1="15.625" y1="927.242" x2="1628.875" y2="927.242" style="stroke:#6272A4;stroke-width:1.042;"/>
-        <rect x="751.432" y="913.11" width="141.636" height="24.097" fill="#44475A"
+        <line x1="15.625" y1="1043.778" x2="1716.263" y2="1043.778" style="stroke:#6272A4;stroke-width:1.042;"/>
+        <line x1="15.625" y1="1046.903" x2="1716.263" y2="1046.903" style="stroke:#6272A4;stroke-width:1.042;"/>
+        <rect x="779.244" y="1032.772" width="173.4" height="24.097" fill="#44475A"
               style="stroke:#6272A4;stroke-width:2.083;" rx="4.167" ry="4.167"/>
-        <text x="757.682" y="929.847" fill="#F8F8F2" font-size="13.542" textLength="122.338" font-weight="700"
+        <text x="785.494" y="1049.508" fill="#F8F8F2" font-size="13.542" textLength="154.103" font-weight="700"
+              font-family="'Verdana'">Async: LLM Analysis
+        </text>
+        <path d="M1392.379,1076.66 L1392.379,1092.285 A4.167,4.167 0 0 0 1396.545,1096.452 L1518.42,1096.452 A4.167,4.167 0 0 0 1522.587,1092.285 L1522.587,1082.91 L1512.17,1072.493 L1396.545,1072.493 A4.167,4.167 0 0 0 1392.379,1076.66"
+              style="stroke:#AD5CD6;stroke-width:1.042;" fill="#93C"/>
+        <path d="M1512.17,1072.493 L1512.17,1080.827 A2.083,2.083 0 0 0 1514.254,1082.91 L1522.587,1082.91 L1512.17,1072.493"
+              style="stroke:#AD5CD6;stroke-width:1.042;" fill="#93C"/>
+        <text x="1398.629" y="1089.305" fill="#FFF" font-size="12.5" textLength="108.868" font-family="'Verdana'">Async
+            processing
+        </text>
+        <polygon points="1440.042,1119.303,1450.459,1123.47,1440.042,1127.637,1444.209,1123.47" fill="#F8F8F2"
+                 style="stroke:#F8F8F2;stroke-width:1.042;stroke-linejoin:miter;stroke-miterlimit:10;"/>
+        <line x1="651.011" y1="1123.47" x2="1446.292" y2="1123.47" style="stroke:#F8F8F2;stroke-width:2.083;"/>
+        <text x="658.303" y="1118.439" fill="#F8F8F2" font-size="12.5" textLength="98.175" font-family="'Verdana'">
+            Consume event
+        </text>
+        <polygon points="1273.049,1148.438,1262.632,1152.604,1273.049,1156.771,1268.882,1152.604" fill="#F8F8F2"
+                 style="stroke:#F8F8F2;stroke-width:1.042;stroke-linejoin:miter;stroke-miterlimit:10;"/>
+        <line x1="1266.799" y1="1152.604" x2="1451.5" y2="1152.604" style="stroke:#F8F8F2;stroke-width:2.083;"/>
+        <text x="1279.299" y="1147.573" fill="#F8F8F2" font-size="12.5" textLength="80.414" font-family="'Verdana'">Get
+            raw_text
+        </text>
+        <line x1="1462.959" y1="1181.738" x2="1506.709" y2="1181.738" style="stroke:#F8F8F2;stroke-width:2.083;"/>
+        <line x1="1506.709" y1="1181.738" x2="1506.709" y2="1195.28" style="stroke:#F8F8F2;stroke-width:2.083;"/>
+        <line x1="1464" y1="1195.28" x2="1506.709" y2="1195.28" style="stroke:#F8F8F2;stroke-width:2.083;"/>
+        <polygon points="1474.417,1191.113,1464,1195.28,1474.417,1199.447,1470.25,1195.28" fill="#F8F8F2"
+                 style="stroke:#F8F8F2;stroke-width:1.042;stroke-linejoin:miter;stroke-miterlimit:10;"/>
+        <text x="1470.25" y="1176.707" fill="#F8F8F2" font-size="12.5" textLength="113.953" font-family="'Verdana'">Get
+            active prompt
+        </text>
+        <polygon points="1623.698,1234.798,1634.115,1238.965,1623.698,1243.132,1627.865,1238.965" fill="#F8F8F2"
+                 style="stroke:#F8F8F2;stroke-width:1.042;stroke-linejoin:miter;stroke-miterlimit:10;"/>
+        <line x1="1462.959" y1="1238.965" x2="1629.948" y2="1238.965" style="stroke:#F8F8F2;stroke-width:2.083;"/>
+        <text x="1470.25" y="1219.383" fill="#F8F8F2" font-size="12.5" textLength="78.119" font-family="'Verdana'">
+            Analyze text
+        </text>
+        <text x="1470.25" y="1233.934" fill="#F8F8F2" font-size="12.5" textLength="98.798" font-family="'Verdana'">(text
+            + prompt)
+        </text>
+        <polygon points="1474.417,1263.932,1464,1268.099,1474.417,1272.266,1470.25,1268.099" fill="#F8F8F2"
+                 style="stroke:#F8F8F2;stroke-width:1.042;stroke-linejoin:miter;stroke-miterlimit:10;"/>
+        <line x1="1468.167" y1="1268.099" x2="1635.156" y2="1268.099"
+              style="stroke:#F8F8F2;stroke-width:2.083;stroke-dasharray:2.083,2.083;"/>
+        <text x="1480.667" y="1263.068" fill="#F8F8F2" font-size="12.5" textLength="129.443" font-family="'Verdana'">
+            JSON Analysis Result
+        </text>
+        <polygon points="1273.049,1293.066,1262.632,1297.233,1273.049,1301.4,1268.882,1297.233" fill="#F8F8F2"
+                 style="stroke:#F8F8F2;stroke-width:1.042;stroke-linejoin:miter;stroke-miterlimit:10;"/>
+        <line x1="1266.799" y1="1297.233" x2="1451.5" y2="1297.233" style="stroke:#F8F8F2;stroke-width:2.083;"/>
+        <text x="1279.299" y="1292.202" fill="#F8F8F2" font-size="12.5" textLength="148.743" font-family="'Verdana'">
+            Save analysis &amp; version
+        </text>
+        <polygon points="465.605,1336.751,455.188,1340.918,465.605,1345.085,461.438,1340.918" fill="#F8F8F2"
+                 style="stroke:#F8F8F2;stroke-width:1.042;stroke-linejoin:miter;stroke-miterlimit:10;"/>
+        <line x1="459.355" y1="1340.918" x2="1451.5" y2="1340.918" style="stroke:#F8F8F2;stroke-width:2.083;"/>
+        <text x="471.855" y="1321.336" fill="#F8F8F2" font-size="12.5" textLength="87.653" font-family="'Verdana'">
+            Update status
+        </text>
+        <text x="471.855" y="1335.887" fill="#F8F8F2" font-size="12.5" textLength="105.243" font-family="'Verdana'">
+            (status: success)
+        </text>
+        <rect x="15.625" y="1370.675" width="1700.638" height="3.125" fill="#44475A"
+              style="stroke:#44475A;stroke-width:1.042;" rx="4.167" ry="4.167"/>
+        <line x1="15.625" y1="1370.675" x2="1716.263" y2="1370.675" style="stroke:#6272A4;stroke-width:1.042;"/>
+        <line x1="15.625" y1="1373.8" x2="1716.263" y2="1373.8" style="stroke:#6272A4;stroke-width:1.042;"/>
+        <rect x="795.126" y="1359.668" width="141.636" height="24.097" fill="#44475A"
+              style="stroke:#6272A4;stroke-width:2.083;" rx="4.167" ry="4.167"/>
+        <text x="801.376" y="1376.404" fill="#F8F8F2" font-size="13.542" textLength="122.338" font-weight="700"
               font-family="'Verdana'">Result Retrieval
         </text>
-        <polygon points="236.743,964.258,247.16,968.424,236.743,972.591,240.91,968.424" fill="#F8F8F2"
+        <polygon points="236.743,1410.815,247.16,1414.982,236.743,1419.149,240.91,1414.982" fill="#F8F8F2"
                  style="stroke:#F8F8F2;stroke-width:1.042;stroke-linejoin:miter;stroke-miterlimit:10;"/>
-        <line x1="32.996" y1="968.424" x2="242.993" y2="968.424" style="stroke:#F8F8F2;stroke-width:2.083;"/>
-        <text x="40.287" y="963.393" fill="#F8F8F2" font-size="12.5" textLength="134.509" font-family="'Verdana'">GET
+        <line x1="32.996" y1="1414.982" x2="242.993" y2="1414.982" style="stroke:#F8F8F2;stroke-width:2.083;"/>
+        <text x="40.287" y="1409.951" fill="#F8F8F2" font-size="12.5" textLength="134.509" font-family="'Verdana'">GET
             /documents/{id}
         </text>
-        <polygon points="44.454,1007.943,34.037,1012.109,44.454,1016.276,40.287,1012.109" fill="#F8F8F2"
+        <polygon points="44.454,1454.5,34.037,1458.667,44.454,1462.834,40.287,1458.667" fill="#F8F8F2"
                  style="stroke:#F8F8F2;stroke-width:1.042;stroke-linejoin:miter;stroke-miterlimit:10;"/>
-        <line x1="38.204" y1="1012.109" x2="248.201" y2="1012.109"
+        <line x1="38.204" y1="1458.667" x2="248.201" y2="1458.667"
               style="stroke:#F8F8F2;stroke-width:2.083;stroke-dasharray:2.083,2.083;"/>
-        <text x="50.704" y="992.527" fill="#F8F8F2" font-size="12.5" textLength="125.354" font-family="'Verdana'">
+        <text x="50.704" y="1439.085" fill="#F8F8F2" font-size="12.5" textLength="125.354" font-family="'Verdana'">
             DocumentResponse
         </text>
-        <text x="50.704" y="1007.078" fill="#F8F8F2" font-size="12.5" textLength="182.678" font-family="'Verdana'">
+        <text x="50.704" y="1453.636" fill="#F8F8F2" font-size="12.5" textLength="182.678" font-family="'Verdana'">
             (metadata + text + analysis)
         </text>
-        <?plantuml-src bLHjRzf84FxkNp4bKjMeIW6704LA9KC2kbFIaf3qlbGwBVQ6h32xxkv2o5NzxpVxOhmc9BhZHRPtdcUUcMV7-qu_qXM5z7akv2AAr9BnWaYoWZb9bmifrZmRYLn8E6edxII-313gaMJYYV45F91SqI1YQQcGd4heXmpwSqrvIXCfnTFT8qkNd2e5yG78b4ZDKbOGheT2PbI-3RzY3_Zdr65znMVs4ns0mwy8m5RXeUC-VkDoSIouVZKmO_zGQ9ib_1tKxTfF6DttCaxYvFJIfHYAROtTwNHwPuaFl23saTXrmKDL-kLQZL-5hjSt7W_xtL4PsPVOwPle8OrotOcqdSW5sp1KgFiGz-Aa4mHVbVA0Gsf1o0cUHh-ZYAGQKOrxHMK3Y09pinCigjc1nfWedKp_i2Yymb6hzRdRxzT1Kw7qGjBPpPN5JITmT7hQxNrkrs6tP3vd-lh6WcwlRuoLtMwhLKUDQ4xbC_mbvD9NvsunPw_VxYHrzBNW2t4nj3XxZxRqahZJVzd6J4jALXRfRh7ZOQSxsglowkhw1_zmGManetJPdD0Lu-pOqZ2qSpqwFuVx8XSaW_VmdUGi8ve93kVdKMJjFFbY31l0zDli3fgPIDShohM23vxrm79wR7Q2ROYc1XiPWv4sdGnWHZOKLbGJJ4km7gM9Ngi1f5Yufbb0d4wYZ8PFFWiQZEBhUSxK8z2jbWQ31MgYbXKRKI7TF5e-9Z1T321kjM7aH8qjlerRgWh15JOGa4qBnfP4FVDq07Se2fULi766u_23sA0zRbC73Wo552aUJdWQHf6P39Gl0IFKGSszkbqqygCHmBqWQ5J7WlLM6--tpMskjiqYUpWEE7PWlDUIFFrjE9M4ZORzkOMARlRfliXCo6qFwdcZtzwXAaLzapRex0_UsCtA9rFGfrtAHfZ66n3uRQOpuIH_LapjcUtc_GspIq1fjYsbwi258__QLCvDgFxlnbNiKitGBOYQcbQ53Z3OpS2rWwTMkPbceZvwR60mOYFJ_KcG-y_Pjw-L7JYlwro7DHdEYtxi992Iz1xGEuMZ-pzQEpGJQfqQlz-QYE39UsqsrbMD5oqPtP3yvU4okGpFbkOlblq-SAJiNkRzrnUBAyyOzDNRM_Q__sx_2m00?>
+        <?plantuml-src fLLjRzew5FwUNt56fQdLLSTB6L2aJWeKqAvAHw7bVfbqPH93BOBDjHrAD-s_xzX9Y0EqNNMfgYG-ptDUddDiVz2FT4KXU9u9kV3Kal4raMG5Cn8i5rB4FEoAI4WugVfLlzPp4EgHXEA9yGNCIQIeOx6qG4XE9RHS1lqlfZoWlfJYwVwH1KjEbOBQ4SY8ICq2jYPSTuGCgNmTViFc-CzfWaqp_cn_tX4u_FG0R1OfjD_2lrgss1TSlsYOi1yKgcRfQD26_RdMVI5hVis_w26Y8xO5QhrURtxsKyC1guMiHc8ybb-wd6TtAtGnitw_qsfqCyk-_rrmOpqM85jF8bHnvPfj6BelbbzhrlowOtmnJWeu5ien9T4kl5-UHmADgDA3eh84H85vsGLSv_C2fJvHsXzzjIXymacbSjbejOgWaL1w8UdaxiRYHWCukRXeD2-hHTYOp6PC3-yiQ3oyCpes6fLA4TMb4PNFy8-GopIxv1LzDblLkh-7ZiZAdoRfJU6aSrdjLhj5o53mXRZkM8nzH-MQVgtUEgnqeYKbAujCNb6KJhtHtIlavcPeCVZSTS6xkeA7TIH821zXIY8M4iq4Xwihpwfx_iNeruRHjyazb4CHn2lAjOBJb3Hd4JqpZM4Regd1UaPlf8q6RPYG3OKLrGIzak_yL6cYOzM609FKD7I8eu4NKlShzO9wO_1u5Z7r22eW73HHovo7TfTeFYqJgIR_DjGgLUWcuJ21wxI0CLLhmHMcxf1DyaOFNptpe0q-ntKcOnJLn4L5E6u041kK9UbjEu72Mee0poKy23qp7nWxitSn20Oybda2yT8fCJfFsqaaeocSVhsTt8zx_j1LT-hXj9mx_YrUKXL7kb3953TBfA5lF345GKG9nssL1pFTULY71fmqnUaEtMffNF756NBSfW0KcqJnrDy5ONnE0vJvZ-DaXBUY01mAVutR3TUCL4LyAglDBEzWpCc6i8ZCBFozCa0PBpYCz6Qcb8Vk1DsZ2-YbRiJ_7A4qdRUcAAFrCZZoi2YzrMRtRilRI6tBwt1-vd3iyPBkLacU_ZMSF8IrkjELBBnBnDVtUkwgiDtf1dVgTrxQdJgVJ6AVTYvBtc7V7VNDCUTp4Zqh7Cw2zCaX-RBqcNqdlKaappynU-bHc-iteFhFvSlPMJH3jo1gKbgjjOF1Mjf9CNWPPYqrq_LNYdNaHQndQZztVFyz-NQRYp4-E30Cvw0UEmya8tq4b4xX6B-ZjDScGyM1aVsrkN2-KirDUvFiyQ4beniI7TnLWvvxLPL_il3NaHjgTqFitmcOOtPbeRofofaC-nV6Rm00?>
     </g>
 </svg>

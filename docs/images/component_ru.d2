@@ -40,7 +40,11 @@ AsyncWorkers: {
     style.bold: true
     style.border-radius: 8
 
-    Task: extract_text_task {
+    ScanTask: Задача сканирования {
+      style.fill: "#5CA86D"
+      style.font-color: "#fff"
+    }
+    ExtractTask: Задача извлечения {
       style.fill: "#5CA86D"
       style.font-color: "#fff"
     }
@@ -57,7 +61,7 @@ AsyncWorkers: {
     style.bold: true
     style.border-radius: 8
 
-    Consumer: DocumentAnalysisConsumer {
+    Consumer: Консьюмер анализа {
       style.fill: "#9F7AEA"
       style.font-color: "#fff"
     }
@@ -66,6 +70,16 @@ AsyncWorkers: {
       style.font-color: "#fff"
     }
   }
+}
+
+# === Антивирус ===
+ClamAV: {
+  shape: rectangle
+  style.fill: "#B91C1C"
+  style.font-color: "#fff"
+  style.bold: true
+  style.border-radius: 8
+  label: "ClamAV"
 }
 
 # === Брокер очередей ===
@@ -90,14 +104,12 @@ DataStores: {
     style.font-color: "#fff"
     style.bold: true
   }
-
   MongoDB: {
     shape: cylinder
     style.fill: "#47A248"
     style.font-color: "#fff"
     style.bold: true
   }
-
   Redis: {
     shape: cylinder
     style.fill: "#DC382D"
@@ -106,21 +118,13 @@ DataStores: {
   }
 }
 
-# === LLM (контейнер) ===
+# === LLM ===
 LLM: {
   shape: cloud
   style.fill: "#1A1A2E"
   style.font-color: "#fff"
   style.bold: true
-
-  DeepSeek: DeepSeek {
-    style.fill: "#4A90E2"
-    style.font-color: "#fff"
-  }
-  Gemini: Gemini {
-    style.fill: "#4285F4"
-    style.font-color: "#fff"
-  }
+  label: "LLM"
 }
 
 # === Связи ===
@@ -140,77 +144,89 @@ FastAPI.Services -> DataStores.Redis: Кэш {
   style.stroke-width: 2
 }
 
-FastAPI.Services -> RabbitMQ: 1. Публикация задачи {
+FastAPI.Services -> RabbitMQ: 1. Публикация задачи сканирования {
   style.stroke: "#FF8C42"
   style.bold: true
   style.stroke-width: 2
 }
 
-RabbitMQ -> AsyncWorkers.CeleryWorker.Task: 2. Получение {
+RabbitMQ -> AsyncWorkers.CeleryWorker.ScanTask: 2. Получение {
   style.stroke: "#6BCB77"
   style.bold: true
   style.stroke-width: 2
 }
 
-AsyncWorkers.CeleryWorker.Extractors -> DataStores.MongoDB: 3. Сохранение текста {
-  style.stroke: "#4ECDC4"
+AsyncWorkers.CeleryWorker.ScanTask -> ClamAV: 3. Сканирование файла {
+  style.stroke: "#E53E3E"
   style.bold: true
   style.stroke-width: 2
 }
 
-AsyncWorkers.CeleryWorker.Task -> RabbitMQ: 4. Публикация события {
+ClamAV -> AsyncWorkers.CeleryWorker.ScanTask: 4. Результат {
+  style.stroke: "#E53E3E"
+  style.stroke-dash: 3
+  style.stroke-width: 2
+}
+
+AsyncWorkers.CeleryWorker.ScanTask -> RabbitMQ: 5. Публикация задачи извлечения {
   style.stroke: "#FF8C42"
   style.bold: true
   style.stroke-width: 2
 }
 
-RabbitMQ -> AsyncWorkers.FastStream.Consumer: 5. Получение {
+RabbitMQ -> AsyncWorkers.CeleryWorker.ExtractTask: 6. Получение {
+  style.stroke: "#6BCB77"
+  style.bold: true
+  style.stroke-width: 2
+}
+
+AsyncWorkers.CeleryWorker.Extractors -> DataStores.MongoDB: 7. Сохранение текста {
+  style.stroke: "#4ECDC4"
+  style.bold: true
+  style.stroke-width: 2
+}
+
+AsyncWorkers.CeleryWorker.ExtractTask -> RabbitMQ: 8. Публикация события {
+  style.stroke: "#FF8C42"
+  style.bold: true
+  style.stroke-width: 2
+}
+
+RabbitMQ -> AsyncWorkers.FastStream.Consumer: 9. Получение {
   style.stroke: "#A78BFA"
   style.bold: true
   style.stroke-width: 2
 }
 
-AsyncWorkers.FastStream.Consumer -> DataStores.MongoDB: 6. Получение текста {
+AsyncWorkers.FastStream.Consumer -> DataStores.MongoDB: 10. Получение текста {
   style.stroke: "#4ECDC4"
   style.stroke-width: 2
 }
 
-AsyncWorkers.FastStream.Factory -> DataStores.Redis: 7. Получение промпта {
+AsyncWorkers.FastStream.Factory -> DataStores.Redis: 11. Получение промпта {
   style.stroke: "#FF6B6B"
   style.stroke-width: 2
 }
 
-AsyncWorkers.FastStream.Consumer -> LLM.DeepSeek: 8. Анализ {
+AsyncWorkers.FastStream.Consumer -> LLM: 12. Анализ {
   style.stroke: "#667"
   style.bold: true
   style.stroke-width: 2
 }
 
-AsyncWorkers.FastStream.Consumer -> LLM.Gemini: 8. Анализ {
-  style.stroke: "#667"
-  style.bold: true
-  style.stroke-width: 2
-}
-
-LLM.DeepSeek -> AsyncWorkers.FastStream.Consumer: 9. Возврат результата {
+LLM -> AsyncWorkers.FastStream.Consumer: 13. Возврат результата {
   style.stroke: "#999"
   style.stroke-dash: 3
   style.stroke-width: 2
 }
 
-LLM.Gemini -> AsyncWorkers.FastStream.Consumer: 9. Возврат результата {
-  style.stroke: "#999"
-  style.stroke-dash: 3
-  style.stroke-width: 2
-}
-
-AsyncWorkers.FastStream.Consumer -> DataStores.MongoDB: 10. Сохранение анализа {
+AsyncWorkers.FastStream.Consumer -> DataStores.MongoDB: 14. Сохранение анализа {
   style.stroke: "#4ECDC4"
   style.bold: true
   style.stroke-width: 2
 }
 
-AsyncWorkers.FastStream.Consumer -> DataStores.PostgreSQL: 11. Обновление статуса {
+AsyncWorkers.FastStream.Consumer -> DataStores.PostgreSQL: 15. Обновление статуса {
   style.stroke: "#5A9FD4"
   style.bold: true
   style.stroke-width: 2
