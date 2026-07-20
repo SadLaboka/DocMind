@@ -1,4 +1,3 @@
-import socket
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -33,7 +32,7 @@ class AntivirusScanner:
 
         try:
             raw_response = self.client.scan_file(file_path)
-        except (socket.error, OSError, socket.timeout) as e:
+        except (TimeoutError, OSError) as e:
             raise AntivirusUnavailableError(
                 message="ClamAV connection failed",
                 error_code="antivirus_connection_error",

@@ -1,4 +1,5 @@
 import asyncio
+
 import structlog
 
 from src.antivirus.exceptions import AntivirusUnavailableError
@@ -7,29 +8,16 @@ from src.core.config import settings
 from src.core.database import celery_session_factory
 from src.core.enums import DocumentStatus
 from src.repositories.documents import DocumentRepository
+from src.worker.base_task import BaseTask
 from src.worker.celery_app import app as celery_app
 from src.worker.extraction_tasks import extract_text_task
-from src.worker.base_task import BaseTask
 
 
 class DocumentScanTask(BaseTask):
     def __init__(
-            self,
-            document_id: int,
-            temp_path: str,
-            mime_type: str,
-            user_id: int,
-            request_id: str,
-            provider: str
+        self, document_id: int, temp_path: str, mime_type: str, user_id: int, request_id: str, provider: str
     ) -> None:
-        super().__init__(
-            document_id,
-            temp_path,
-            mime_type,
-            user_id,
-            request_id,
-            provider
-        )
+        super().__init__(document_id, temp_path, mime_type, user_id, request_id, provider)
         self.scanner = AntivirusScanner()
         self.fail_on_unavailable = settings.antivirus.fail_on_unavailable
 
@@ -40,7 +28,7 @@ class DocumentScanTask(BaseTask):
             "task_received_by_antivirus_worker",
             user_id=self.user_id,
             document_id=self.document_id,
-            mime_type=self.mime_type
+            mime_type=self.mime_type,
         )
 
         async with celery_session_factory() as session:
@@ -51,7 +39,7 @@ class DocumentScanTask(BaseTask):
                     "document_status_is_cancelled",
                     user_id=self.user_id,
                     document_id=self.document_id,
-                    mime_type=self.mime_type
+                    mime_type=self.mime_type,
                 )
                 return
 
@@ -63,7 +51,7 @@ class DocumentScanTask(BaseTask):
                     file_path=self.temp_path,
                     user_id=self.user_id,
                     document_id=self.document_id,
-                    mime_type=self.mime_type
+                    mime_type=self.mime_type,
                 )
                 return
 
@@ -119,7 +107,6 @@ class DocumentScanTask(BaseTask):
                     await repo.update_document_fields(self.document_id, document_status=DocumentStatus.extracting)
                     await self._publish_to_extract()
 
-
     async def _publish_to_extract(self) -> None:
         """Publish document to extract text task"""
         await asyncio.to_thread(
@@ -140,7 +127,7 @@ class DocumentScanTask(BaseTask):
                 user_id=self.user_id,
                 file_path=self.temp_path,
                 document_id=self.document_id,
-                mime_type=self.mime_type
+                mime_type=self.mime_type,
             )
             return self.scanner.scan_file(self.temp_path)
 
@@ -171,12 +158,12 @@ class DocumentScanTask(BaseTask):
     on_failure=DocumentScanTask._on_task_failure,
 )
 def scan_file_task(
-        document_id: int,
-        temp_path: str,
-        mime_type: str,
-        user_id: int,
-        request_id: str,
-        provider: str,
+    document_id: int,
+    temp_path: str,
+    mime_type: str,
+    user_id: int,
+    request_id: str,
+    provider: str,
 ) -> None:
     """Runs a document scan task async"""
     task = DocumentScanTask(

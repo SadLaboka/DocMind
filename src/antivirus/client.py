@@ -5,6 +5,7 @@ from pathlib import Path
 
 class ClamAVClient:
     """TCP-client for clamd protocol"""
+
     def __init__(self, host: str, port: int, timeout: float, chunk_size: int) -> None:
         self.host = host
         self.port = port
@@ -44,7 +45,7 @@ class ClamAVClient:
         try:
             sock.connect((self.host, self.port))
             return sock
-        except (socket.error, OSError) as e:
+        except OSError:
             sock.close()
             raise
 

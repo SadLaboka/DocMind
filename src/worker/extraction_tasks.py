@@ -11,30 +11,17 @@ from src.models.documents import DocumentStatus, MimeType
 from src.repositories.documents import DocumentRepository
 from src.repositories.mongo_documents import MongoDocumentRepository
 from src.services.extractors import TextExtractor
-from src.worker.celery_app import app as celery_app
 from src.worker.base_task import BaseTask
+from src.worker.celery_app import app as celery_app
 
 
 class DocumentExtractionTask(BaseTask):
     """Celery task to extract text from document"""
 
     def __init__(
-            self,
-            document_id: int,
-            temp_path: str,
-            mime_type: str,
-            user_id: int,
-            request_id: str,
-            provider: str
+        self, document_id: int, temp_path: str, mime_type: str, user_id: int, request_id: str, provider: str
     ) -> None:
-        super().__init__(
-            document_id,
-            temp_path,
-            mime_type,
-            user_id,
-            request_id,
-            provider
-        )
+        super().__init__(document_id, temp_path, mime_type, user_id, request_id, provider)
         self.extractor = TextExtractor()
 
     async def execute(self) -> None:
@@ -66,7 +53,6 @@ class DocumentExtractionTask(BaseTask):
 
             await self._process_extraction(repo, mime_enum)
 
-
     def _validate_mime_type(self) -> MimeType:
         """Validates mime type"""
         if not self.mime_type:
@@ -88,7 +74,6 @@ class DocumentExtractionTask(BaseTask):
             )
             self._cleanup_file()
             raise ValueError(f"Unsupported mime type: {self.mime_type}") from None
-
 
     async def _process_extraction(self, repo: DocumentRepository, mime_enum: MimeType) -> None:
         """Launch extraction logic"""

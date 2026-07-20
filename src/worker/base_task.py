@@ -1,21 +1,16 @@
-from pathlib import Path
-import structlog
 import asyncio
+from pathlib import Path
 
-from src.repositories.documents import DocumentRepository
-from src.core.enums import DocumentStatus
+import structlog
+
 from src.core.database import celery_session_factory
+from src.core.enums import DocumentStatus
+from src.repositories.documents import DocumentRepository
 
 
 class BaseTask:
     def __init__(
-            self,
-            document_id: int,
-            temp_path: str,
-            mime_type: str,
-            user_id: int,
-            request_id: str,
-            provider: str
+        self, document_id: int, temp_path: str, mime_type: str, user_id: int, request_id: str, provider: str
     ) -> None:
         self.document_id = document_id
         self.temp_path = Path(temp_path)

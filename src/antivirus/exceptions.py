@@ -18,13 +18,13 @@ class AntivirusUnavailableError(AntivirusException):
     error_code: str = "antivirus_unavailable"
 
     def __init__(
-            self,
-            host: str | None = None,
-            port: int | None = None,
-            error_code: str | None = None,
-            message: str | None = None,
-            log_context: dict | None = None,
-            original_error: Exception | None = None
+        self,
+        host: str | None = None,
+        port: int | None = None,
+        error_code: str | None = None,
+        message: str | None = None,
+        log_context: dict | None = None,
+        original_error: Exception | None = None,
     ):
         super().__init__(error_code=error_code, message=message, log_context=log_context)
         self.host = host
