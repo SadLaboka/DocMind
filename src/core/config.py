@@ -158,6 +158,7 @@ class KimiSettings(SettingsBase):
     model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="KIMI_")
 
     api_key: str = ""
+    base_url: str = "https://api.moonshot.ai/v1"
     model: str = "kimi-2.7"
     timeout: float = 60.0
     max_tokens: int = 4096
