@@ -8,7 +8,10 @@ from src.core.logging_config import setup_logging
 
 app = Celery("worker", broker=settings.rabbit.url, worker_max_tasks_per_child=50, task_time_limit=240)
 
-app.autodiscover_tasks(["src.worker"], related_name="extraction_tasks")
+app.conf.include = [
+    "src.worker.extraction_tasks",
+    "src.worker.antivirus_tasks",
+]
 
 app.conf.worker_hijack_root_logger = False
 
