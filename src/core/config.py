@@ -154,6 +154,16 @@ class LLMSettings(SettingsBase):
     default_provider: LLMProvider = LLMProvider.deepseek
 
 
+class KimiSettings(SettingsBase):
+    model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="KIMI_")
+
+    api_key: str = ""
+    model: str = "kimi-2.7"
+    timeout: float = 60.0
+    max_tokens: int = 4096
+    temperature: float = 0.2
+
+
 class GeminiSettings(SettingsBase):
     model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="GEMINI_")
 
@@ -188,6 +198,7 @@ class Settings(BaseSettings):
     rate_limit: RateLimitSettings = Field(default_factory=RateLimitSettings)
     initial_prompt: InitialPromptSettings = Field(default_factory=InitialPromptSettings)
     llm: LLMSettings = Field(default_factory=LLMSettings)
+    kimi: KimiSettings = Field(default_factory=KimiSettings)
     gemini: GeminiSettings = Field(default_factory=GeminiSettings)
     deepseek: DeepSeekSettings = Field(default_factory=DeepSeekSettings)
 
