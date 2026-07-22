@@ -42,7 +42,7 @@ The system is designed for high fault tolerance, scalability, and strict separat
 - **Antivirus scanning**: All uploaded files are scanned by ClamAV before text extraction. Infected files are rejected with status `infected`. Configurable fallback behavior when ClamAV is unavailable.
 - **Multiple format support**: Text extraction from `.txt`, `.docx`, `.xlsx`, and `.pdf` (including tables in documents).
 - **Document deduplication**: The system calculates the SHA-256 hash of the file. If such a file has already been processed, re-analysis is not launched — the result is taken from the database.
-- **LLM integration (Factory Pattern)**: Support for DeepSeek and Gemini. The provider is selected dynamically, and raw responses are mapped to a strict Pydantic schema.
+- **LLM integration (Factory Pattern)**: Support for Kimi, DeepSeek and Gemini. The provider is selected dynamically, and raw responses are mapped to a strict Pydantic schema.
 - **Reliable task queue**: Using RabbitMQ with Dead Letter Queues (DLQ) configuration for automatic retry and handling of failed analysis tasks.
 - **Caching and Rate Limiting**: API protection from overloads and optimization of database queries using Redis (user status cache, prompts, token blacklist).
 - **Security**: JWT authentication (RS256) with token revocation mechanism (blacklist) and password hashing via Argon2.
@@ -74,6 +74,7 @@ The system is designed for high fault tolerance, scalability, and strict separat
 - **FastStream** — consumers for asynchronous text analysis via LLM
 
 ### LLM Providers
+- **Kimi** (via OpenAI SDK)
 - **DeepSeek** (via OpenAI SDK)
 - **Gemini** (via google-genai)
 
@@ -133,7 +134,7 @@ The system is designed for high fault tolerance, scalability, and strict separat
    - Consumer receives event from queue
    - Retrieves raw text from MongoDB
    - Fetches active prompt from Redis cache (or MongoDB)
-   - Sends text + prompt to LLM (DeepSeek/Gemini)
+   - Sends text + prompt to LLM (Kimi/DeepSeek/Gemini)
    - Parses JSON response, validates structure
    - Saves analysis result to MongoDB
    - Updates document status: `success`
@@ -262,13 +263,42 @@ The full list of variables is in `.env.example`. Key variables grouped by catego
 | `ANTIVIRUS_CHUNK_SIZE` | Stream chunk size (bytes) | `4096` |
 
 ### LLM Providers
+
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `LLM_DEFAULT_PROVIDER` | Default provider for analysis | `deepseek` |
+
+#### DeepSeek
+
+| Variable | Description | Default |
+|----------|-------------|---------|
 | `DEEPSEEK_API_KEY` | DeepSeek API key | — |
-| `DEEPSEEK_MODEL` | DeepSeek model name | `deepseek-v4-flash` |
+| `DEEPSEEK_MODEL` | Model name | `deepseek-v4-flash` |
+| `DEEPSEEK_BASE_URL` | API base URL | `https://api.deepseek.com` |
+| `DEEPSEEK_TIMEOUT` | Request timeout (seconds) | `60` |
+| `DEEPSEEK_MAX_TOKENS` | Maximum output tokens | `8192` |
+| `DEEPSEEK_TEMPERATURE` | Sampling temperature | `0.2` |
+
+#### Gemini
+
+| Variable | Description | Default |
+|----------|-------------|---------|
 | `GEMINI_API_KEY` | Google Gemini API key | — |
-| `GEMINI_MODEL` | Gemini model name | `gemini-3.1-flash-lite` |
+| `GEMINI_MODEL` | Model name | `gemini-3.1-flash-lite` |
+| `GEMINI_TIMEOUT` | Request timeout (seconds) | `60` |
+| `GEMINI_MAX_TOKENS` | Maximum output tokens | `4096` |
+| `GEMINI_TEMPERATURE` | Sampling temperature | `0.2` |
+
+#### Kimi (Moonshot AI)
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `KIMI_API_KEY` | Kimi API key | — |
+| `KIMI_MODEL` | Model name | `kimi-2.7` |
+| `KIMI_BASE_URL` | API base URL | `https://api.moonshot.ai/v1` |
+| `KIMI_TIMEOUT` | Request timeout (seconds) | `60` |
+| `KIMI_MAX_TOKENS` | Maximum output tokens | `4096` |
+| `KIMI_TEMPERATURE` | Sampling temperature | `0.2` |
 
 ### Rate Limiting
 | Variable | Description | Default |
