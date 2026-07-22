@@ -23,6 +23,7 @@ class DocumentStatus(Enum):
 class LLMProvider(Enum):
     gemini = "gemini"
     deepseek = "deepseek"
+    kimi = "kimi"
 
 
 class PromptType(Enum):

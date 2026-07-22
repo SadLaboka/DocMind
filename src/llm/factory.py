@@ -4,6 +4,7 @@ from src.llm.base import BaseLLMService
 from src.llm.deepseek.service import DeepSeekLLMService
 from src.llm.exceptions import LLMException
 from src.llm.gemini.service import GeminiLLMService
+from src.llm.kimi.service import KimiService
 
 
 class LLMServiceFactory:
@@ -41,6 +42,16 @@ class LLMServiceFactory:
                 timeout=self.settings.deepseek.timeout,
                 max_tokens=self.settings.deepseek.max_tokens,
                 temperature=self.settings.deepseek.temperature,
+            )
+
+        if provider_enum == LLMProvider.deepseek:
+            return KimiService(
+                api_key=self.settings.kimi.api_key,
+                model=self.settings.kimi.model,
+                base_url=self.settings.kimi.base_url,
+                timeout=self.settings.kimi.timeout,
+                max_tokens=self.settings.kimi.max_tokens,
+                temperature=self.settings.kimi.temperature,
             )
 
         raise LLMException(
