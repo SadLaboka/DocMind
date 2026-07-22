@@ -44,7 +44,7 @@ class LLMServiceFactory:
                 temperature=self.settings.deepseek.temperature,
             )
 
-        if provider_enum == LLMProvider.deepseek:
+        if provider_enum == LLMProvider.kimi:
             return KimiService(
                 api_key=self.settings.kimi.api_key,
                 model=self.settings.kimi.model,
