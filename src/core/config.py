@@ -165,6 +165,17 @@ class KimiSettings(SettingsBase):
     temperature: float = 0.2
 
 
+class MistralSettings(SettingsBase):
+    model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="MISTRAL_")
+
+    api_key: str = ""
+    base_url: str = "https://api.mistral.ai/v1"
+    model: str = "mistral-small-2603"
+    timeout: float = 60.0
+    max_tokens: int = 4096
+    temperature: float = 0.15
+
+
 class GeminiSettings(SettingsBase):
     model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="GEMINI_")
 
@@ -200,6 +211,7 @@ class Settings(BaseSettings):
     initial_prompt: InitialPromptSettings = Field(default_factory=InitialPromptSettings)
     llm: LLMSettings = Field(default_factory=LLMSettings)
     kimi: KimiSettings = Field(default_factory=KimiSettings)
+    mistral: MistralSettings = Field(default_factory=MistralSettings)
     gemini: GeminiSettings = Field(default_factory=GeminiSettings)
     deepseek: DeepSeekSettings = Field(default_factory=DeepSeekSettings)
 
