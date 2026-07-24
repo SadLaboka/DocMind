@@ -5,6 +5,7 @@ from src.llm.deepseek.service import DeepSeekLLMService
 from src.llm.exceptions import LLMException
 from src.llm.gemini.service import GeminiLLMService
 from src.llm.kimi.service import KimiService
+from src.llm.qwen.service import QwenService
 
 
 class LLMServiceFactory:
@@ -52,6 +53,16 @@ class LLMServiceFactory:
                 timeout=self.settings.kimi.timeout,
                 max_tokens=self.settings.kimi.max_tokens,
                 temperature=self.settings.kimi.temperature,
+            )
+
+        if provider_enum == LLMProvider.qwen:
+            return QwenService(
+                api_key=self.settings.qwen.api_key,
+                model=self.settings.qwen.model,
+                base_url=self.settings.qwen.base_url,
+                timeout=self.settings.qwen.timeout,
+                max_tokens=self.settings.qwen.max_tokens,
+                temperature=self.settings.qwen.temperature,
             )
 
         raise LLMException(
