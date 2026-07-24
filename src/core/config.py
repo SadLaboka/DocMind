@@ -165,6 +165,17 @@ class KimiSettings(SettingsBase):
     temperature: float = 0.2
 
 
+class QwenSettings(SettingsBase):
+    model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="QWEN_")
+
+    api_key: str = ""
+    base_url: str = "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
+    model: str = "qwen3.7-plus"
+    timeout: float = 60.0
+    max_tokens: int = 8192
+    temperature: float = 0.15
+
+
 class MistralSettings(SettingsBase):
     model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="MISTRAL_")
 
@@ -211,6 +222,7 @@ class Settings(BaseSettings):
     initial_prompt: InitialPromptSettings = Field(default_factory=InitialPromptSettings)
     llm: LLMSettings = Field(default_factory=LLMSettings)
     kimi: KimiSettings = Field(default_factory=KimiSettings)
+    qwen: QwenSettings = Field(default_factory=QwenSettings)
     mistral: MistralSettings = Field(default_factory=MistralSettings)
     gemini: GeminiSettings = Field(default_factory=GeminiSettings)
     deepseek: DeepSeekSettings = Field(default_factory=DeepSeekSettings)
