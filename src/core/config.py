@@ -176,6 +176,17 @@ class GrokSettings(SettingsBase):
     temperature: float = 0.2
 
 
+class GPTSettings(SettingsBase):
+    model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="GPT_")
+
+    api_key: str = ""
+    base_url: str = "https://api.openai.com/v1"
+    model: str = "gpt-5.4"
+    timeout: float = 60.0
+    max_tokens: int = 4096
+    temperature: float = 0.2
+
+
 class QwenSettings(SettingsBase):
     model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="QWEN_")
 
@@ -234,6 +245,7 @@ class Settings(BaseSettings):
     llm: LLMSettings = Field(default_factory=LLMSettings)
     kimi: KimiSettings = Field(default_factory=KimiSettings)
     grok: GrokSettings = Field(default_factory=GrokSettings)
+    gpt: GPTSettings = Field(default_factory=GPTSettings)
     qwen: QwenSettings = Field(default_factory=QwenSettings)
     mistral: MistralSettings = Field(default_factory=MistralSettings)
     gemini: GeminiSettings = Field(default_factory=GeminiSettings)
