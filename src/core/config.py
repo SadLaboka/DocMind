@@ -142,6 +142,19 @@ class RateLimitSettings(SettingsBase):
     documents_get_window: int = 60
 
 
+class StorageSettings(SettingsBase):
+    model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="STORAGE_", extra="ignore")
+
+    backend: str = "local"
+    endpoint_url: str = "http://minio:9000"
+    access_key: str = "minio"
+    secret_key: str = "minio"
+    region: str = "us-east-1"
+    bucket: str = "docmind"
+    presigned_url_ttl: int = 3600
+    lifecycle_days: int = 30
+
+
 class InitialPromptSettings(SettingsBase):
     model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="PROMPT_", extra="ignore")
 
@@ -241,6 +254,7 @@ class Settings(BaseSettings):
     redis: RedisSettings = Field(default_factory=RedisSettings)
     cache: CacheSettings = Field(default_factory=CacheSettings)
     rate_limit: RateLimitSettings = Field(default_factory=RateLimitSettings)
+    storage: StorageSettings = Field(default_factory=StorageSettings)
     initial_prompt: InitialPromptSettings = Field(default_factory=InitialPromptSettings)
     llm: LLMSettings = Field(default_factory=LLMSettings)
     kimi: KimiSettings = Field(default_factory=KimiSettings)
