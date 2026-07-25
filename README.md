@@ -42,7 +42,7 @@ The system is designed for high fault tolerance, scalability, and strict separat
 - **Antivirus scanning**: All uploaded files are scanned by ClamAV before text extraction. Infected files are rejected with status `infected`. Configurable fallback behavior when ClamAV is unavailable.
 - **Multiple format support**: Text extraction from `.txt`, `.docx`, `.xlsx`, and `.pdf` (including tables in documents).
 - **Document deduplication**: The system calculates the SHA-256 hash of the file. If such a file has already been processed, re-analysis is not launched — the result is taken from the database.
-- **LLM integration (Factory Pattern)**: Support for Kimi, DeepSeek and Gemini. The provider is selected dynamically, and raw responses are mapped to a strict Pydantic schema.
+- **LLM integration (Factory Pattern)**: Support for Kimi, Grok, GPT, Qwen, Mistral, Gemini, and DeepSeek. The provider is selected dynamically, and raw responses are mapped to a strict Pydantic schema.
 - **Reliable task queue**: Using RabbitMQ with Dead Letter Queues (DLQ) configuration for automatic retry and handling of failed analysis tasks.
 - **Caching and Rate Limiting**: API protection from overloads and optimization of database queries using Redis (user status cache, prompts, token blacklist).
 - **Security**: JWT authentication (RS256) with token revocation mechanism (blacklist) and password hashing via Argon2.
@@ -75,6 +75,10 @@ The system is designed for high fault tolerance, scalability, and strict separat
 
 ### LLM Providers
 - **Kimi** (via OpenAI SDK)
+- **Grok** (via OpenAI SDK)
+- **GPT** (via OpenAI SDK)
+- **Qwen** (via OpenAI SDK)
+- **Mistral** (via OpenAI SDK)
 - **DeepSeek** (via OpenAI SDK)
 - **Gemini** (via google-genai)
 
@@ -134,7 +138,7 @@ The system is designed for high fault tolerance, scalability, and strict separat
    - Consumer receives event from queue
    - Retrieves raw text from MongoDB
    - Fetches active prompt from Redis cache (or MongoDB)
-   - Sends text + prompt to LLM (Kimi/DeepSeek/Gemini)
+   - Sends text + prompt to LLM (Kimi/Grok/GPT/Qwen/Mistral/Gemini/DeepSeek)
    - Parses JSON response, validates structure
    - Saves analysis result to MongoDB
    - Updates document status: `success`
@@ -263,24 +267,61 @@ The full list of variables is in `.env.example`. Key variables grouped by catego
 | `ANTIVIRUS_CHUNK_SIZE` | Stream chunk size (bytes) | `4096` |
 
 ### LLM Providers
-
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `LLM_DEFAULT_PROVIDER` | Default provider for analysis | `deepseek` |
 
-#### DeepSeek
-
+#### Kimi (Moonshot AI)
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `DEEPSEEK_API_KEY` | DeepSeek API key | — |
-| `DEEPSEEK_MODEL` | Model name | `deepseek-v4-flash` |
-| `DEEPSEEK_BASE_URL` | API base URL | `https://api.deepseek.com` |
-| `DEEPSEEK_TIMEOUT` | Request timeout (seconds) | `60` |
-| `DEEPSEEK_MAX_TOKENS` | Maximum output tokens | `8192` |
-| `DEEPSEEK_TEMPERATURE` | Sampling temperature | `0.2` |
+| `KIMI_API_KEY` | Kimi API key | — |
+| `KIMI_MODEL` | Model name | `K-3` |
+| `KIMI_BASE_URL` | API base URL | `https://api.moonshot.ai/v1` |
+| `KIMI_TIMEOUT` | Request timeout (seconds) | `60` |
+| `KIMI_MAX_TOKENS` | Maximum output tokens | `4096` |
+| `KIMI_TEMPERATURE` | Sampling temperature | `0.2` |
 
-#### Gemini
+#### Grok (xAI)
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `GROK_API_KEY` | Grok API key | — |
+| `GROK_MODEL` | Model name | `grok-4.5` |
+| `GROK_BASE_URL` | API base URL | `https://api.x.ai/v1` |
+| `GROK_TIMEOUT` | Request timeout (seconds) | `60` |
+| `GROK_MAX_TOKENS` | Maximum output tokens | `4096` |
+| `GROK_TEMPERATURE` | Sampling temperature | `0.2` |
 
+#### GPT (OpenAI)
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `GPT_API_KEY` | OpenAI API key | — |
+| `GPT_MODEL` | Model name | `gpt-5.5-2026-04-23` |
+| `GPT_BASE_URL` | API base URL | `https://api.openai.com/v1` |
+| `GPT_TIMEOUT` | Request timeout (seconds) | `45` |
+| `GPT_MAX_TOKENS` | Maximum output tokens | `4096` |
+| `GPT_TEMPERATURE` | Sampling temperature | `0.2` |
+
+#### Qwen (Alibaba)
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `QWEN_API_KEY` | Qwen API key (DashScope) | — |
+| `QWEN_MODEL` | Model name | `qwen3.7-plus` |
+| `QWEN_BASE_URL` | API base URL | `https://dashscope-intl.aliyuncs.com/compatible-mode/v1` |
+| `QWEN_TIMEOUT` | Request timeout (seconds) | `60` |
+| `QWEN_MAX_TOKENS` | Maximum output tokens | `8192` |
+| `QWEN_TEMPERATURE` | Sampling temperature | `0.15` |
+
+#### Mistral AI
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `MISTRAL_API_KEY` | Mistral API key | — |
+| `MISTRAL_MODEL` | Model name | `mistral-small-2603` |
+| `MISTRAL_BASE_URL` | API base URL | `https://api.mistral.ai/v1` |
+| `MISTRAL_TIMEOUT` | Request timeout (seconds) | `60` |
+| `MISTRAL_MAX_TOKENS` | Maximum output tokens | `4096` |
+| `MISTRAL_TEMPERATURE` | Sampling temperature | `0.15` |
+
+#### Gemini (Google)
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `GEMINI_API_KEY` | Google Gemini API key | — |
@@ -289,16 +330,15 @@ The full list of variables is in `.env.example`. Key variables grouped by catego
 | `GEMINI_MAX_TOKENS` | Maximum output tokens | `4096` |
 | `GEMINI_TEMPERATURE` | Sampling temperature | `0.2` |
 
-#### Kimi (Moonshot AI)
-
+#### DeepSeek
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `KIMI_API_KEY` | Kimi API key | — |
-| `KIMI_MODEL` | Model name | `kimi-2.7` |
-| `KIMI_BASE_URL` | API base URL | `https://api.moonshot.ai/v1` |
-| `KIMI_TIMEOUT` | Request timeout (seconds) | `60` |
-| `KIMI_MAX_TOKENS` | Maximum output tokens | `4096` |
-| `KIMI_TEMPERATURE` | Sampling temperature | `0.2` |
+| `DEEPSEEK_API_KEY` | DeepSeek API key | — |
+| `DEEPSEEK_MODEL` | Model name | `deepseek-v4-flash` |
+| `DEEPSEEK_BASE_URL` | API base URL | `https://api.deepseek.com` |
+| `DEEPSEEK_TIMEOUT` | Request timeout (seconds) | `60` |
+| `DEEPSEEK_MAX_TOKENS` | Maximum output tokens | `8192` |
+| `DEEPSEEK_TEMPERATURE` | Sampling temperature | `0.2` |
 
 ### Rate Limiting
 | Variable | Description | Default |
@@ -388,7 +428,7 @@ make migrate-down
 ### Completed
 - [x] Async pipeline: FastAPI + Celery + FastStream
 - [x] Multi-format text extraction (TXT, DOCX, XLSX, PDF)
-- [x] LLM integration with Factory Pattern (DeepSeek, Gemini)
+- [x] Multi-LLM integration with Factory Pattern (Kimi, Grok, GPT, Qwen, Mistral, Gemini, DeepSeek)
 - [x] Document deduplication by SHA-256 hash
 - [x] Redis caching (prompts, user statuses, token blacklist)
 - [x] Rate limiting with per-endpoint configuration
