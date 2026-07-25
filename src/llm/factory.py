@@ -7,6 +7,7 @@ from src.llm.gemini.service import GeminiLLMService
 from src.llm.kimi.service import KimiService
 from src.llm.qwen.service import QwenService
 from src.llm.grok.service import GrokService
+from src.llm.mistral.service import MistralService
 
 
 class LLMServiceFactory:
@@ -74,6 +75,16 @@ class LLMServiceFactory:
                 timeout=self.settings.grok.timeout,
                 max_tokens=self.settings.grok.max_tokens,
                 temperature=self.settings.grok.temperature,
+            )
+
+        if provider_enum == LLMProvider.mistral:
+            return MistralService(
+                api_key=self.settings.mistral.api_key,
+                model=self.settings.mistral.model,
+                base_url=self.settings.mistral.base_url,
+                timeout=self.settings.mistral.timeout,
+                max_tokens=self.settings.mistral.max_tokens,
+                temperature=self.settings.mistral.temperature,
             )
 
         raise LLMException(
