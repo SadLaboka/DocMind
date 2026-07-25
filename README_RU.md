@@ -41,7 +41,7 @@
 - **Антивирусная проверка**: Все загружаемые файлы сканируются ClamAV перед извлечением текста. Заражённые файлы отклоняются со статусом `infected`. Настраиваемое поведение при недоступности антивируса.
 - **Поддержка множества форматов**: Извлечение текста из `.txt`, `.docx`, `.xlsx` и `.pdf` (включая таблицы в документах).
 - **Дедупликация документов**: Система вычисляет SHA-256 хэш файла. Если такой файл уже обрабатывался, повторный анализ не запускается — результат берётся из базы.
-- **Интеграция с LLM (Factory Pattern)**: Поддержка Kimi, DeepSeek и Gemini. Провайдер выбирается динамически, а сырые ответы маппятся в строгую Pydantic-схему.
+- **Интеграция с LLM (Factory Pattern)**: Поддержка Kimi, Grok, GPT, Qwen, Mistral, Gemini и DeepSeek. Провайдер выбирается динамически, а сырые ответы маппятся в строгую Pydantic-схему.
 - **Надёжная очередь задач**: Использование RabbitMQ с настройкой Dead Letter Queues (DLQ) для автоматического ретрая и обработки упавших задач анализа.
 - **Кэширование и Rate Limiting**: Защита API от перегрузок и оптимизация запросов к БД с помощью Redis (кэш статусов пользователей, промптов, blacklist токенов).
 - **Безопасность**: JWT-аутентификация (RS256) с механизмом отзыва токенов (blacklist) и хэшированием паролей через Argon2.
@@ -74,6 +74,10 @@
 
 ### LLM-провайдеры
 - **Kimi** (через OpenAI SDK)
+- **Grok** (через OpenAI SDK)
+- **GPT** (через OpenAI SDK)
+- **Qwen** (через OpenAI SDK)
+- **Mistral** (через OpenAI SDK)
 - **DeepSeek** (через OpenAI SDK)
 - **Gemini** (через google-genai)
 
@@ -134,7 +138,7 @@
    - Консьюмер получает событие из очереди
    - Извлекает сырой текст из MongoDB
    - Получает активный промпт из кэша Redis (или MongoDB)
-   - Отправляет текст + промпт в LLM (Kimi/DeepSeek/Gemini)
+   - Отправляет текст + промпт в LLM (Kimi/Grok/GPT/Qwen/Mistral/Gemini/DeepSeek)
    - Парсит JSON-ответ, валидирует структуру
    - Сохраняет результат анализа в MongoDB
    - Обновляет статус документа: `success`
@@ -263,24 +267,61 @@
 | `ANTIVIRUS_CHUNK_SIZE` | Размер чанка стрима (байты) | `4096` |
 
 ### LLM-провайдеры
-
 | Переменная | Описание | По умолчанию |
 |------------|----------|--------------|
 | `LLM_DEFAULT_PROVIDER` | Провайдер по умолчанию для анализа | `deepseek` |
 
-#### DeepSeek
-
+#### Kimi (Moonshot AI)
 | Переменная | Описание | По умолчанию |
 |------------|----------|--------------|
-| `DEEPSEEK_API_KEY` | API-ключ DeepSeek | — |
-| `DEEPSEEK_MODEL` | Название модели | `deepseek-v4-flash` |
-| `DEEPSEEK_BASE_URL` | Базовый URL API | `https://api.deepseek.com` |
-| `DEEPSEEK_TIMEOUT` | Таймаут запроса (секунды) | `60` |
-| `DEEPSEEK_MAX_TOKENS` | Максимальное количество токенов | `8192` |
-| `DEEPSEEK_TEMPERATURE` | Температура сэмплирования | `0.2` |
+| `KIMI_API_KEY` | API-ключ Kimi | — |
+| `KIMI_MODEL` | Название модели | `K-3` |
+| `KIMI_BASE_URL` | Базовый URL API | `https://api.moonshot.ai/v1` |
+| `KIMI_TIMEOUT` | Таймаут запроса (секунды) | `60` |
+| `KIMI_MAX_TOKENS` | Максимальное количество токенов | `4096` |
+| `KIMI_TEMPERATURE` | Температура сэмплирования | `0.2` |
 
-#### Gemini
+#### Grok (xAI)
+| Переменная | Описание | По умолчанию |
+|------------|----------|--------------|
+| `GROK_API_KEY` | API-ключ Grok | — |
+| `GROK_MODEL` | Название модели | `grok-4.5` |
+| `GROK_BASE_URL` | Базовый URL API | `https://api.x.ai/v1` |
+| `GROK_TIMEOUT` | Таймаут запроса (секунды) | `60` |
+| `GROK_MAX_TOKENS` | Максимальное количество токенов | `4096` |
+| `GROK_TEMPERATURE` | Температура сэмплирования | `0.2` |
 
+#### GPT (OpenAI)
+| Переменная | Описание | По умолчанию |
+|------------|----------|--------------|
+| `GPT_API_KEY` | API-ключ OpenAI | — |
+| `GPT_MODEL` | Название модели | `gpt-5.5-2026-04-23` |
+| `GPT_BASE_URL` | Базовый URL API | `https://api.openai.com/v1` |
+| `GPT_TIMEOUT` | Таймаут запроса (секунды) | `45` |
+| `GPT_MAX_TOKENS` | Максимальное количество токенов | `4096` |
+| `GPT_TEMPERATURE` | Температура сэмплирования | `0.2` |
+
+#### Qwen (Alibaba)
+| Переменная | Описание | По умолчанию |
+|------------|----------|--------------|
+| `QWEN_API_KEY` | API-ключ Qwen (DashScope) | — |
+| `QWEN_MODEL` | Название модели | `qwen3.7-plus` |
+| `QWEN_BASE_URL` | Базовый URL API | `https://dashscope-intl.aliyuncs.com/compatible-mode/v1` |
+| `QWEN_TIMEOUT` | Таймаут запроса (секунды) | `60` |
+| `QWEN_MAX_TOKENS` | Максимальное количество токенов | `8192` |
+| `QWEN_TEMPERATURE` | Температура сэмплирования | `0.15` |
+
+#### Mistral AI
+| Переменная | Описание | По умолчанию |
+|------------|----------|--------------|
+| `MISTRAL_API_KEY` | API-ключ Mistral | — |
+| `MISTRAL_MODEL` | Название модели | `mistral-small-2603` |
+| `MISTRAL_BASE_URL` | Базовый URL API | `https://api.mistral.ai/v1` |
+| `MISTRAL_TIMEOUT` | Таймаут запроса (секунды) | `60` |
+| `MISTRAL_MAX_TOKENS` | Максимальное количество токенов | `4096` |
+| `MISTRAL_TEMPERATURE` | Температура сэмплирования | `0.15` |
+
+#### Gemini (Google)
 | Переменная | Описание | По умолчанию |
 |------------|----------|--------------|
 | `GEMINI_API_KEY` | API-ключ Google Gemini | — |
@@ -289,16 +330,15 @@
 | `GEMINI_MAX_TOKENS` | Максимальное количество токенов | `4096` |
 | `GEMINI_TEMPERATURE` | Температура сэмплирования | `0.2` |
 
-#### Kimi (Moonshot AI)
-
+#### DeepSeek
 | Переменная | Описание | По умолчанию |
 |------------|----------|--------------|
-| `KIMI_API_KEY` | API-ключ Kimi | — |
-| `KIMI_MODEL` | Название модели | `kimi-2.7` |
-| `KIMI_BASE_URL` | Базовый URL API | `https://api.moonshot.ai/v1` |
-| `KIMI_TIMEOUT` | Таймаут запроса (секунды) | `60` |
-| `KIMI_MAX_TOKENS` | Максимальное количество токенов | `4096` |
-| `KIMI_TEMPERATURE` | Температура сэмплирования | `0.2` |
+| `DEEPSEEK_API_KEY` | API-ключ DeepSeek | — |
+| `DEEPSEEK_MODEL` | Название модели | `deepseek-v4-flash` |
+| `DEEPSEEK_BASE_URL` | Базовый URL API | `https://api.deepseek.com` |
+| `DEEPSEEK_TIMEOUT` | Таймаут запроса (секунды) | `60` |
+| `DEEPSEEK_MAX_TOKENS` | Максимальное количество токенов | `8192` |
+| `DEEPSEEK_TEMPERATURE` | Температура сэмплирования | `0.2` |
 
 ### Rate Limiting
 | Переменная | Описание | По умолчанию |
@@ -388,7 +428,7 @@ make migrate-down
 ### Выполнено
 - [x] Асинхронный конвейер: FastAPI + Celery + FastStream
 - [x] Извлечение текста из множества форматов (TXT, DOCX, XLSX, PDF)
-- [x] Интеграция с LLM через Factory Pattern (DeepSeek, Gemini)
+- [x] Мульти-LLM интеграция через Factory Pattern (Kimi, Grok, GPT, Qwen, Mistral, Gemini, DeepSeek)
 - [x] Дедупликация документов по SHA-256 хэшу
 - [x] Кэширование в Redis (промпты, статусы пользователей, blacklist токенов)
 - [x] Rate limiting с настройкой для каждого эндпоинта
