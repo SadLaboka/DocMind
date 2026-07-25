@@ -8,6 +8,7 @@ from src.llm.kimi.service import KimiService
 from src.llm.qwen.service import QwenService
 from src.llm.grok.service import GrokService
 from src.llm.mistral.service import MistralService
+from src.llm.gpt.service import GPTService
 
 
 class LLMServiceFactory:
@@ -85,6 +86,16 @@ class LLMServiceFactory:
                 timeout=self.settings.mistral.timeout,
                 max_tokens=self.settings.mistral.max_tokens,
                 temperature=self.settings.mistral.temperature,
+            )
+
+        if provider_enum == LLMProvider.gpt:
+            return GPTService(
+                api_key=self.settings.gpt.api_key,
+                model=self.settings.gpt.model,
+                base_url=self.settings.gpt.base_url,
+                timeout=self.settings.gpt.timeout,
+                max_tokens=self.settings.gpt.max_tokens,
+                temperature=self.settings.gpt.temperature,
             )
 
         raise LLMException(

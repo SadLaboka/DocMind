@@ -27,6 +27,7 @@ class LLMProvider(Enum):
     qwen = "qwen"
     grok = "grok"
     mistral = "mistral"
+    gpt = "gpt"
 
 
 class PromptType(Enum):
