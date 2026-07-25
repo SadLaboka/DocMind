@@ -165,6 +165,17 @@ class KimiSettings(SettingsBase):
     temperature: float = 0.2
 
 
+class GrokSettings(SettingsBase):
+    model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="GROK_")
+
+    api_key: str = ""
+    base_url: str = "https://api.x.ai/v1"
+    model: str = "grok-4.5"
+    timeout: float = 60.0
+    max_tokens: int = 4096
+    temperature: float = 0.2
+
+
 class QwenSettings(SettingsBase):
     model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="QWEN_")
 
@@ -222,6 +233,7 @@ class Settings(BaseSettings):
     initial_prompt: InitialPromptSettings = Field(default_factory=InitialPromptSettings)
     llm: LLMSettings = Field(default_factory=LLMSettings)
     kimi: KimiSettings = Field(default_factory=KimiSettings)
+    grok: GrokSettings = Field(default_factory=GrokSettings)
     qwen: QwenSettings = Field(default_factory=QwenSettings)
     mistral: MistralSettings = Field(default_factory=MistralSettings)
     gemini: GeminiSettings = Field(default_factory=GeminiSettings)
