@@ -6,6 +6,7 @@ from src.llm.exceptions import LLMException
 from src.llm.gemini.service import GeminiLLMService
 from src.llm.kimi.service import KimiService
 from src.llm.qwen.service import QwenService
+from src.llm.grok.service import GrokService
 
 
 class LLMServiceFactory:
@@ -63,6 +64,16 @@ class LLMServiceFactory:
                 timeout=self.settings.qwen.timeout,
                 max_tokens=self.settings.qwen.max_tokens,
                 temperature=self.settings.qwen.temperature,
+            )
+
+        if provider_enum == LLMProvider.grok:
+            return GrokService(
+                api_key=self.settings.grok.api_key,
+                model=self.settings.grok.model,
+                base_url=self.settings.grok.base_url,
+                timeout=self.settings.grok.timeout,
+                max_tokens=self.settings.grok.max_tokens,
+                temperature=self.settings.grok.temperature,
             )
 
         raise LLMException(

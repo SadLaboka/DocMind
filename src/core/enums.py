@@ -25,6 +25,7 @@ class LLMProvider(Enum):
     deepseek = "deepseek"
     kimi = "kimi"
     qwen = "qwen"
+    grok = "grok"
 
 
 class PromptType(Enum):
