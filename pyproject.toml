@@ -30,6 +30,7 @@ dependencies = [
     "google-genai (>=2.9.0,<3.0.0)",
     "openai (>=2.43.0,<3.0.0)",
     "redis (>=8.0.1,<9.0.0)",
+    "aioboto3 (>=15.5.0,<16.0.0)",
 ]
 
 [tool.poetry]
