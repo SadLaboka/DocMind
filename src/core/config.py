@@ -160,7 +160,7 @@ class StorageSettingsNonLocal(SettingsBase):
     endpoint_url: str = "https://s3.selcloud.ru"
     access_key: str = ""
     secret_key: str = ""
-    region: str = "us-east-1"
+    region: str = "ru-1"
     bucket: str = "docmind"
     presigned_url_ttl: int = 3600
     lifecycle_days: int = 30
