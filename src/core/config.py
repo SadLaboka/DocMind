@@ -142,13 +142,24 @@ class RateLimitSettings(SettingsBase):
     documents_get_window: int = 60
 
 
-class StorageSettings(SettingsBase):
-    model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="STORAGE_", extra="ignore")
+class StorageSettingsLocal(SettingsBase):
+    model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="LOCAL_STORAGE_", extra="ignore")
 
-    backend: str = "local"
     endpoint_url: str = "http://minio:9000"
     access_key: str = "minio"
     secret_key: str = "minio"
+    region: str = "us-east-1"
+    bucket: str = "docmind"
+    presigned_url_ttl: int = 600
+    lifecycle_days: int = 1
+
+
+class StorageSettingsNonLocal(SettingsBase):
+    model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="NONLOCAL_STORAGE_", extra="ignore")
+
+    endpoint_url: str = "https://s3.selcloud.ru"
+    access_key: str = ""
+    secret_key: str = ""
     region: str = "us-east-1"
     bucket: str = "docmind"
     presigned_url_ttl: int = 3600
@@ -254,7 +265,6 @@ class Settings(BaseSettings):
     redis: RedisSettings = Field(default_factory=RedisSettings)
     cache: CacheSettings = Field(default_factory=CacheSettings)
     rate_limit: RateLimitSettings = Field(default_factory=RateLimitSettings)
-    storage: StorageSettings = Field(default_factory=StorageSettings)
     initial_prompt: InitialPromptSettings = Field(default_factory=InitialPromptSettings)
     llm: LLMSettings = Field(default_factory=LLMSettings)
     kimi: KimiSettings = Field(default_factory=KimiSettings)
@@ -268,6 +278,17 @@ class Settings(BaseSettings):
     app_name: str = APP_NAME
     app_version: str = APP_VERSION
     base_dir: str = BASE_DIR
+    storage_backend: str = "local"
+    storage_local: StorageSettingsLocal = Field(default_factory=StorageSettingsLocal)
+    storage_nonlocal: StorageSettingsNonLocal = Field(default_factory=StorageSettingsNonLocal)
+
+
+    @property
+    def storage(self) -> StorageSettingsLocal | StorageSettingsNonLocal:
+        """Returns settings for active storage type"""
+        if self.storage_backend == "local":
+            return self.storage_local
+        return self.storage_nonlocal
 
 
 settings = Settings()
