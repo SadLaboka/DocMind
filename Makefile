@@ -2,10 +2,13 @@
 
 # Docker
 up:
-	docker compose up -d --build
+	poetry run python scripts/docker_up.py
 
 down:
 	docker compose down -v
+
+down-all:
+	docker compose --profile local-storage down -v
 
 down-soft:
 	docker compose down
