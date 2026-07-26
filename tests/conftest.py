@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 from pathlib import Path
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 import pytest_asyncio
@@ -28,6 +28,7 @@ from src.DependencyInjection.documents import get_mongo_document_repository
 from src.DependencyInjection.prompts import get_mongo_prompt_repository
 from src.repositories.mongo_documents import MongoDocumentRepository
 from src.repositories.mongo_prompts import MongoPromptsRepository
+from src.storage.s3_storage import S3Storage
 
 TEST_DB_URL = settings.db.url
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
@@ -62,6 +63,37 @@ async def test_db_session(db_engine):
             if transaction.is_active:
                 await transaction.rollback()
 
+# Storage mocks
+
+
+@pytest.fixture
+def s3_storage():
+    return S3Storage(
+        endpoint_url="http://localhost:9000",
+        access_key="test_access_key",
+        secret_key="test_secret_key",
+        region="us-east-1",
+        bucket="test-bucket",
+        presigned_url_ttl=3600,
+    )
+
+
+@pytest.fixture
+def mock_s3_client():
+
+    client = MagicMock()
+    client.upload_file = AsyncMock()
+    client.delete_object = AsyncMock()
+    client.head_object = AsyncMock()
+    client.generate_presigned_url = MagicMock(return_value="https://signed-url")
+    return client
+
+
+@pytest.fixture
+def temp_file(tmp_path):
+    file_path = tmp_path / "test.txt"
+    file_path.write_text("test content")
+    return file_path
 
 # Mongo mocks
 
