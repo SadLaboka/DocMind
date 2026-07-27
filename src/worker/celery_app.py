@@ -11,6 +11,7 @@ app = Celery("worker", broker=settings.rabbit.url, worker_max_tasks_per_child=50
 app.conf.include = [
     "src.worker.extraction_tasks",
     "src.worker.antivirus_tasks",
+    "src.worker.s3_upload_task",
 ]
 
 app.conf.worker_hijack_root_logger = False

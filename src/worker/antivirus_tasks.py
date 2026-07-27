@@ -10,7 +10,7 @@ from src.core.enums import DocumentStatus
 from src.repositories.documents import DocumentRepository
 from src.worker.base_task import BaseTask
 from src.worker.celery_app import app as celery_app
-from src.worker.extraction_tasks import extract_text_task
+from src.worker.s3_upload_task import upload_document_task
 
 
 class DocumentScanTask(BaseTask):
@@ -28,31 +28,15 @@ class DocumentScanTask(BaseTask):
             "task_received_by_antivirus_worker",
             user_id=self.user_id,
             document_id=self.document_id,
-            mime_type=self.mime_type,
         )
 
         async with celery_session_factory() as session:
             repo = DocumentRepository(session)
 
             if await self._is_document_cancelled(repo):
-                self.logger.info(
-                    "document_status_is_cancelled",
-                    user_id=self.user_id,
-                    document_id=self.document_id,
-                    mime_type=self.mime_type,
-                )
                 return
 
-            if not self.temp_path.exists():
-                await repo.update_document_fields(self.document_id, document_status=DocumentStatus.cancelled)
-                self.logger.error(
-                    "Document not found",
-                    error_code="scan_file_not_found",
-                    file_path=self.temp_path,
-                    user_id=self.user_id,
-                    document_id=self.document_id,
-                    mime_type=self.mime_type,
-                )
+            if not await self._is_path_exists(repo):
                 return
 
             await repo.update_document_fields(self.document_id, document_status=DocumentStatus.scanning)
@@ -77,7 +61,7 @@ class DocumentScanTask(BaseTask):
                         document_id=self.document_id,
                         document_status=DocumentStatus.extracting,
                     )
-                    await self._publish_to_extract()
+                    await self._publish_to_upload()
                 return
 
             if scan_result:
@@ -105,12 +89,12 @@ class DocumentScanTask(BaseTask):
                     )
 
                     await repo.update_document_fields(self.document_id, document_status=DocumentStatus.extracting)
-                    await self._publish_to_extract()
+                    await self._publish_to_upload()
 
-    async def _publish_to_extract(self) -> None:
+    async def _publish_to_upload(self) -> None:
         """Publish document to extract text task"""
         await asyncio.to_thread(
-            extract_text_task.delay,
+            upload_document_task.delay,
             document_id=self.document_id,
             temp_path=str(self.temp_path),
             mime_type=self.mime_type,
@@ -127,7 +111,6 @@ class DocumentScanTask(BaseTask):
                 user_id=self.user_id,
                 file_path=self.temp_path,
                 document_id=self.document_id,
-                mime_type=self.mime_type,
             )
             return self.scanner.scan_file(self.temp_path)
 
