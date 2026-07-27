@@ -284,7 +284,6 @@ class Settings(BaseSettings):
     storage_local: StorageSettingsLocal = Field(default_factory=StorageSettingsLocal)
     storage_nonlocal: StorageSettingsNonLocal = Field(default_factory=StorageSettingsNonLocal)
 
-
     @property
     def storage(self) -> StorageSettingsLocal | StorageSettingsNonLocal:
         """Returns settings for active storage type"""

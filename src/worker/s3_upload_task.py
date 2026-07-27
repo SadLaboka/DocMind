@@ -1,19 +1,20 @@
 import asyncio
-import structlog
 import uuid
+
+import structlog
 
 from src.core.database import celery_session_factory
 from src.core.enums import DocumentStatus
 from src.repositories.documents import DocumentRepository
-from src.storage.s3_storage import get_storage
 from src.storage.exceptions import (
-    StorageError,
-    S3UploadError,
     S3ConnectionError,
+    S3UploadError,
     StorageConfigError,
+    StorageError,
 )
-from src.worker.celery_app import app as celery_app
+from src.storage.s3_storage import get_storage
 from src.worker.base_task import BaseTask
+from src.worker.celery_app import app as celery_app
 from src.worker.extraction_tasks import extract_text_task
 
 

@@ -31,7 +31,7 @@ class DocumentExtractionTask(BaseTask):
             "task_received_by_extraction_worker",
             user_id=self.user_id,
             document_id=self.document_id,
-            mime_type=self.mime_type
+            mime_type=self.mime_type,
         )
 
         await init_mongo_for_worker()

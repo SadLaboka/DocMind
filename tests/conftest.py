@@ -63,6 +63,7 @@ async def test_db_session(db_engine):
             if transaction.is_active:
                 await transaction.rollback()
 
+
 # Storage mocks
 
 
@@ -94,6 +95,7 @@ def temp_file(tmp_path):
     file_path = tmp_path / "test.txt"
     file_path.write_text("test content")
     return file_path
+
 
 # Mongo mocks
 

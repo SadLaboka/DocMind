@@ -1,4 +1,4 @@
-from typing import Any, NoReturn
+from typing import Any
 
 
 class StorageError(Exception):
@@ -100,9 +100,7 @@ class S3PresignedUrlError(StorageError):
         original_error: Exception | None = None,
         key: str | None = None,
     ) -> None:
-        super().__init__(
-            message, error_code, retryable=True, log_context=log_context, original_error=original_error
-        )
+        super().__init__(message, error_code, retryable=True, log_context=log_context, original_error=original_error)
         self.key = key
 
 

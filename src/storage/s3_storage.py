@@ -4,8 +4,9 @@ from pathlib import Path
 from typing import NoReturn
 
 import aioboto3
-from botocore.exceptions import ClientError, BotoCoreError
+from botocore.exceptions import BotoCoreError, ClientError
 
+from src.core.config import settings
 from src.storage.exceptions import (
     S3ConnectionError,
     S3FileNotFoundError,
@@ -13,11 +14,11 @@ from src.storage.exceptions import (
     S3UploadError,
     StorageError,
 )
-from src.core.config import settings
 
 
 class S3Storage:
     """S3-compatible storage client"""
+
     MAX_PRESIGNED_URL_TTL = 3600
 
     def __init__(
@@ -101,9 +102,7 @@ class S3Storage:
         target_ttl = expires_in if expires_in is not None else self._presigned_url_ttl
 
         if target_ttl <= 0 or target_ttl > self.MAX_PRESIGNED_URL_TTL:
-            raise ValueError(
-                f"expires_in must be between 1 and {self.MAX_PRESIGNED_URL_TTL} seconds"
-            )
+            raise ValueError(f"expires_in must be between 1 and {self.MAX_PRESIGNED_URL_TTL} seconds")
 
         async with self._get_client() as client:
             try:
@@ -158,7 +157,7 @@ class S3Storage:
                 operation=operation,
             ) from error
 
-        if operation in ("upload_file",):
+        if operation == "upload_file":
             raise S3UploadError(
                 message=f"Upload failed: {error_message}",
                 log_context=log_context,
@@ -177,6 +176,7 @@ class S3Storage:
         """Determine content type from file extension"""
         content_type, _ = mimetypes.guess_type(str(file_path))
         return content_type or "application/octet-stream"
+
 
 _storage_instance: S3Storage | None = None
 
