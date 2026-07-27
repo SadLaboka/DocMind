@@ -152,6 +152,7 @@ class StorageSettingsLocal(SettingsBase):
     bucket: str = "docmind"
     presigned_url_ttl: int = 600
     lifecycle_days: int = 1
+    sse_enabled: bool = False
 
 
 class StorageSettingsNonLocal(SettingsBase):
@@ -164,6 +165,7 @@ class StorageSettingsNonLocal(SettingsBase):
     bucket: str = "docmind"
     presigned_url_ttl: int = 3600
     lifecycle_days: int = 30
+    sse_enabled: bool = True
 
 
 class InitialPromptSettings(SettingsBase):

@@ -28,6 +28,7 @@ class S3Storage:
         region: str,
         bucket: str,
         presigned_url_ttl: int = 3600,
+        sse_enabled: bool = False,
     ) -> None:
         self._endpoint_url = endpoint_url
         self._access_key = access_key
@@ -35,6 +36,7 @@ class S3Storage:
         self._region = region
         self._bucket = bucket
         self._presigned_url_ttl = presigned_url_ttl
+        self._sse_enabled = sse_enabled
         self._session = aioboto3.Session(
             aws_access_key_id=access_key,
             aws_secret_access_key=secret_key,
@@ -54,16 +56,17 @@ class S3Storage:
 
         content_type = self._get_content_type(file_path)
 
+        extra_args = {"ContentType": content_type}
+        if self._sse_enabled:
+            extra_args["ServerSideEncryption"] = "AES256"
+
         async with self._get_client() as client:
             try:
                 await client.upload_file(
                     Filename=str(file_path),
                     Bucket=self._bucket,
                     Key=key,
-                    ExtraArgs={
-                        "ServerSideEncryption": "AES256",
-                        "ContentType": content_type,
-                    },
+                    ExtraArgs=extra_args,
                 )
 
                 return key
@@ -190,5 +193,6 @@ def get_storage() -> S3Storage:
             region=storage_config.region,
             bucket=storage_config.bucket,
             presigned_url_ttl=storage_config.presigned_url_ttl,
+            sse_enabled=storage_config.sse_enabled,
         )
     return _storage_instance
