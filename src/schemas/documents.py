@@ -40,6 +40,7 @@ class DocumentData(DocumentBase):
     temp_filename: str | None = None
     file_hash: str | None = None
     document_status: DocumentStatus = Field(alias="document_status", default=DocumentStatus.created)
+    file_key: str | None = None
 
 
 class DocumentListResponse(BaseModel):

@@ -26,3 +26,4 @@ class Document(Base):
         nullable=True,
         default=None,
     )
+    file_key: Mapped[str | None] = mapped_column(String(500), nullable=True, default=None)
