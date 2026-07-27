@@ -2,11 +2,18 @@ import subprocess
 import sys
 from pathlib import Path
 
+import structlog
+
+from src.core.logging_config import setup_logging
+
+logger = structlog.get_logger(__name__)
+
 
 def main():
+    setup_logging()
     env_file = Path(".env")
     if not env_file.exists():
-        print("Error: .env file not found")
+        logger.info("Error: .env file not found")
         sys.exit(1)
 
     storage_backend = "local"  # default
@@ -20,7 +27,7 @@ def main():
         cmd.extend(["--profile", "local-storage"])
     cmd.extend(["up", "-d", "--build"])
 
-    print(f"Running: {' '.join(cmd)}")
+    logger.info(f"Running: {' '.join(cmd)}")
     subprocess.run(cmd, check=True)
 
 
