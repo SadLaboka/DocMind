@@ -11,6 +11,7 @@ class MimeType(Enum):
 class DocumentStatus(Enum):
     created = "created"
     scanning = "scanning"
+    uploading = "uploading"
     extracting = "extracting"
     extracted = "extracted"
     analyzing = "analyzing"
