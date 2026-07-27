@@ -27,7 +27,12 @@ class DocumentExtractionTask(BaseTask):
     async def execute(self) -> None:
         """Main task manager"""
         structlog.contextvars.bind_contextvars(request_id=self.request_id)
-        self.logger.info("task_received_by_extraction_worker", document_id=self.document_id, mime_type=self.mime_type)
+        self.logger.info(
+            "task_received_by_extraction_worker",
+            user_id=self.user_id,
+            document_id=self.document_id,
+            mime_type=self.mime_type
+        )
 
         await init_mongo_for_worker()
 
@@ -47,6 +52,9 @@ class DocumentExtractionTask(BaseTask):
             repo = DocumentRepository(session)
 
             if await self._is_document_cancelled(repo):
+                return
+
+            if not await self._is_path_exists(repo):
                 return
 
             await repo.update_document_fields(self.document_id, document_status=DocumentStatus.extracting)

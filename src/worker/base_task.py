@@ -57,10 +57,32 @@ class BaseTask:
         """Checks whether document processing has been canceled"""
         current_doc = await repo.get_document_by_id(self.document_id)
         if not current_doc or current_doc.document_status == DocumentStatus.cancelled:
-            self.logger.info("document_cancelled_or_deleted", document_id=self.document_id)
+
             self._cleanup_file()
+
+            self.logger.info(
+                "document_status_is_cancelled",
+                user_id=self.user_id,
+                document_id=self.document_id,
+            )
+
             return True
         return False
+
+    async def _is_path_exists(self, repo: DocumentRepository) -> bool:
+        """Checks whether path exists"""
+        if not self.temp_path.exists():
+            await repo.update_document_fields(self.document_id, document_status=DocumentStatus.cancelled)
+            self.logger.error(
+                "Document not found",
+                error_code="processed_file_not_found",
+                file_path=self.temp_path,
+                user_id=self.user_id,
+                document_id=self.document_id,
+            )
+
+            return False
+        return True
 
     def _cleanup_file(self) -> None:
         """Safely cleanup file"""
