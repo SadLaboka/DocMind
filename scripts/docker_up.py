@@ -2,6 +2,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 import structlog
 
 from src.core.logging_config import setup_logging
@@ -13,7 +15,7 @@ def main():
     setup_logging()
     env_file = Path(".env")
     if not env_file.exists():
-        logger.info("Error: .env file not found")
+        logger.info("env_file_not_found")
         sys.exit(1)
 
     storage_backend = "local"  # default
@@ -27,7 +29,7 @@ def main():
         cmd.extend(["--profile", "local-storage"])
     cmd.extend(["up", "-d", "--build"])
 
-    logger.info(f"Running: {' '.join(cmd)}")
+    logger.info("docker_compose_starting", command=" ".join(cmd))
     subprocess.run(cmd, check=True)
 
 
