@@ -146,6 +146,7 @@ class StorageSettingsLocal(SettingsBase):
     model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="LOCAL_STORAGE_", extra="ignore")
 
     endpoint_url: str = "http://minio:9000"
+    external_endpoint_url: str = "http://localhost:9000"
     access_key: str = "minio"
     secret_key: str = "minio"
     region: str = "us-east-1"
@@ -159,6 +160,7 @@ class StorageSettingsNonLocal(SettingsBase):
     model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="NONLOCAL_STORAGE_", extra="ignore")
 
     endpoint_url: str = "https://s3.selcloud.ru"
+    external_endpoint_url: str = "https://s3.selcloud.ru"
     access_key: str = ""
     secret_key: str = ""
     region: str = "ru-1"
