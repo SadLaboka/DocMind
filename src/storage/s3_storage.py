@@ -31,8 +31,10 @@ class S3Storage:
         bucket: str,
         presigned_url_ttl: int = 3600,
         sse_enabled: bool = False,
+        external_endpoint_url: str | None = None,
     ) -> None:
         self._endpoint_url = endpoint_url
+        self._external_endpoint_url = external_endpoint_url or endpoint_url
         self._access_key = access_key
         self._secret_key = secret_key
         self._region = region
@@ -46,9 +48,10 @@ class S3Storage:
         )
 
     @contextlib.asynccontextmanager
-    async def _get_client(self):
+    async def _get_client(self, endpoint_url: str | None = None):
         """Create S3 client context manager"""
-        async with self._session.client("s3", endpoint_url=self._endpoint_url) as client:
+        endpoint_url = endpoint_url or self._endpoint_url
+        async with self._session.client("s3", endpoint_url=endpoint_url) as client:
             yield client
 
     async def upload_file(self, file_path: Path, key: str) -> str:
@@ -116,7 +119,9 @@ class S3Storage:
             encoded_name = parse.quote(original_filename)
             params["ResponseContentDisposition"] = f"attachment; filename*=UTF-8''{encoded_name}"
 
-        async with self._get_client() as client:
+        url_endpoint = self._external_endpoint_url
+
+        async with self._get_client(url_endpoint) as client:
             try:
                 url = await client.generate_presigned_url(
                     "get_object",
@@ -206,5 +211,6 @@ def get_storage() -> S3Storage:
             bucket=storage_config.bucket,
             presigned_url_ttl=storage_config.presigned_url_ttl,
             sse_enabled=storage_config.sse_enabled,
+            external_endpoint_url=storage_config.external_endpoint_url,
         )
     return _storage_instance
