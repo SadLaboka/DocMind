@@ -7,7 +7,7 @@ from starlette import status
 from src.core.enums import LLMProvider
 from src.DependencyInjection.auth import get_current_user
 from src.DependencyInjection.documents import get_document_service, get_upload_service
-from src.schemas.documents import DocumentListResponse, DocumentResponse
+from src.schemas.documents import DocumentListResponse, DocumentResponse, DownloadUrlResponse
 from src.schemas.users import User
 from src.services.documents import DocumentService
 from src.services.file_processor import UploadService
@@ -77,3 +77,17 @@ async def cancel_document(
     document_service: DocumentService = Depends(get_document_service),
 ):
     return await document_service.cancel_document_processing(current_user, document_id)
+
+@router.get(
+    path="/{document_id}/download",
+    summary="Get download URL for document",
+    status_code=status.HTTP_200_OK,
+    response_model=DownloadUrlResponse,
+)
+async def get_download_url(
+    document_id: int,
+    current_user: User = Depends(get_current_user),
+    document_service: DocumentService = Depends(get_document_service),
+) -> DownloadUrlResponse:
+    url = await document_service.get_download_url(document_id, current_user)
+    return DownloadUrlResponse(download_url=url)
