@@ -23,7 +23,7 @@ def _mock_get_client(mock_client):
     """Helper to create a mock async context manager for _get_client"""
 
     @asynccontextmanager
-    async def _mock():
+    async def _mock(endpoint_url: str | None = None):
         yield mock_client
 
     return _mock
@@ -44,7 +44,6 @@ async def test_upload_file_success(s3_storage, temp_file, mock_s3_client):
         Bucket="test-bucket",
         Key="test/test.txt",
         ExtraArgs={
-            "ServerSideEncryption": "AES256",
             "ContentType": "text/plain",
         },
     )

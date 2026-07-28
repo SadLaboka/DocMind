@@ -86,7 +86,7 @@ def mock_s3_client():
     client.upload_file = AsyncMock()
     client.delete_object = AsyncMock()
     client.head_object = AsyncMock()
-    client.generate_presigned_url = MagicMock(return_value="https://signed-url")
+    client.generate_presigned_url = AsyncMock(return_value="https://signed-url")
     return client
 
 
