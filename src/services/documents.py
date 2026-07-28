@@ -132,6 +132,80 @@ class DocumentService(BaseService[DocumentRepository]):
 
         return DocumentResponse.model_validate(updated_document)
 
+    async def get_download_url(self, document_id: int, user: User) -> str:
+        """Generate presigned URL for document download"""
+        document = await self._get_document(user, document_id)
+
+        if not document.file_key:
+            raise ResourceNotFoundError(
+                error_code="file_not_uploaded",
+                message="File has not been uploaded to storage yet",
+                log_context={
+                    "event_name": "download_url_generation_failed",
+                    "reason": "file_key_missing",
+                    "document_id": document_id,
+                    "document_status": document.document_status.value,
+                },
+            )
+
+        from src.storage.s3_storage import get_storage
+        from src.storage.exceptions import S3PresignedUrlError
+
+        storage = get_storage()
+
+        try:
+            presigned_url = await storage.generate_presigned_url(
+                key=document.file_key,
+                original_filename=document.filename,
+            )
+        except ValueError as e:
+            logger.error(
+                "download_url_generation_invalid_params",
+                document_id=document_id,
+                user_id=user.id,
+                file_key=document.file_key,
+                error_detail=str(e),
+            )
+            raise ResourceNotFoundError(
+                error_code="invalid_download_parameters",
+                message="Unable to generate download URL",
+                log_context={
+                    "event_name": "download_url_generation_failed",
+                    "reason": "invalid_parameters",
+                    "document_id": document_id,
+                    "error_detail": str(e),
+                },
+            ) from e
+        except S3PresignedUrlError as e:
+            logger.error(
+                "download_url_generation_failed",
+                document_id=document_id,
+                user_id=user.id,
+                file_key=document.file_key,
+                error_code=e.error_code,
+                error_detail=e.message,
+            )
+            raise ResourceNotFoundError(
+                error_code="download_url_generation_failed",
+                message="Unable to generate download URL",
+                log_context={
+                    "event_name": "download_url_generation_failed",
+                    "reason": "s3_error",
+                    "document_id": document_id,
+                    "error_code": e.error_code,
+                    "error_detail": e.message,
+                },
+            ) from e
+
+        logger.info(
+            "download_url_generated",
+            document_id=document_id,
+            user_id=user.id,
+            file_key=document.file_key,
+        )
+
+        return presigned_url
+
     async def _get_document(self, user: User, document_id: int) -> Document:
         """Gets a document from the database by id, checks the document's ownership and returns it"""
         if user.is_admin:
