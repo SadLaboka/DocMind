@@ -2,6 +2,7 @@ import contextlib
 import mimetypes
 from pathlib import Path
 from typing import NoReturn
+from urllib import parse
 
 import aioboto3
 from botocore.exceptions import BotoCoreError, ClientError
@@ -95,7 +96,12 @@ class S3Storage:
                     return False
                 self._handle_boto_error(e, "file_exists", key)
 
-    async def generate_presigned_url(self, key: str, expires_in: int | None = None) -> str:
+    async def generate_presigned_url(
+            self,
+            key: str,
+            expires_in: int | None = None,
+            original_filename: str | None = None,
+    ) -> str:
         if not key:
             raise ValueError("key must not be empty")
 
@@ -104,11 +110,17 @@ class S3Storage:
         if target_ttl <= 0 or target_ttl > self.MAX_PRESIGNED_URL_TTL:
             raise ValueError(f"expires_in must be between 1 and {self.MAX_PRESIGNED_URL_TTL} seconds")
 
+        params = {"Bucket": self._bucket, "Key": key}
+
+        if original_filename:
+            encoded_name = parse.quote(original_filename)
+            params["ResponseContentDisposition"] = f"attachment; filename*=UTF-8''{encoded_name}"
+
         async with self._get_client() as client:
             try:
-                url = client.generate_presigned_url(
+                url = await client.generate_presigned_url(
                     "get_object",
-                    Params={"Bucket": self._bucket, "Key": key},
+                    Params=params,
                     ExpiresIn=target_ttl,
                 )
                 return url
