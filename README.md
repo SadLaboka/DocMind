@@ -40,6 +40,7 @@ The system is designed for high fault tolerance, scalability, and strict separat
 
 - **Asynchronous pipeline processing**: Upload, text extraction, and analysis occur in separate processes without blocking the main API.
 - **Antivirus scanning**: All uploaded files are scanned by ClamAV before text extraction. Infected files are rejected with status `infected`. Configurable fallback behavior when ClamAV is unavailable.
+- **S3-compatible storage**: Files are stored in S3-compatible storage (MinIO for local development, Selectel Cloud for production) with presigned URLs for secure downloads.
 - **Multiple format support**: Text extraction from `.txt`, `.docx`, `.xlsx`, and `.pdf` (including tables in documents).
 - **Document deduplication**: The system calculates the SHA-256 hash of the file. If such a file has already been processed, re-analysis is not launched — the result is taken from the database.
 - **LLM integration (Factory Pattern)**: Support for Kimi, Grok, GPT, Qwen, Mistral, Gemini, and DeepSeek. The provider is selected dynamically, and raw responses are mapped to a strict Pydantic schema.
@@ -155,6 +156,7 @@ The system is designed for high fault tolerance, scalability, and strict separat
 8. **Result Retrieval** (FastAPI)
    - User polls `GET /documents/{id}` to check status
    - Response includes: metadata, raw text, analysis result, version
+   - User can request presigned URL via `GET /documents/{id}/download` to download original file
 
 ### Key Architectural Decisions
 
@@ -167,9 +169,11 @@ The system is designed for high fault tolerance, scalability, and strict separat
 - **Celery**: Heavy I/O-bound tasks (text extraction from files) — proven, reliable, supports retries
 - **FastStream**: Modern async consumers for LLM analysis — native async/await, better integration with async codebase
 
-**Why local files instead of S3?**
-- Current implementation uses local temp storage for simplicity
-- TODO: Migrate to S3/MinIO for stateless architecture and horizontal scaling
+**Why S3-compatible storage?**
+- **Stateless architecture**: Workers can scale horizontally without needing to synchronize local files
+- **Reliability**: Files are not lost when containers restart
+- **Security**: Presigned URLs with limited lifetime for secure downloads
+- **Flexibility**: Support for various S3-compatible storage backends (MinIO, AWS S3, Selectel Cloud)
 
 <a id="quick-start"></a>
 ## Quick Start
