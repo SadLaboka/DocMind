@@ -39,6 +39,7 @@
 
 - **Асинхронная конвейерная обработка**: Загрузка, извлечение текста и анализ происходят в разных процессах, не блокируя основной API.
 - **Антивирусная проверка**: Все загружаемые файлы сканируются ClamAV перед извлечением текста. Заражённые файлы отклоняются со статусом `infected`. Настраиваемое поведение при недоступности антивируса.
+- **Хранение в S3**: Файлы хранятся в S3-совместимом хранилище (MinIO для локальной разработки, Selectel Cloud для продакшена) с генерацией presigned URL для безопасного скачивания.
 - **Поддержка множества форматов**: Извлечение текста из `.txt`, `.docx`, `.xlsx` и `.pdf` (включая таблицы в документах).
 - **Дедупликация документов**: Система вычисляет SHA-256 хэш файла. Если такой файл уже обрабатывался, повторный анализ не запускается — результат берётся из базы.
 - **Интеграция с LLM (Factory Pattern)**: Поддержка Kimi, Grok, GPT, Qwen, Mistral, Gemini и DeepSeek. Провайдер выбирается динамически, а сырые ответы маппятся в строгую Pydantic-схему.
@@ -84,6 +85,7 @@
 ### Инфраструктура и DevOps
 - **Docker & Docker Compose** — оркестрация всех сервисов
 - **ClamAV** — антивирусная проверка загружаемых файлов
+- **MinIO / S3** — объектное хранилище для загруженных документов (локально: MinIO, продакшен: AWS S3 / Selectel Cloud)
 - **Poetry** — управление зависимостями
 - **Alembic** — миграции PostgreSQL
 - **GitHub Actions** — CI/CD, Codecov, SonarCloud
@@ -123,18 +125,26 @@
 4. **Антивирусная проверка** (Celery Worker + ClamAV)
    - Воркер забирает задачу сканирования из очереди
    - Файл стримится в ClamAV для проверки
-   - Если чист: обновление статуса → `extracting`, публикация задачи извлечения
+   - Если чист: обновление статуса → `uploading`, публикация задачи загрузки в S3
    - Если заражён: обновление статуса → `infected`, удаление файла
    - Если ClamAV недоступен: настраиваемый fallback (пропустить или отклонить)
 
-5. **Извлечение текста** (Celery Worker)
+5. **Загрузка в S3** (Celery Worker)
+   - Воркер забирает задачу загрузки из очереди
+   - Генерирует уникальный ключ для S3: `documents/{document_id}/{uuid}`
+   - Загружает файл в S3-совместимое хранилище
+   - Сохраняет `file_key` в PostgreSQL
+   - Обновляет статус документа: `extracting`
+   - Публикует задачу извлечения текста
+
+6. **Извлечение текста** (Celery Worker)
    - Воркер забирает задачу из очереди
    - Извлекает текст в зависимости от MIME-типа (TXT, DOCX, XLSX, PDF)
    - Сохраняет сырой текст в MongoDB
    - Обновляет статус документа: `extracted`
    - Публикует событие: `documents.text.extracted`
 
-6. **Анализ через LLM** (FastStream Consumer)
+7. **Анализ через LLM** (FastStream Consumer)
    - Консьюмер получает событие из очереди
    - Извлекает сырой текст из MongoDB
    - Получает активный промпт из кэша Redis (или MongoDB)
@@ -143,9 +153,10 @@
    - Сохраняет результат анализа в MongoDB
    - Обновляет статус документа: `success`
 
-7. **Получение результата** (FastAPI)
+8. **Получение результата** (FastAPI)
    - Пользователь опрашивает `GET /documents/{id}` для проверки статуса
    - Ответ включает: метаданные, сырой текст, результат анализа, версию
+   - Пользователь может получить presigned URL для скачивания оригинального файла через `GET /documents/{id}/download`
 
 ### Ключевые архитектурные решения
 
@@ -265,6 +276,29 @@
 | `ANTIVIRUS_TIMEOUT` | Таймаут сканирования (секунды) | `60` |
 | `ANTIVIRUS_FAIL_ON_UNAVAILABLE` | Ошибка при недоступности ClamAV | `false` |
 | `ANTIVIRUS_CHUNK_SIZE` | Размер чанка стрима (байты) | `4096` |
+
+### Хранилище (S3 / MinIO)
+| Переменная | Описание | По умолчанию |
+|------------|----------|--------------|
+| `STORAGE_BACKEND` | Тип хранилища (`local` или `s3`) | `local` |
+| `LOCAL_STORAGE_ENDPOINT_URL` | Внутренний URL MinIO | `http://minio:9000` |
+| `LOCAL_STORAGE_EXTERNAL_ENDPOINT_URL` | Внешний URL MinIO (для presigned URL) | `http://localhost:9000` |
+| `LOCAL_STORAGE_ACCESS_KEY` | Access key для MinIO | `minioadmin` |
+| `LOCAL_STORAGE_SECRET_KEY` | Secret key для MinIO | `minioadmin` |
+| `LOCAL_STORAGE_REGION` | Регион MinIO | `us-east-1` |
+| `LOCAL_STORAGE_BUCKET` | Название бакета MinIO | `docmind` |
+| `LOCAL_STORAGE_PRESIGNED_URL_TTL` | Время жизни presigned URL (секунды) | `600` |
+| `LOCAL_STORAGE_LIFECYCLE_DAYS` | Дни до удаления временных файлов | `1` |
+| `LOCAL_STORAGE_SSE_ENABLED` | Включить шифрование на стороне сервера | `false` |
+| `NONLOCAL_STORAGE_ENDPOINT_URL` | Внутренний URL S3 (продакшен) | `https://s3.selcloud.ru` |
+| `NONLOCAL_STORAGE_EXTERNAL_ENDPOINT_URL` | Внешний URL S3 (продакшен) | `https://s3.selcloud.ru` |
+| `NONLOCAL_STORAGE_ACCESS_KEY` | Access key для S3 (продакшен) | — |
+| `NONLOCAL_STORAGE_SECRET_KEY` | Secret key для S3 (продакшен) | — |
+| `NONLOCAL_STORAGE_REGION` | Регион S3 (продакшен) | `ru-1` |
+| `NONLOCAL_STORAGE_BUCKET` | Название бакета S3 (продакшен) | `docmind` |
+| `NONLOCAL_STORAGE_PRESIGNED_URL_TTL` | Время жизни presigned URL (секунды) | `3600` |
+| `NONLOCAL_STORAGE_LIFECYCLE_DAYS` | Дни до удаления временных файлов | `30` |
+| `NONLOCAL_STORAGE_SSE_ENABLED` | Включить шифрование на стороне сервера | `true` |
 
 ### LLM-провайдеры
 | Переменная | Описание | По умолчанию |
@@ -438,10 +472,10 @@ make migrate-down
 - [x] Структурированное логирование через `structlog` (JSON в продакшене)
 - [x] Диаграммы архитектуры и подробная документация
 - [x] Антивирусная проверка через ClamAV (двухэтапный конвейер: сканирование → извлечение)
+- [x] **Интеграция с S3 / MinIO** — объектное хранилище для загруженных документов с presigned URL для безопасного скачивания
 
 ### В планах
 - [ ] **WebSockets** — real-time обновление статусов документов (замена polling)
-- [ ] **S3 / MinIO** — замена локального temp-хранилища для stateless-архитектуры
 - [ ] **Email-уведомления** — уведомлять пользователей о завершении анализа
 - [ ] **Telegram-бот** — альтернативный UI поверх существующего API
 - [ ] **Стек наблюдаемости** — Grafana + Prometheus + Loki
@@ -555,6 +589,22 @@ curl -X POST http://localhost:8000/auth/refresh \
 curl -X POST http://localhost:8000/auth/logout \
   -H "Authorization: Bearer <access_token>"
 ```
+
+### 8. Получение presigned URL для скачивания файла
+```bash
+curl -X GET http://localhost:8000/documents/42/download \
+-H "Authorization: Bearer <access_token>"
+```
+
+Ответ:
+```json
+{
+  "download_url": "http://localhost:9000/docmind/documents/42/abc123?X-Amz-Algorithm=AWS4-HMAC-SHA256&..."
+}
+```
+
+>[!NOTE]
+>download_url — это временная ссылка, которая истекает через настроенное время (по умолчанию: 10 минут для локальной разработки, 1 час для продакшена).
 
 <a id="license"></a>
 ## Лицензия
