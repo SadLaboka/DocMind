@@ -13,7 +13,6 @@ FastAPI: {
   style.font-color: "#fff"
   style.bold: true
   style.border-radius: 8
-
   API: API Routers {
     style.fill: "#4DB6AC"
     style.font-color: "#fff"
@@ -31,15 +30,17 @@ AsyncWorkers: {
   style.border-radius: 12
   style.bold: true
   label: "Async Workers"
-
   CeleryWorker: {
     shape: rectangle
     style.fill: "#37814A"
     style.font-color: "#fff"
     style.bold: true
     style.border-radius: 8
-
     ScanTask: Scan Task {
+      style.fill: "#5CA86D"
+      style.font-color: "#fff"
+    }
+    UploadTask: Upload Task {
       style.fill: "#5CA86D"
       style.font-color: "#fff"
     }
@@ -52,14 +53,12 @@ AsyncWorkers: {
       style.font-color: "#fff"
     }
   }
-
   FastStream: {
     shape: rectangle
     style.fill: "#6B46C1"
     style.font-color: "#fff"
     style.bold: true
     style.border-radius: 8
-
     Consumer: Analysis Consumer {
       style.fill: "#9F7AEA"
       style.font-color: "#fff"
@@ -96,7 +95,6 @@ DataStores: {
   style.border-radius: 12
   style.bold: true
   label: "Data Stores"
-
   PostgreSQL: {
     shape: cylinder
     style.fill: "#336791"
@@ -112,6 +110,12 @@ DataStores: {
   Redis: {
     shape: cylinder
     style.fill: "#DC382D"
+    style.font-color: "#fff"
+    style.bold: true
+  }
+  S3Storage: S3 / MinIO {
+    shape: cylinder
+    style.fill: "#FF9900"
     style.font-color: "#fff"
     style.bold: true
   }
@@ -143,6 +147,11 @@ FastAPI.Services -> DataStores.Redis: Cache {
   style.stroke-width: 2
 }
 
+FastAPI.Services -> DataStores.S3Storage: Presigned URL {
+  style.stroke: "#FF9900"
+  style.stroke-width: 2
+}
+
 FastAPI.Services -> RabbitMQ: 1. Publish scan task {
   style.stroke: "#FF8C42"
   style.bold: true
@@ -167,65 +176,83 @@ ClamAV -> AsyncWorkers.CeleryWorker.ScanTask: 4. Result {
   style.stroke-width: 2
 }
 
-AsyncWorkers.CeleryWorker.ScanTask -> RabbitMQ: 5. Publish extract task {
+AsyncWorkers.CeleryWorker.ScanTask -> RabbitMQ: 5. Publish upload task {
   style.stroke: "#FF8C42"
   style.bold: true
   style.stroke-width: 2
 }
 
-RabbitMQ -> AsyncWorkers.CeleryWorker.ExtractTask: 6. Consume {
+RabbitMQ -> AsyncWorkers.CeleryWorker.UploadTask: 6. Consume {
   style.stroke: "#6BCB77"
   style.bold: true
   style.stroke-width: 2
 }
 
-AsyncWorkers.CeleryWorker.Extractors -> DataStores.MongoDB: 7. Save text {
-  style.stroke: "#4ECDC4"
+AsyncWorkers.CeleryWorker.UploadTask -> DataStores.S3Storage: 7. Upload file {
+  style.stroke: "#FF9900"
   style.bold: true
   style.stroke-width: 2
 }
 
-AsyncWorkers.CeleryWorker.ExtractTask -> RabbitMQ: 8. Publish event {
+AsyncWorkers.CeleryWorker.UploadTask -> RabbitMQ: 8. Publish extract task {
   style.stroke: "#FF8C42"
   style.bold: true
   style.stroke-width: 2
 }
 
-RabbitMQ -> AsyncWorkers.FastStream.Consumer: 9. Consume {
+RabbitMQ -> AsyncWorkers.CeleryWorker.ExtractTask: 9. Consume {
+  style.stroke: "#6BCB77"
+  style.bold: true
+  style.stroke-width: 2
+}
+
+AsyncWorkers.CeleryWorker.Extractors -> DataStores.MongoDB: 10. Save text {
+  style.stroke: "#4ECDC4"
+  style.bold: true
+  style.stroke-width: 2
+}
+
+AsyncWorkers.CeleryWorker.ExtractTask -> RabbitMQ: 11. Publish event {
+  style.stroke: "#FF8C42"
+  style.bold: true
+  style.stroke-width: 2
+}
+
+RabbitMQ -> AsyncWorkers.FastStream.Consumer: 12. Consume {
   style.stroke: "#A78BFA"
   style.bold: true
   style.stroke-width: 2
 }
 
-AsyncWorkers.FastStream.Consumer -> DataStores.MongoDB: 10. Get text {
+AsyncWorkers.FastStream.Consumer -> DataStores.MongoDB: 13. Get text {
   style.stroke: "#4ECDC4"
   style.stroke-width: 2
 }
 
-AsyncWorkers.FastStream.Factory -> DataStores.Redis: 11. Get prompt {
+AsyncWorkers.FastStream.Factory -> DataStores.Redis: 14. Get prompt {
   style.stroke: "#FF6B6B"
   style.stroke-width: 2
 }
 
-AsyncWorkers.FastStream.Consumer -> LLM: 12. Analyze {
+AsyncWorkers.FastStream.Consumer -> LLM: 15. Analyze {
   style.stroke: "#667"
   style.bold: true
   style.stroke-width: 2
 }
 
-LLM -> AsyncWorkers.FastStream.Consumer: 13. Return result {
+LLM -> AsyncWorkers.FastStream.Consumer: 16. Return result {
   style.stroke: "#999"
   style.stroke-dash: 3
   style.stroke-width: 2
 }
 
-AsyncWorkers.FastStream.Consumer -> DataStores.MongoDB: 14. Save analysis {
+AsyncWorkers.FastStream.Consumer -> DataStores.MongoDB: 17. Save analysis {
   style.stroke: "#4ECDC4"
   style.bold: true
   style.stroke-width: 2
 }
 
-AsyncWorkers.FastStream.Consumer -> DataStores.PostgreSQL: 15. Update status {
+AsyncWorkers.FastStream.Consumer -> DataStores.PostgreSQL: 18. Update status {
   style.stroke: "#5A9FD4"
   style.bold: true
   style.stroke-width: 2

@@ -6,7 +6,6 @@ skinparam roundcorner 8
 skinparam sequenceArrowThickness 2
 skinparam sequenceParticipantBorderThickness 2
 skinparam sequenceLifeLineBorderColor #555555
-
 skinparam sequence {
   ArrowColor #F8F8F2
   ArrowFontColor #F8F8F2
@@ -33,6 +32,7 @@ participant "PostgreSQL" as PG #336791
 participant "RabbitMQ" as RMQ #FF6600
 participant "Celery Worker" as Worker #37814A
 participant "ClamAV" as AV #B91C1C
+participant "S3 / MinIO" as S3 #FF9900
 participant "MongoDB" as Mongo #47A248
 participant "FastStream" as Stream #6B46C1
 participant "LLM" as LLM #44475A
@@ -40,13 +40,13 @@ participant "LLM" as LLM #44475A
 == Upload & Validation ==
 User -> API: POST /documents (Upload file)
 activate API
-API -> PG: Save metadata\n(status: created)
+API -> PG: Save metadata (status: created)
 activate PG
 deactivate PG
 API -> RMQ: Publish scan task
 activate RMQ
 deactivate RMQ
-API --> User: 201 Created\n(DocumentResponse)
+API --> User: 201 Created (DocumentResponse)
 deactivate API
 
 == Async: Antivirus Scan ==
@@ -57,35 +57,49 @@ Worker -> AV: Scan file (INSTREAM)
 activate AV
 AV --> Worker: Scan result
 deactivate AV
-
 alt File is clean
-  Worker -> PG: Update status\n(status: extracting)
+  Worker -> PG: Update status (uploading)
   activate PG
   deactivate PG
 else File is infected
-  Worker -> PG: Update status\n(status: infected)
+  Worker -> PG: Update status (infected)
   activate PG
   deactivate PG
   note over Worker: Delete file
   deactivate Worker
 else Antivirus unavailable
-  Worker -> PG: Update status\n(status: extracting / failed)
+  Worker -> PG: Update status (uploading / failed)
   activate PG
   deactivate PG
 end
+
+== Async: S3 Upload ==
+note over Worker: Async processing
+RMQ -> Worker: Consume upload task
+activate Worker
+Worker -> S3: Upload file
+activate S3
+S3 --> Worker: Upload result
+deactivate S3
+Worker -> PG: Update file_key
+Worker -> PG: Update status (extracting)
+activate PG
+deactivate PG
+Worker -> RMQ: Publish extract task
+deactivate Worker
 
 == Async: Text Extraction ==
 note over Worker: Async processing
 RMQ -> Worker: Consume extract task
 activate Worker
-Worker -> Worker: Extract text\n(txt/docx/xlsx/pdf)
+Worker -> Worker: Extract text (txt/docx/xlsx/pdf)
 Worker -> Mongo: Save raw_text
 activate Mongo
 deactivate Mongo
-Worker -> PG: Update status\n(status: extracted)
+Worker -> PG: Update status (extracted)
 activate PG
 deactivate PG
-Worker -> RMQ: Publish event\n"documents.text.extracted"
+Worker -> RMQ: Publish event "documents.text.extracted"
 deactivate Worker
 
 == Async: LLM Analysis ==
@@ -96,22 +110,36 @@ Stream -> Mongo: Get raw_text
 activate Mongo
 deactivate Mongo
 Stream -> Stream: Get active prompt
-Stream -> LLM: Analyze text\n(text + prompt)
+Stream -> LLM: Analyze text (text + prompt)
 activate LLM
 LLM --> Stream: JSON Analysis Result
 deactivate LLM
 Stream -> Mongo: Save analysis & version
 activate Mongo
 deactivate Mongo
-Stream -> PG: Update status\n(status: success)
+Stream -> PG: Update status (success)
 activate PG
 deactivate PG
 deactivate Stream
 
+== Download ==
+User -> API: GET /documents/{id}/download
+activate API
+API -> PG: Get document metadata
+activate PG
+PG --> API: file_key, filename
+deactivate PG
+API -> S3: Generate presigned URL
+activate S3
+S3 --> API: Presigned URL
+deactivate S3
+API --> User: { download_url: "..." }
+deactivate API
+
 == Result Retrieval ==
 User -> API: GET /documents/{id}
 activate API
-API --> User: DocumentResponse\n(metadata + text + analysis)
+API --> User: DocumentResponse (metadata + text + analysis)
 deactivate API
 
 @enduml

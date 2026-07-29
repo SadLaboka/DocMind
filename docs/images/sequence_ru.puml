@@ -6,7 +6,6 @@ skinparam roundcorner 8
 skinparam sequenceArrowThickness 2
 skinparam sequenceParticipantBorderThickness 2
 skinparam sequenceLifeLineBorderColor #555555
-
 skinparam sequence {
   ArrowColor #F8F8F2
   ArrowFontColor #F8F8F2
@@ -33,6 +32,7 @@ participant "PostgreSQL" as PG #336791
 participant "RabbitMQ" as RMQ #FF6600
 participant "Celery Worker" as Worker #37814A
 participant "ClamAV" as AV #B91C1C
+participant "S3 / MinIO" as S3 #FF9900
 participant "MongoDB" as Mongo #47A248
 participant "FastStream" as Stream #6B46C1
 participant "LLM" as LLM #44475A
@@ -40,13 +40,13 @@ participant "LLM" as LLM #44475A
 == Загрузка и валидация ==
 User -> API: POST /documents (Загрузка файла)
 activate API
-API -> PG: Сохранение метаданных\n(статус: created)
+API -> PG: Сохранение метаданных (статус: created)
 activate PG
 deactivate PG
-API -> RMQ: Публикация задачи\nна сканирование
+API -> RMQ: Публикация задачи сканирования
 activate RMQ
 deactivate RMQ
-API --> User: 201 Created\n(DocumentResponse)
+API --> User: 201 Created (DocumentResponse)
 deactivate API
 
 == Асинхронно: Антивирусная проверка ==
@@ -57,35 +57,49 @@ Worker -> AV: Сканирование файла (INSTREAM)
 activate AV
 AV --> Worker: Результат проверки
 deactivate AV
-
 alt Файл чист
-  Worker -> PG: Обновление статуса\n(статус: extracting)
+  Worker -> PG: Обновление статуса (uploading)
   activate PG
   deactivate PG
 else Файл заражён
-  Worker -> PG: Обновление статуса\n(статус: infected)
+  Worker -> PG: Обновление статуса (infected)
   activate PG
   deactivate PG
   note over Worker: Удаление файла
   deactivate Worker
 else Антивирус недоступен
-  Worker -> PG: Обновление статуса\n(статус: extracting / failed)
+  Worker -> PG: Обновление статуса (uploading / failed)
   activate PG
   deactivate PG
 end
+
+== Асинхронно: Загрузка в S3 ==
+note over Worker: Асинхронная обработка
+RMQ -> Worker: Получение задачи загрузки
+activate Worker
+Worker -> S3: Загрузка файла
+activate S3
+S3 --> Worker: Результат загрузки
+deactivate S3
+Worker -> PG: Обновление file_key
+Worker -> PG: Обновление статуса (extracting)
+activate PG
+deactivate PG
+Worker -> RMQ: Публикация задачи извлечения
+deactivate Worker
 
 == Асинхронно: Извлечение текста ==
 note over Worker: Асинхронная обработка
 RMQ -> Worker: Получение задачи извлечения
 activate Worker
-Worker -> Worker: Извлечение текста\n(txt/docx/xlsx/pdf)
+Worker -> Worker: Извлечение текста (txt/docx/xlsx/pdf)
 Worker -> Mongo: Сохранение raw_text
 activate Mongo
 deactivate Mongo
-Worker -> PG: Обновление статуса\n(статус: extracted)
+Worker -> PG: Обновление статуса (extracted)
 activate PG
 deactivate PG
-Worker -> RMQ: Публикация события\n"documents.text.extracted"
+Worker -> RMQ: Публикация события "documents.text.extracted"
 deactivate Worker
 
 == Асинхронно: Анализ через LLM ==
@@ -96,22 +110,36 @@ Stream -> Mongo: Получение raw_text
 activate Mongo
 deactivate Mongo
 Stream -> Stream: Получение активного промпта
-Stream -> LLM: Анализ текста\n(текст + промпт)
+Stream -> LLM: Анализ текста (текст + промпт)
 activate LLM
 LLM --> Stream: JSON-результат анализа
 deactivate LLM
 Stream -> Mongo: Сохранение анализа и версии
 activate Mongo
 deactivate Mongo
-Stream -> PG: Обновление статуса\n(статус: success)
+Stream -> PG: Обновление статуса (success)
 activate PG
 deactivate PG
 deactivate Stream
 
+== Скачивание ==
+User -> API: GET /documents/{id}/download
+activate API
+API -> PG: Получение метаданных документа
+activate PG
+PG --> API: file_key, filename
+deactivate PG
+API -> S3: Генерация presigned URL
+activate S3
+S3 --> API: Presigned URL
+deactivate S3
+API --> User: { download_url: "..." }
+deactivate API
+
 == Получение результата ==
 User -> API: GET /documents/{id}
 activate API
-API --> User: DocumentResponse\n(метаданные + текст + анализ)
+API --> User: DocumentResponse (метаданные + текст + анализ)
 deactivate API
 
 @enduml
