@@ -85,6 +85,7 @@ The system is designed for high fault tolerance, scalability, and strict separat
 ### Infrastructure & DevOps
 - **Docker & Docker Compose** — orchestration of all services
 - **ClamAV** — antivirus scanning of uploaded files
+- **MinIO / S3** — object storage for uploaded documents (local: MinIO, production: AWS S3 / Selectel Cloud)
 - **Poetry** — dependency management
 - **Alembic** — PostgreSQL migrations
 - **GitHub Actions** — CI/CD, Codecov, SonarCloud
@@ -123,18 +124,26 @@ The system is designed for high fault tolerance, scalability, and strict separat
 4. **Antivirus Scan** (Celery Worker + ClamAV)
    - Worker consumes scan task from queue
    - File is streamed to ClamAV for scanning
-   - If clean: update status to `extracting`, publish extract task
+   - If clean: update status to `uploading`, publish upload task
    - If infected: update status to `infected`, delete file
    - If ClamAV unavailable: configurable fallback (skip or fail)
 
-5. **Text Extraction** (Celery Worker)
+5. **S3 Upload** (Celery Worker)
+   - Worker consumes upload task from queue
+   - File is uploaded to S3-compatible storage (MinIO locally, AWS S3 / Selectel in production)
+   - Generates unique S3 key: `documents/{document_id}/{uuid}`
+   - Saves `file_key` to PostgreSQL
+   - Updates document status: `extracting`
+   - Publishes extract task
+
+6. **Text Extraction** (Celery Worker)
    - Worker consumes task from queue
    - Extracts text based on MIME type (TXT, DOCX, XLSX, PDF)
    - Saves raw text to MongoDB
    - Updates document status: `extracted`
    - Publishes event: `documents.text.extracted`
 
-6. **LLM Analysis** (FastStream Consumer)
+7. **LLM Analysis** (FastStream Consumer)
    - Consumer receives event from queue
    - Retrieves raw text from MongoDB
    - Fetches active prompt from Redis cache (or MongoDB)
@@ -143,7 +152,7 @@ The system is designed for high fault tolerance, scalability, and strict separat
    - Saves analysis result to MongoDB
    - Updates document status: `success`
 
-7. **Result Retrieval** (FastAPI)
+8. **Result Retrieval** (FastAPI)
    - User polls `GET /documents/{id}` to check status
    - Response includes: metadata, raw text, analysis result, version
 
@@ -265,6 +274,27 @@ The full list of variables is in `.env.example`. Key variables grouped by catego
 | `ANTIVIRUS_TIMEOUT` | Scan timeout (seconds) | `60` |
 | `ANTIVIRUS_FAIL_ON_UNAVAILABLE` | Fail if ClamAV is unavailable | `false` |
 | `ANTIVIRUS_CHUNK_SIZE` | Stream chunk size (bytes) | `4096` |
+
+### Storage (S3 / MinIO)
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `STORAGE_BACKEND` | Storage backend (`local` or `s3`) | `local` |
+| `LOCAL_STORAGE_ENDPOINT_URL` | MinIO endpoint URL | `http://minio:9000` |
+| `LOCAL_STORAGE_EXTERNAL_ENDPOINT_URL` | MinIO external URL (for presigned URLs) | `http://localhost:9000` |
+| `LOCAL_STORAGE_ACCESS_KEY` | MinIO access key | `minio` |
+| `LOCAL_STORAGE_SECRET_KEY` | MinIO secret key | `minio` |
+| `LOCAL_STORAGE_REGION` | MinIO region | `us-east-1` |
+| `LOCAL_STORAGE_BUCKET` | MinIO bucket name | `docmind` |
+| `LOCAL_STORAGE_PRESIGNED_URL_TTL` | Presigned URL TTL (seconds) | `600` |
+| `LOCAL_STORAGE_SSE_ENABLED` | Enable server-side encryption | `false` |
+| `NONLOCAL_STORAGE_ENDPOINT_URL` | S3 endpoint URL (production) | `https://s3.selcloud.ru` |
+| `NONLOCAL_STORAGE_EXTERNAL_ENDPOINT_URL` | S3 external URL (production) | `https://s3.selcloud.ru` |
+| `NONLOCAL_STORAGE_ACCESS_KEY` | S3 access key (production) | — |
+| `NONLOCAL_STORAGE_SECRET_KEY` | S3 secret key (production) | — |
+| `NONLOCAL_STORAGE_REGION` | S3 region (production) | `ru-1` |
+| `NONLOCAL_STORAGE_BUCKET` | S3 bucket name (production) | `docmind` |
+| `NONLOCAL_STORAGE_PRESIGNED_URL_TTL` | Presigned URL TTL (seconds) | `3600` |
+| `NONLOCAL_STORAGE_SSE_ENABLED` | Enable server-side encryption | `true` |
 
 ### LLM Providers
 | Variable | Description | Default |
@@ -438,10 +468,10 @@ make migrate-down
 - [x] Structured logging with `structlog` (JSON in prod)
 - [x] Architecture diagrams and detailed documentation
 - [x] Antivirus scanning with ClamAV (two-stage pipeline: scan → extract)
+- [x] **S3 / MinIO integration** — object storage for uploaded documents with presigned URLs for secure downloads
 
 ### In Progress / Planned
 - [ ] **WebSockets** — real-time document status updates (replace polling)
-- [ ] **S3 / MinIO** — replace local temp storage for stateless architecture
 - [ ] **Email notifications** — notify users when analysis completes
 - [ ] **Telegram bot** — alternative UI on top of the existing API
 - [ ] **Observability stack** — Grafana + Prometheus + Loki
@@ -555,6 +585,22 @@ curl -X POST http://localhost:8000/auth/refresh \
 curl -X POST http://localhost:8000/auth/logout \
   -H "Authorization: Bearer <access_token>"
 ```
+
+### 8. Download document file
+
+```bash
+curl -X GET http://localhost:8000/documents/42/download \
+-H "Authorization: Bearer <access_token>"
+```
+Response:
+```json
+{
+  "download_url": "http://localhost:9000/docmind/documents/42/abc123?X-Amz-Algorithm=AWS4-HMAC-SHA256&..."
+}
+```
+
+>[!NOTE]
+>The download_url is a presigned URL that expires after the configured TTL (default: 10 minutes for local, 1 hour for production).
 
 <a id="license"></a>
 ## License
