@@ -148,8 +148,8 @@ class DocumentService(BaseService[DocumentRepository]):
                 },
             )
 
-        from src.storage.s3_storage import get_storage
         from src.storage.exceptions import S3PresignedUrlError
+        from src.storage.s3_storage import get_storage
 
         storage = get_storage()
 

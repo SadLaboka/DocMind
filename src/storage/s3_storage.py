@@ -100,10 +100,10 @@ class S3Storage:
                 self._handle_boto_error(e, "file_exists", key)
 
     async def generate_presigned_url(
-            self,
-            key: str,
-            expires_in: int | None = None,
-            original_filename: str | None = None,
+        self,
+        key: str,
+        expires_in: int | None = None,
+        original_filename: str | None = None,
     ) -> str:
         if not key:
             raise ValueError("key must not be empty")

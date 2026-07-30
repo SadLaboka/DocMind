@@ -78,6 +78,7 @@ async def cancel_document(
 ):
     return await document_service.cancel_document_processing(current_user, document_id)
 
+
 @router.get(
     path="/{document_id}/download",
     summary="Get download URL for document",

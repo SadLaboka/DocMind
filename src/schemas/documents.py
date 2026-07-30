@@ -50,5 +50,6 @@ class DocumentListResponse(BaseModel):
     limit: int
     has_next: bool
 
+
 class DownloadUrlResponse(BaseModel):
     download_url: str
