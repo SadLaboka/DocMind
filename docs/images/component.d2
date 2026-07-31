@@ -48,10 +48,6 @@ AsyncWorkers: {
       style.fill: "#5CA86D"
       style.font-color: "#fff"
     }
-    Extractors: Text Extractors {
-      style.fill: "#5CA86D"
-      style.font-color: "#fff"
-    }
   }
   FastStream: {
     shape: rectangle
@@ -206,7 +202,7 @@ RabbitMQ -> AsyncWorkers.CeleryWorker.ExtractTask: 9. Consume {
   style.stroke-width: 2
 }
 
-AsyncWorkers.CeleryWorker.Extractors -> DataStores.MongoDB: 10. Save text {
+AsyncWorkers.CeleryWorker.ExtractTask -> DataStores.MongoDB: 10. Save text {
   style.stroke: "#4ECDC4"
   style.bold: true
   style.stroke-width: 2
