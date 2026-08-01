@@ -1,6 +1,7 @@
+from contextlib import ExitStack
 from datetime import UTC, datetime
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 import pytest_asyncio
@@ -26,6 +27,7 @@ from src.DependencyInjection.auth import (
 )
 from src.DependencyInjection.documents import get_mongo_document_repository
 from src.DependencyInjection.prompts import get_mongo_prompt_repository
+from src.repositories.documents import DocumentRepository
 from src.repositories.mongo_documents import MongoDocumentRepository
 from src.repositories.mongo_prompts import MongoPromptsRepository
 from src.storage.s3_storage import S3Storage
@@ -62,6 +64,63 @@ async def test_db_session(db_engine):
             await session.close()
             if transaction.is_active:
                 await transaction.rollback()
+
+
+# Worker mocks
+
+
+WORKER_SESSION_FACTORY_TARGETS = (
+    "src.worker.base_task.celery_session_factory",
+    "src.worker.extraction_tasks.celery_session_factory",
+)
+
+WORKER_REPOSITORY_TARGETS = (
+    "src.worker.base_task.DocumentRepository",
+    "src.worker.extraction_tasks.DocumentRepository",
+)
+
+
+@pytest.fixture
+def mock_celery_session():
+
+    mock_session = AsyncMock(spec=AsyncSession)
+
+    context_manager = MagicMock()
+    context_manager.__aenter__ = AsyncMock(return_value=mock_session)
+    context_manager.__aexit__ = AsyncMock(return_value=None)
+
+    with ExitStack() as stack:
+        for target in WORKER_SESSION_FACTORY_TARGETS:
+            mock_factory = stack.enter_context(patch(target))
+            mock_factory.return_value = context_manager
+
+        yield mock_session
+
+
+@pytest.fixture
+def mock_worker_repo():
+
+    mock_repo = AsyncMock(spec=DocumentRepository)
+    mock_repo.get_document_by_id.return_value = MagicMock(
+        document_status=DocumentStatus.created,
+    )
+
+    with ExitStack() as stack:
+        for target in WORKER_REPOSITORY_TARGETS:
+            mock_repository_class = stack.enter_context(patch(target))
+            mock_repository_class.return_value = mock_repo
+
+        yield mock_repo
+
+
+@pytest.fixture
+def mock_path_operations():
+
+    with (
+        patch("pathlib.Path.exists", return_value=True) as mock_exists,
+        patch("pathlib.Path.unlink") as mock_unlink,
+    ):
+        yield mock_exists, mock_unlink
 
 
 # Storage mocks
