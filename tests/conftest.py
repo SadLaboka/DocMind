@@ -72,11 +72,13 @@ async def test_db_session(db_engine):
 WORKER_SESSION_FACTORY_TARGETS = (
     "src.worker.base_task.celery_session_factory",
     "src.worker.extraction_tasks.celery_session_factory",
+    "src.worker.antivirus_tasks.celery_session_factory",
 )
 
 WORKER_REPOSITORY_TARGETS = (
     "src.worker.base_task.DocumentRepository",
     "src.worker.extraction_tasks.DocumentRepository",
+    "src.worker.antivirus_tasks.DocumentRepository",
 )
 
 
