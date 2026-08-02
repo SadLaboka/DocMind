@@ -51,9 +51,7 @@ def test_scan_file_returns_infected_result(
     mock_clamav_client: MagicMock,
     file_path: Path,
 ) -> None:
-    mock_clamav_client.scan_file.return_value = (
-        "stream: Eicar-Test-Signature FOUND"
-    )
+    mock_clamav_client.scan_file.return_value = "stream: Eicar-Test-Signature FOUND"
 
     with patch(
         "src.antivirus.scanner.time.perf_counter",

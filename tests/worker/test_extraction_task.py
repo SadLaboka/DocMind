@@ -183,15 +183,9 @@ async def test_process_extraction_soft_fail(
         with pytest.raises(RuntimeError, match="Connection lost"):
             await task.execute()
 
-    update_calls = [
-        awaited_call.kwargs
-        for awaited_call in mock_worker_repo.update_document_fields.await_args_list
-    ]
+    update_calls = [awaited_call.kwargs for awaited_call in mock_worker_repo.update_document_fields.await_args_list]
 
-    assert not any(
-        update_call.get("document_status") == DocumentStatus.failed
-        for update_call in update_calls
-    )
+    assert not any(update_call.get("document_status") == DocumentStatus.failed for update_call in update_calls)
 
     mock_unlink.assert_not_called()
     mock_mongo_repo.create_content.assert_not_awaited()
@@ -214,8 +208,5 @@ async def test_update_status_after_failure(
     mock_worker_repo.update_document_fields.assert_awaited_once_with(
         document_id=1,
         document_status=DocumentStatus.failed,
-        error_trace=(
-            "Task failed after all retries: "
-            "Task failed after 3 retries: Connection lost"
-        ),
+        error_trace=("Task failed after all retries: " "Task failed after 3 retries: Connection lost"),
     )
