@@ -28,16 +28,35 @@ class BaseTask:
         Does not delete the tempo file here to allow manual restarts
         """
         document_id = kwargs.get("document_id")
+        temp_path = Path(kwargs.get("temp_path"))
         task_logger = structlog.get_logger(cls.__name__)
+        user_id = kwargs.get("user_id")
         if document_id:
             task_logger.error(
                 "task_final_failure",
                 document_id=document_id,
                 task_id=task_id,
-                user_id=kwargs.get("user_id"),
+                user_id=user_id,
                 error_detail=str(exc),
             )
+
             asyncio.run(cls._update_status_after_failure(document_id, str(exc)))
+
+            try:
+                if temp_path.exists():
+                    temp_path.unlink(missing_ok=True)
+
+                task_logger.info("temp_file_sucessfully_removed")
+
+            except Exception as e:
+                task_logger.error(
+                    "cleanup_temp_file_failure",
+                    document_id=document_id,
+                    task_id=task_id,
+                    user_id=user_id,
+                    temp_path=temp_path,
+                    error_detail=str(e),
+                )
 
     @staticmethod
     async def _update_status_after_failure(document_id: int, error_detail: str) -> None:
@@ -50,6 +69,7 @@ class BaseTask:
                 await repo.update_document_fields(
                     document_id=document_id,
                     document_status=DocumentStatus.failed,
+                    temp_filename=None,
                     error_trace=f"Task failed after all retries: {error_detail}",
                 )
 
