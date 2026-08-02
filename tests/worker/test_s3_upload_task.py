@@ -120,6 +120,7 @@ async def test_execute_storage_config_error_marks_failed_and_removes_file(
         call(
             document_id=upload_task.document_id,
             document_status=DocumentStatus.failed,
+            temp_filename=None,
             error_trace="Storage configuration error",
         ),
     ]
@@ -160,6 +161,7 @@ async def test_execute_non_retryable_upload_error_marks_failed(
         call(
             document_id=upload_task.document_id,
             document_status=DocumentStatus.failed,
+            temp_filename=None,
             error_trace="S3 Upload Error: Invalid upload request",
         ),
     ]

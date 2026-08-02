@@ -154,6 +154,7 @@ async def test_execute_unavailable_fail_closed_marks_failed(
         call(
             document_id=antivirus_task.document_id,
             document_status=DocumentStatus.failed,
+            temp_filename=None,
             error_trace="Antivirus service unavailable",
         ),
     ]

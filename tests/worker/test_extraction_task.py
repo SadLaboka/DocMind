@@ -208,5 +208,6 @@ async def test_update_status_after_failure(
     mock_worker_repo.update_document_fields.assert_awaited_once_with(
         document_id=1,
         document_status=DocumentStatus.failed,
+        temp_filename=None,
         error_trace=("Task failed after all retries: " "Task failed after 3 retries: Connection lost"),
     )
