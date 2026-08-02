@@ -76,6 +76,7 @@ class UploadTask(BaseTask):
                 await repo.update_document_fields(
                     document_id=self.document_id,
                     document_status=DocumentStatus.failed,
+                    temp_filename=None,
                     error_trace="Storage configuration error",
                 )
                 self._cleanup_file()
@@ -94,6 +95,7 @@ class UploadTask(BaseTask):
                     await repo.update_document_fields(
                         document_id=self.document_id,
                         document_status=DocumentStatus.failed,
+                        temp_filename=None,
                         error_trace=f"S3 Upload Error: {e.message}",
                     )
                     self._cleanup_file()
