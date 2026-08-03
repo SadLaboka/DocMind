@@ -177,7 +177,7 @@ class UploadTask(BaseTask):
 
     def _generate_file_key(self) -> str:
         """Generates a unique file key for s3 storage"""
-        return f"documents/{self.document_id}/{uuid.uuid4()}"
+        return f"documents/{uuid.uuid4()}"
 
 
 @celery_app.task(
