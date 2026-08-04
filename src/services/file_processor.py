@@ -2,6 +2,8 @@ import asyncio
 import hashlib
 import string
 import time
+from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
 from typing import BinaryIO
 from uuid import uuid4
@@ -54,6 +56,20 @@ RESERVED_NAMES = {
     "LPT10",
 }
 ALLOWED_MIME_VALUES = {m.value for m in MimeType}
+
+
+class ProcessingPath(Enum):
+    """Processing options when loading a document"""
+    full_pipeline = "full_pipeline"
+    extraction_only = "extraction_only"
+    analysis_only = "analysis_only"
+
+
+@dataclass
+class PreparedUpload:
+    """Prepared data for upload process"""
+    document: Document
+    processing_path: ProcessingPath
 
 
 class HashingFileSaver:
