@@ -1,4 +1,4 @@
-from sqlalchemy import and_, func, select
+from sqlalchemy import and_, func, select, Null
 
 from src.core.enums import DocumentStatus, LLMProvider
 from src.models.documents import Document
@@ -64,3 +64,13 @@ class DocumentRepository(BaseRepository):
         )
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
+
+    async def get_reuse_candidates(self, file_hash: str) -> list[Document]:
+        stmt = select(Document).where(
+            and_(
+                Document.file_hash == file_hash,
+                Document.file_key is not Null,
+            )
+        )
+        result = await self.session.execute(stmt)
+        return result.scalars().all()
