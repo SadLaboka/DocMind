@@ -59,12 +59,15 @@ class UploadTask(BaseTask):
             file_key = self._generate_file_key()
             await repo.update_document_fields(
                 document_id=self.document_id,
-                file_key=file_key,
                 document_status=DocumentStatus.uploading,
             )
 
             try:
                 await self._upload_document(file_key)
+                await repo.update_document_fields(
+                    document_id=self.document_id,
+                    file_key=file_key,
+                )
             except StorageConfigError as e:
                 self.logger.error(
                     "upload_config_error",
