@@ -12,10 +12,11 @@ import filetype
 import structlog
 from celery.result import AsyncResult
 from fastapi import UploadFile
+from pymongo.errors import ConnectionFailure
 from sqlalchemy.exc import IntegrityError
 
 from src.core.config import settings
-from src.core.enums import LLMProvider, MimeType, DocumentStatus
+from src.core.enums import LLMProvider, MimeType
 from src.core.exceptions import BadRequestError
 from src.models.documents import Document
 from src.repositories.documents import DocumentRepository
@@ -209,6 +210,74 @@ class UploadService(BaseService[DocumentRepository]):
                 logger.info("extract_task_dispatched_to_queue", document_id=document.id, celery_task_id=celery_task.id)
 
         return DocumentResponse.model_validate(document)
+
+
+    async def _determine_processing_path(self, file_hash: str, user_id: int) -> PreparedUpload:
+        """Determines which document processing path is needed"""
+
+        logger.info(
+            "try_to_find_document_duplicates",
+            user_id=user_id,
+            file_hash=file_hash[:16],
+        )
+        candidates = await self.repository.get_reuse_candidates(file_hash)
+
+        if candidates:
+
+            candidates_ids = [candidate.id for candidate in candidates]
+
+            try:
+                content = await self.mongo_repository.get_content_for_deduplicate(candidates_ids)
+
+                if content:
+                    logger.info(
+                        "duplicate_found",
+                        user_id=user_id,
+                        file_hash=file_hash[:16],
+                        chosen_path=ProcessingPath.ANALYSIS_ONLY.value,
+                    )
+                    document = [doc for doc in candidates if doc.id == content.document_id][0]
+                    return PreparedUpload(
+                        path=ProcessingPath.ANALYSIS_ONLY,
+                        source_document_id=document.id,
+                        file_key=document.file_key,
+                        raw_text=content.raw_text,
+                    )
+            except ConnectionFailure as err:
+                logger.warning(
+                    "raw_text_deduplication_skipped",
+                    user_id=user_id,
+                    file_hash=file_hash[:16],
+                    reason="mongo_error",
+                    error_type=type(err).__name__
+                )
+
+            logger.info(
+                "duplicate_found_without_extracted_text",
+                user_id=user_id,
+                file_hash=file_hash[:16],
+                chosen_path=ProcessingPath.EXTRACTION_ONLY.value,
+            )
+            return PreparedUpload(
+                path=ProcessingPath.EXTRACTION_ONLY,
+                source_document_id=candidates[0].id,
+                file_key=candidates[0].file_key,
+                raw_text=None
+            )
+
+        logger.info(
+            "duplicates_not_found",
+            user_id=user_id,
+            file_hash=file_hash[:16],
+            chosen_path=ProcessingPath.FULL_PIPELINE.value,
+        )
+        return PreparedUpload(
+            path=ProcessingPath.FULL_PIPELINE,
+            source_document_id=None,
+            file_key=None,
+            raw_text=None
+        )
+
 
     async def _create_duplicate_document(
         self,
