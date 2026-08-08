@@ -1,6 +1,7 @@
 import contextlib
 import datetime
 
+from beanie.operators import In, NotIn
 from pymongo.errors import DuplicateKeyError
 
 from src.models.mongo_documents import MongoDocument
@@ -26,6 +27,14 @@ class MongoDocumentRepository:
 
     async def get_content(self, document_id: int) -> MongoDocument | None:
         return await MongoDocument.find_one(MongoDocument.document_id == document_id)
+
+    async def get_content_for_deduplicate(self, candidates_ids: list[int]) -> MongoDocument | None:
+        content = await MongoDocument.find_one(
+            In(MongoDocument.document_id, candidates_ids),
+            NotIn(MongoDocument.raw_text, [None, ""]),
+        )
+
+        return content
 
     async def create_duplicate_content(self, original_doc_id: int, new_doc_id: int) -> MongoDocument | None:
         original_doc = await self.get_content(original_doc_id)
