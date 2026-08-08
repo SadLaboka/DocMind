@@ -69,7 +69,7 @@ class DocumentRepository(BaseRepository):
         stmt = select(Document).where(
             and_(
                 Document.file_hash == file_hash,
-                Document.file_key is not Null,
+                Document.file_key.is_not(None),
             )
         )
         result = await self.session.execute(stmt)
