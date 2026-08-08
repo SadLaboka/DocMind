@@ -15,7 +15,7 @@ from fastapi import UploadFile
 from sqlalchemy.exc import IntegrityError
 
 from src.core.config import settings
-from src.core.enums import LLMProvider, MimeType
+from src.core.enums import LLMProvider, MimeType, DocumentStatus
 from src.core.exceptions import BadRequestError
 from src.models.documents import Document
 from src.repositories.documents import DocumentRepository
@@ -60,16 +60,18 @@ ALLOWED_MIME_VALUES = {m.value for m in MimeType}
 
 class ProcessingPath(Enum):
     """Processing options when loading a document"""
-    full_pipeline = "full_pipeline"
-    extraction_only = "extraction_only"
-    analysis_only = "analysis_only"
+    FULL_PIPELINE = "full_pipeline"
+    EXTRACTION_ONLY = "extraction_only"
+    ANALYSIS_ONLY = "analysis_only"
 
 
-@dataclass
+@dataclass(frozen=True, slots=True)
 class PreparedUpload:
     """Prepared data for upload process"""
-    document: Document
-    processing_path: ProcessingPath
+    path: ProcessingPath
+    source_document_id: int | None = None
+    file_key: str | None = None
+    raw_text: str | None = None
 
 
 class HashingFileSaver:
