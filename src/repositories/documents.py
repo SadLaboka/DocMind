@@ -12,6 +12,8 @@ class DocumentRepository(BaseRepository):
 
         self.session.add(document)
         await self.session.flush()
+        await self.session.commit()
+        await self.session.refresh(document)
 
         return document
 
