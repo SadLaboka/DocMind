@@ -13,17 +13,16 @@ import structlog
 from celery.result import AsyncResult
 from fastapi import UploadFile
 from pymongo.errors import ConnectionFailure
-from sqlalchemy.exc import IntegrityError
 
 from src.core.config import settings
-from src.core.enums import LLMProvider, MimeType
+from src.core.enums import LLMProvider, MimeType, DocumentStatus
 from src.core.exceptions import BadRequestError
-from src.models.documents import Document
 from src.repositories.documents import DocumentRepository
 from src.schemas.documents import DocumentData, DocumentResponse
 from src.services.base import BaseService
 from src.worker.antivirus_tasks import scan_file_task
 from src.worker.extraction_tasks import extract_text_task
+from src.worker.s3_upload_task import upload_document_task
 
 logger = structlog.get_logger(__name__)
 
@@ -166,50 +165,92 @@ class UploadService(BaseService[DocumentRepository]):
                 },
             ) from err
 
-        document, is_duplicate, needs_extraction = await self._create_document_with_deduplication(
-            file_hash=file_hash,
-            temp_path=temp_path,
-            temp_filename=temp_filename,
+        prepared_data = await self._determine_processing_path(file_hash=file_hash, user_id=user_id)
+
+        upload_processor = {
+            ProcessingPath.FULL_PIPELINE: self._full_pipeline_processing,
+        }
+
+        db_kwargs = {
+            ProcessingPath.FULL_PIPELINE: {
+                "document_status": DocumentStatus.created,
+                "temp_filename": temp_filename,
+                "file_key": None,
+            },
+            ProcessingPath.EXTRACTION_ONLY: {
+                "document_status": DocumentStatus.uploaded,
+                "temp_filename": temp_filename,
+                "file_key": prepared_data.file_key
+            },
+            ProcessingPath.ANALYSIS_ONLY: {
+                "document_status": DocumentStatus.extracted,
+                "temp_filename": None,
+                "file_key": prepared_data.file_key
+            },
+        }
+
+        document = await self._create_document_for_processing(
             user_id=user_id,
             sanitized_filename=sanitized_filename,
             mime_type=mime_type,
             description=description,
             file_size=file_size,
+            file_hash=file_hash,
             provider=provider,
+            **db_kwargs[prepared_data.path]
         )
+
+        if prepared_data.raw_text:
+            document.document_text = prepared_data.raw_text
+
+        await upload_processor[prepared_data.path](
+            document=document,
+            request_id=request_id,
+            temp_path=temp_path
+        )
+
+        return document
+
+    async def _create_document_for_processing(
+            self,
+            user_id: int,
+            sanitized_filename: str,
+            mime_type: MimeType,
+            description: str | None,
+            file_size: int,
+            file_hash: str,
+            provider: LLMProvider,
+            **db_kwargs
+    ) -> DocumentResponse:
+
+        logger.info(
+            "start_saving_document_to_db",
+            user_id=user_id,
+        )
+
+        data = DocumentData(
+            filename=sanitized_filename,
+            user_id=user_id,
+            mime_type=mime_type,
+            description=description,
+            file_size=file_size,
+            file_hash=file_hash,
+            provider=provider,
+            **db_kwargs
+        )
+        start_time = time.perf_counter()
+        doc = await self.repository.create_document(data)
+        duration_ms = round((time.perf_counter() - start_time) * 1000, 2)
 
         logger.info(
             "document_saved_to_db",
-            document_id=document.id,
-            status=document.document_status.value,
+            document_id=doc.id,
+            status=doc.document_status.value,
             user_id=user_id,
-            is_duplicate=is_duplicate,
-            needs_extraction=needs_extraction,
+            duration_ms=duration_ms,
         )
 
-        if needs_extraction:
-            if settings.antivirus.enabled:
-                celery_task = await self._send_to_queue_for_scanning(
-                    document_id=document.id,
-                    temp_path=temp_path,
-                    user_id=user_id,
-                    mime_type=mime_type.value,
-                    request_id=request_id,
-                    provider=provider.value,
-                )
-                logger.info("scan_task_dispatched_to_queue", document_id=document.id, celery_task_id=celery_task.id)
-            else:
-                celery_task = await self._send_to_queue_for_extraction(
-                    document_id=document.id,
-                    temp_path=temp_path,
-                    user_id=user_id,
-                    mime_type=mime_type.value,
-                    request_id=request_id,
-                    provider=provider.value,
-                )
-                logger.info("extract_task_dispatched_to_queue", document_id=document.id, celery_task_id=celery_task.id)
-
-        return DocumentResponse.model_validate(document)
+        return DocumentResponse.model_validate(doc)
 
 
     async def _determine_processing_path(self, file_hash: str, user_id: int) -> PreparedUpload:
@@ -278,176 +319,55 @@ class UploadService(BaseService[DocumentRepository]):
             raw_text=None
         )
 
+    async def _full_pipeline_processing(
+            self,
+            document: DocumentResponse,
+            request_id: str,
+            temp_path: Path
+    ) -> None:
 
-    async def _create_duplicate_document(
-        self,
-        existing_doc: Document,
-        user_id: int,
-        sanitized_filename: str,
-        mime_type: MimeType,
-        description: str | None,
-        file_size: int,
-        temp_path: Path,
-        provider: LLMProvider,
-    ) -> tuple[Document, bool]:
-        """Creates a duplicate document from the existing document-data and
-        Returns: (document, content_was_copied)
-        """
-        data = DocumentData(
-            filename=sanitized_filename,
-            user_id=user_id,
-            mime_type=mime_type,
-            description=description,
-            file_size=file_size,
-            temp_filename=existing_doc.temp_filename,
-            file_hash=existing_doc.file_hash,
-            document_status=existing_doc.document_status,
-            provider=provider,
+        logger.info(
+            "starting_full_pipeline_processing",
+            user_id=document.user_id,
+
         )
 
-        document = await self.repository.create_document(data)
-
-        if self.mongo_repository is None:
-            logger.error("mongo_repository_not_available", document_id=document.id)
-            return document, False
-
-        content_was_copied = False
-        try:
-            new_doc = await self.mongo_repository.create_duplicate_content(existing_doc.id, document.id)
-            if new_doc:
-                content_was_copied = True
-                self._remove_from_temp(temp_path)
-            else:
-                # Content was not found in mongo. Don't remove temp_path for extraction in future
-                logger.warning(
-                    "duplicate_content_not_found_in_mongo",
-                    existing_document_id=existing_doc.id,
-                    new_document_id=document.id,
-                    user_id=user_id,
-                    reason="original_content_missing",
-                )
-
-                try:
-                    await self.mongo_repository.create_content(document.id)
-                except Exception as mongo_err:
-                    logger.error(
-                        "mongo_create_empty_error",
-                        document_id=document.id,
-                        user_id=user_id,
-                        error=str(mongo_err),
-                    )
-
-        except Exception as err:
-            # Mongo connection error. Don't remove temp_path for extraction
-            logger.error(
-                "mongo_connection_error",
+        if settings.antivirus.enabled:
+            celery_task = await self._send_to_queue_for_scanning(
                 document_id=document.id,
-                user_id=user_id,
-                error=str(err),
-            )
-
-            try:
-                await self.mongo_repository.create_content(document.id)
-            except Exception as mongo_err:
-                logger.error(
-                    "mongo_create_empty_error",
-                    document_id=document.id,
-                    user_id=user_id,
-                    error=str(mongo_err),
-                )
-
-        return document, content_was_copied
-
-    async def _create_document_with_deduplication(
-        self,
-        file_hash: str,
-        temp_path: Path,
-        temp_filename: str,
-        user_id: int,
-        sanitized_filename: str,
-        mime_type: MimeType,
-        description: str | None,
-        file_size: int,
-        provider: LLMProvider,
-    ) -> tuple[Document, bool, bool]:
-        """
-        Creates document or returns existing duplicate
-        Returns: (document, is_duplicate, needs_extraction)
-
-        needs_extraction is True if this is a new document or this is a duplicate without content in mongo
-        """
-        existing_doc = await self.repository.get_document_by_hash_and_active_status_and_provider(file_hash, provider)
-        if existing_doc:
-            logger.info(
-                "document_duplicate_found",
-                filename=sanitized_filename,
-                file_hash=file_hash[:16],
-                existing_document_id=existing_doc.id,
-                original_status=existing_doc.document_status,
-            )
-            doc, content_was_copied = await self._create_duplicate_document(
-                existing_doc=existing_doc,
-                user_id=user_id,
-                sanitized_filename=sanitized_filename,
-                mime_type=mime_type,
-                description=description,
-                file_size=file_size,
                 temp_path=temp_path,
-                provider=provider,
+                user_id=document.user_id,
+                mime_type=document.mime_type.value,
+                request_id=request_id,
+                provider=document.provider.value,
             )
-            needs_extraction = not content_was_copied
-            return doc, True, needs_extraction
-
-        data = DocumentData(
-            filename=sanitized_filename,
-            user_id=user_id,
-            mime_type=mime_type,
-            description=description,
-            file_size=file_size,
-            temp_filename=temp_filename,
-            file_hash=file_hash,
-            provider=provider,
-        )
-
-        try:
-            doc = await self.repository.create_document(data)
-            return doc, False, True
-        except IntegrityError as err:
-            existing_doc = await self.repository.get_document_by_hash_and_active_status_and_provider(
-                file_hash, provider
+            logger.info("scan_task_dispatched_to_queue", document_id=document.id, celery_task_id=celery_task.id)
+        else:
+            celery_task = await self._send_to_queue_for_uploading(
+                document_id=document.id,
+                temp_path=temp_path,
+                user_id=document.user_id,
+                mime_type=document.mime_type.value,
+                request_id=request_id,
+                provider=document.provider.value,
             )
-            if existing_doc:
-                logger.info(
-                    "document_found_after_race",
-                    filename=sanitized_filename,
-                    file_hash=file_hash[:16],
-                    user_id=user_id,
-                    existing_document_id=existing_doc.id,
-                    original_status=existing_doc.document_status,
-                )
-                doc, content_was_copied = await self._create_duplicate_document(
-                    existing_doc=existing_doc,
-                    user_id=user_id,
-                    sanitized_filename=sanitized_filename,
-                    mime_type=mime_type,
-                    description=description,
-                    file_size=file_size,
-                    temp_path=temp_path,
-                    provider=provider,
-                )
-                needs_extraction = not content_was_copied
-                return doc, True, needs_extraction
+            logger.info("upload_task_dispatched_to_queue", document_id=document.id, celery_task_id=celery_task.id)
 
-            raise BadRequestError(
-                error_code="storage_error",
-                message="Failed to save document due to concurrent upload",
-                log_context={
-                    "event_name": "document_upload_rejected",
-                    "reason": "concurrent upload conflict",
-                    "user_id": user_id,
-                    "file_hash": file_hash[:16],
-                },
-            ) from err
+    async def _extracting_only_processing(
+            self,
+            document: DocumentResponse,
+            request_id: str,
+            temp_path: Path
+    ) -> None:
+        pass
+
+    async def _analyzing_only_processing(
+            self,
+            document: DocumentResponse,
+            request_id: str,
+            temp_path: Path
+    ) -> None:
+        pass
 
     async def _validate_and_prepare_upload(
         self, uploaded_file: UploadFile, user_id: int
@@ -544,6 +464,22 @@ class UploadService(BaseService[DocumentRepository]):
             request_id=request_id,
             provider=provider,
         )
+
+    @staticmethod
+    async def _send_to_queue_for_uploading(
+        document_id: int, temp_path: Path, mime_type: str, request_id: str, user_id, provider: str
+    ) -> AsyncResult:
+        """Adds a document s3-uploading task to the queue and returns the task object"""
+        return await asyncio.to_thread(
+            upload_document_task.delay,
+            document_id=document_id,
+            temp_path=str(temp_path),
+            mime_type=mime_type,
+            user_id=user_id,
+            request_id=request_id,
+            provider=provider,
+        )
+
 
     @staticmethod
     async def _send_to_queue_for_extraction(
