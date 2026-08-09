@@ -67,6 +67,7 @@ class UploadTask(BaseTask):
                 await repo.update_document_fields(
                     document_id=self.document_id,
                     file_key=file_key,
+                    document_status=DocumentStatus.uploaded,
                 )
             except StorageConfigError as e:
                 self.logger.error(

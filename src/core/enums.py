@@ -12,6 +12,7 @@ class DocumentStatus(Enum):
     created = "created"
     scanning = "scanning"
     uploading = "uploading"
+    uploaded = "uploaded"
     extracting = "extracting"
     extracted = "extracted"
     analyzing = "analyzing"
