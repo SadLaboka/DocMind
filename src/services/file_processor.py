@@ -1,11 +1,12 @@
 import asyncio
+from collections.abc import Callable, Coroutine
 import hashlib
 import string
 import time
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import BinaryIO
+from typing import BinaryIO, Final, Any
 from uuid import uuid4
 
 import filetype
@@ -17,6 +18,7 @@ from pymongo.errors import ConnectionFailure
 from src.core.config import settings
 from src.core.enums import LLMProvider, MimeType, DocumentStatus
 from src.core.exceptions import BadRequestError
+from src.events.publisher import publish_document_text_extracted
 from src.repositories.documents import DocumentRepository
 from src.schemas.documents import DocumentData, DocumentResponse
 from src.services.base import BaseService
@@ -25,6 +27,8 @@ from src.worker.extraction_tasks import extract_text_task
 from src.worker.s3_upload_task import upload_document_task
 
 logger = structlog.get_logger(__name__)
+
+type ProcessingFunc = Callable[[DocumentResponse, PreparedUpload, str, Path], Coroutine[Any, Any, None]]
 
 ALPHABET_RU = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя"
 ALPHABET_RU_UPPER = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
@@ -167,8 +171,10 @@ class UploadService(BaseService[DocumentRepository]):
 
         prepared_data = await self._determine_processing_path(file_hash=file_hash, user_id=user_id)
 
-        upload_processor = {
+        upload_processor: Final[dict[ProcessingPath, ProcessingFunc]] = {
             ProcessingPath.FULL_PIPELINE: self._full_pipeline_processing,
+            ProcessingPath.EXTRACTION_ONLY: self._extracting_only_processing,
+            ProcessingPath.ANALYSIS_ONLY: self._analyzing_only_processing,
         }
 
         db_kwargs = {
@@ -200,13 +206,12 @@ class UploadService(BaseService[DocumentRepository]):
             **db_kwargs[prepared_data.path]
         )
 
-        if prepared_data.raw_text:
-            document.document_text = prepared_data.raw_text
 
         await upload_processor[prepared_data.path](
-            document=document,
-            request_id=request_id,
-            temp_path=temp_path
+            document,
+            prepared_data,
+            request_id,
+            temp_path
         )
 
         return document
@@ -277,13 +282,16 @@ class UploadService(BaseService[DocumentRepository]):
                         file_hash=file_hash[:16],
                         chosen_path=ProcessingPath.ANALYSIS_ONLY.value,
                     )
-                    document = [doc for doc in candidates if doc.id == content.document_id][0]
-                    return PreparedUpload(
+                    document = next((doc for doc in candidates if doc.id == content.document_id), None)
+
+                    if document:
+                        return PreparedUpload(
                         path=ProcessingPath.ANALYSIS_ONLY,
                         source_document_id=document.id,
                         file_key=document.file_key,
                         raw_text=content.raw_text,
-                    )
+                        )
+
             except ConnectionFailure as err:
                 logger.warning(
                     "raw_text_deduplication_skipped",
@@ -322,6 +330,7 @@ class UploadService(BaseService[DocumentRepository]):
     async def _full_pipeline_processing(
             self,
             document: DocumentResponse,
+            prepared_upload: PreparedUpload,
             request_id: str,
             temp_path: Path
     ) -> None:
@@ -356,18 +365,50 @@ class UploadService(BaseService[DocumentRepository]):
     async def _extracting_only_processing(
             self,
             document: DocumentResponse,
+            prepared_upload: PreparedUpload,
             request_id: str,
             temp_path: Path
     ) -> None:
-        pass
+        logger.info(
+            "start_extracting_only_processing",
+            user_id=document.user_id,
+        )
+
+        celery_task = await self._send_to_queue_for_extraction(
+            document_id=document.id,
+            temp_path=temp_path,
+            user_id=document.user_id,
+            mime_type=document.mime_type.value,
+            request_id=request_id,
+            provider=document.provider.value,
+        )
+        logger.info("extract_task_dispatched_to_queue", document_id=document.id, celery_task_id=celery_task.id)
 
     async def _analyzing_only_processing(
             self,
             document: DocumentResponse,
+            prepared_upload: PreparedUpload,
             request_id: str,
             temp_path: Path
     ) -> None:
-        pass
+
+
+        logger.info(
+            "start_analyzing_only_processing",
+            user_id=document.user_id,
+        )
+
+        await self.mongo_repository.create_content(document_id=document.id, raw_text=prepared_upload.raw_text)
+
+        self._remove_from_temp(temp_path)
+
+        await self._publish_to_analysis(
+            document_id=document.id,
+            user_id=document.user_id,
+            mime_type=document.mime_type.value,
+            request_id=request_id,
+            provider=document.provider.value,
+        )
 
     async def _validate_and_prepare_upload(
         self, uploaded_file: UploadFile, user_id: int
@@ -449,6 +490,20 @@ class UploadService(BaseService[DocumentRepository]):
                     "mime_type": detected_mime,
                 },
             )
+
+    @staticmethod
+    async def _publish_to_analysis(
+            document_id: int, mime_type: str, request_id: str, user_id: int, provider: str
+    ) -> AsyncResult:
+        """Publishes document to analysis queue"""
+        return await asyncio.to_thread(
+            publish_document_text_extracted,
+            document_id=document_id,
+            user_id=user_id,
+            mime_type=mime_type,
+            request_id=request_id,
+            provider=provider,
+        )
 
     @staticmethod
     async def _send_to_queue_for_scanning(
