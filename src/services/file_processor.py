@@ -28,7 +28,7 @@ from src.worker.s3_upload_task import upload_document_task
 
 logger = structlog.get_logger(__name__)
 
-type ProcessingFunc = Callable[[DocumentResponse, PreparedUpload, str, Path], Coroutine[Any, Any, None]]
+type ProcessingFunc = Callable[[DocumentResponse, PreparedUpload, str, Path, str], Coroutine[Any, Any, DocumentResponse]]
 
 ALPHABET_RU = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя"
 ALPHABET_RU_UPPER = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
@@ -207,14 +207,15 @@ class UploadService(BaseService[DocumentRepository]):
         )
 
 
-        await upload_processor[prepared_data.path](
+        response_data = await upload_processor[prepared_data.path](
             document,
             prepared_data,
             request_id,
-            temp_path
+            temp_path,
+            temp_filename,
         )
 
-        return document
+        return response_data
 
     async def _create_document_for_processing(
             self,
@@ -332,13 +333,17 @@ class UploadService(BaseService[DocumentRepository]):
             document: DocumentResponse,
             prepared_upload: PreparedUpload,
             request_id: str,
-            temp_path: Path
-    ) -> None:
+            temp_path: Path,
+            temp_filename: str,
+    ) -> DocumentResponse:
+        """
+        Publishing a task for full document processing without deduplication
+        """
 
         logger.info(
             "starting_full_pipeline_processing",
             user_id=document.user_id,
-
+            document=document.id,
         )
 
         if settings.antivirus.enabled:
@@ -362,16 +367,23 @@ class UploadService(BaseService[DocumentRepository]):
             )
             logger.info("upload_task_dispatched_to_queue", document_id=document.id, celery_task_id=celery_task.id)
 
+        return document
+
     async def _extracting_only_processing(
             self,
             document: DocumentResponse,
             prepared_upload: PreparedUpload,
             request_id: str,
-            temp_path: Path
-    ) -> None:
+            temp_path: Path,
+            temp_filename: str,
+    ) -> DocumentResponse:
+        """
+        Publishing a task for partial processing with text extraction only
+        """
         logger.info(
             "start_extracting_only_processing",
             user_id=document.user_id,
+            document=document.id,
         )
 
         celery_task = await self._send_to_queue_for_extraction(
@@ -384,21 +396,49 @@ class UploadService(BaseService[DocumentRepository]):
         )
         logger.info("extract_task_dispatched_to_queue", document_id=document.id, celery_task_id=celery_task.id)
 
+        return document
+
     async def _analyzing_only_processing(
             self,
             document: DocumentResponse,
             prepared_upload: PreparedUpload,
             request_id: str,
-            temp_path: Path
-    ) -> None:
-
+            temp_path: Path,
+            temp_filename: str,
+    ) -> DocumentResponse:
+        """
+        Full deduplication processing. Publishes an event for document analysis or degrades to partial processing
+        """
 
         logger.info(
             "start_analyzing_only_processing",
             user_id=document.user_id,
+            document_id=document.id,
         )
 
-        await self.mongo_repository.create_content(document_id=document.id, raw_text=prepared_upload.raw_text)
+        try:
+            await self.mongo_repository.create_content(document_id=document.id, raw_text=prepared_upload.raw_text)
+        except Exception as e:
+            logger.warning(
+                "processing_path_degradated_to_extraction_only",
+                user_id=document.user_id,
+            )
+
+            document = await self.repository.update_document_fields(
+                document_id=document.id,
+                document_status=DocumentStatus.uploaded,
+                temp_filename=temp_filename,
+            )
+
+            document = DocumentResponse.model_validate(document)
+
+            return await self._extracting_only_processing(
+                document=document,
+                prepared_upload=prepared_upload,
+                request_id=request_id,
+                temp_path=temp_path,
+                temp_filename=temp_filename,
+            )
 
         self._remove_from_temp(temp_path)
 
@@ -409,6 +449,14 @@ class UploadService(BaseService[DocumentRepository]):
             request_id=request_id,
             provider=document.provider.value,
         )
+
+        logger.info(
+            "document_text_extracted_event_published",
+            document_id=document.id,
+            user_id=document.user_id,
+        )
+
+        return document
 
     async def _validate_and_prepare_upload(
         self, uploaded_file: UploadFile, user_id: int
