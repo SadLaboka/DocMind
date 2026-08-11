@@ -1,8 +1,5 @@
-import contextlib
 import datetime
-
-from beanie.operators import In, NotIn
-from pymongo.errors import DuplicateKeyError
+from beanie.operators import Set
 
 from src.models.mongo_documents import MongoDocument
 
@@ -20,35 +17,22 @@ class MongoDocumentRepository:
             document_id=document_id, raw_text=raw_text, analysis=analysis, analysis_version=analysis_version
         )
 
-        with contextlib.suppress(DuplicateKeyError):
-            await document_content.insert()
+        await document_content.insert()
 
         return document_content
 
+    async def upsert_raw_text(self, document_id: int, raw_text: str) -> None:
+        await (MongoDocument.find_one(
+            MongoDocument.document_id == document_id)
+               .upsert(
+            Set({
+                MongoDocument.raw_text: raw_text,
+                MongoDocument.updated_at: datetime.datetime.now(datetime.UTC),
+            }),
+            on_insert=MongoDocument(document_id=document_id, raw_text=raw_text)))
+
     async def get_content(self, document_id: int) -> MongoDocument | None:
         return await MongoDocument.find_one(MongoDocument.document_id == document_id)
-
-    async def get_content_for_deduplicate(self, candidates_ids: list[int]) -> MongoDocument | None:
-        content = await MongoDocument.find_one(
-            In(MongoDocument.document_id, candidates_ids),
-            NotIn(MongoDocument.raw_text, [None, ""]),
-        )
-
-        return content
-
-    async def create_duplicate_content(self, original_doc_id: int, new_doc_id: int) -> MongoDocument | None:
-        original_doc = await self.get_content(original_doc_id)
-        if original_doc:
-            new_doc = MongoDocument(
-                document_id=new_doc_id,
-                raw_text=original_doc.raw_text,
-                analysis=original_doc.analysis,
-                analysis_version=original_doc.analysis_version,
-            )
-            await new_doc.insert()
-            return new_doc
-
-        return None
 
     async def update_content(self, document_id: int, **kwargs) -> MongoDocument | None:
         document_content = await self.get_content(document_id)
@@ -56,7 +40,7 @@ class MongoDocumentRepository:
             for key, value in kwargs.items():
                 setattr(document_content, key, value)
 
-                document_content.updated_at = datetime.datetime.now(datetime.UTC)
+            document_content.updated_at = datetime.datetime.now(datetime.UTC)
 
             await document_content.save()
 
