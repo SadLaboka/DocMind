@@ -93,7 +93,7 @@ class DocumentExtractionTask(BaseTask):
             text = self.extractor.extract(self.temp_path, mime_enum)
             duration_ms = round((time.perf_counter() - start_time) * 1000, 2)
 
-            await mongo_repo.create_content(
+            await mongo_repo.upsert_raw_text(
                 document_id=self.document_id,
                 raw_text=text,
             )
