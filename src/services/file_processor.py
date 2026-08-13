@@ -157,6 +157,7 @@ class UploadService(BaseService[DocumentRepository]):
                 file_hash=file_hash[:16],
             )
         except OSError as err:
+            self._remove_from_temp(temp_path)
             raise AppBaseError(
                 error_code="storage_error",
                 message="Failed to save the file to disk",
@@ -220,11 +221,10 @@ class UploadService(BaseService[DocumentRepository]):
                 "document_processing_failed",
                 document_id=document.id if document else None,
                 user_id=user_id,
-                document_status=DocumentStatus.failed,
                 error_trace=type(err).__name__,
             )
 
-            await self._ty_mark_document_failed(user_id=user_id, document=document)
+            await self._try_mark_document_failed(user_id=user_id, document=document)
             self._remove_from_temp(temp_path)
 
             raise
@@ -429,6 +429,9 @@ class UploadService(BaseService[DocumentRepository]):
             user_id=document.user_id,
             document_id=document.id,
         )
+
+        if prepared_upload.raw_text is None:
+            raise ValueError("raw_text is None in analyzing only processing path")
 
         try:
             await self.mongo_repository.upsert_raw_text(document_id=document.id, raw_text=prepared_upload.raw_text)
@@ -649,7 +652,7 @@ class UploadService(BaseService[DocumentRepository]):
 
         return sanitized_filename if sanitized_filename.upper() not in RESERVED_NAMES else "_" + sanitized_filename
 
-    async def _ty_mark_document_failed(self, user_id: int, document: DocumentResponse | None) -> None:
+    async def _try_mark_document_failed(self, user_id: int, document: DocumentResponse | None) -> None:
         """Tries to change the document status to failed"""
         if document:
             try:
