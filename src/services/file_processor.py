@@ -221,7 +221,7 @@ class UploadService(BaseService[DocumentRepository]):
                 "document_processing_failed",
                 document_id=document.id if document else None,
                 user_id=user_id,
-                error_trace=type(err).__name__,
+                error_type=type(err).__name__,
             )
 
             await self._try_mark_document_failed(user_id=user_id, document=document)
@@ -430,7 +430,7 @@ class UploadService(BaseService[DocumentRepository]):
             document_id=document.id,
         )
 
-        if prepared_upload.raw_text is None:
+        if not prepared_upload.raw_text:
             raise ValueError("raw_text is None in analyzing only processing path")
 
         try:
