@@ -17,7 +17,7 @@ from pymongo.errors import ConnectionFailure
 
 from src.core.config import settings
 from src.core.enums import LLMProvider, MimeType, DocumentStatus
-from src.core.exceptions import BadRequestError
+from src.core.exceptions import BadRequestError, AppBaseError
 from src.events.publisher import publish_document_text_extracted
 from src.repositories.documents import DocumentRepository
 from src.schemas.documents import DocumentData, DocumentResponse
@@ -157,7 +157,7 @@ class UploadService(BaseService[DocumentRepository]):
                 file_hash=file_hash[:16],
             )
         except OSError as err:
-            raise BadRequestError(
+            raise AppBaseError(
                 error_code="storage_error",
                 message="Failed to save the file to disk",
                 log_context={
@@ -169,51 +169,65 @@ class UploadService(BaseService[DocumentRepository]):
                 },
             ) from err
 
-        prepared_data = await self._determine_processing_path(file_hash=file_hash, user_id=user_id)
+        document = None
+        try:
+            prepared_data = await self._determine_processing_path(file_hash=file_hash, user_id=user_id)
 
-        upload_processor: Final[dict[ProcessingPath, ProcessingFunc]] = {
-            ProcessingPath.FULL_PIPELINE: self._full_pipeline_processing,
-            ProcessingPath.EXTRACTION_ONLY: self._extracting_only_processing,
-            ProcessingPath.ANALYSIS_ONLY: self._analyzing_only_processing,
-        }
+            upload_processor: Final[dict[ProcessingPath, ProcessingFunc]] = {
+                ProcessingPath.FULL_PIPELINE: self._full_pipeline_processing,
+                ProcessingPath.EXTRACTION_ONLY: self._extracting_only_processing,
+                ProcessingPath.ANALYSIS_ONLY: self._analyzing_only_processing,
+            }
 
-        db_kwargs = {
-            ProcessingPath.FULL_PIPELINE: {
-                "document_status": DocumentStatus.created,
-                "temp_filename": temp_filename,
-                "file_key": None,
-            },
-            ProcessingPath.EXTRACTION_ONLY: {
-                "document_status": DocumentStatus.uploaded,
-                "temp_filename": temp_filename,
-                "file_key": prepared_data.file_key
-            },
-            ProcessingPath.ANALYSIS_ONLY: {
-                "document_status": DocumentStatus.extracted,
-                "temp_filename": None,
-                "file_key": prepared_data.file_key
-            },
-        }
+            db_kwargs = {
+                ProcessingPath.FULL_PIPELINE: {
+                    "document_status": DocumentStatus.created,
+                    "temp_filename": temp_filename,
+                    "file_key": None,
+                },
+                ProcessingPath.EXTRACTION_ONLY: {
+                    "document_status": DocumentStatus.uploaded,
+                    "temp_filename": temp_filename,
+                    "file_key": prepared_data.file_key
+                },
+                ProcessingPath.ANALYSIS_ONLY: {
+                    "document_status": DocumentStatus.extracted,
+                    "temp_filename": None,
+                    "file_key": prepared_data.file_key
+                },
+            }
 
-        document = await self._create_document_for_processing(
-            user_id=user_id,
-            sanitized_filename=sanitized_filename,
-            mime_type=mime_type,
-            description=description,
-            file_size=file_size,
-            file_hash=file_hash,
-            provider=provider,
-            **db_kwargs[prepared_data.path]
-        )
+            document = await self._create_document_for_processing(
+                user_id=user_id,
+                sanitized_filename=sanitized_filename,
+                mime_type=mime_type,
+                description=description,
+                file_size=file_size,
+                file_hash=file_hash,
+                provider=provider,
+                **db_kwargs[prepared_data.path]
+            )
 
+            response_data = await upload_processor[prepared_data.path](
+                document,
+                prepared_data,
+                request_id,
+                temp_path,
+                temp_filename,
+            )
+        except Exception as err:
+            logger.warning(
+                "document_processing_failed",
+                document_id=document.id if document else None,
+                user_id=user_id,
+                document_status=DocumentStatus.failed,
+                error_trace=type(err).__name__,
+            )
 
-        response_data = await upload_processor[prepared_data.path](
-            document,
-            prepared_data,
-            request_id,
-            temp_path,
-            temp_filename,
-        )
+            await self._ty_mark_document_failed(user_id=user_id, document=document)
+            self._remove_from_temp(temp_path)
+
+            raise
 
         return response_data
 
@@ -542,7 +556,7 @@ class UploadService(BaseService[DocumentRepository]):
     @staticmethod
     async def _publish_to_analysis(
             document_id: int, mime_type: str, request_id: str, user_id: int, provider: str
-    ) -> AsyncResult:
+    ) -> None:
         """Publishes document to analysis queue"""
         return await asyncio.to_thread(
             publish_document_text_extracted,
@@ -635,8 +649,45 @@ class UploadService(BaseService[DocumentRepository]):
 
         return sanitized_filename if sanitized_filename.upper() not in RESERVED_NAMES else "_" + sanitized_filename
 
+    async def _ty_mark_document_failed(self, user_id: int, document: DocumentResponse | None) -> None:
+        """Tries to change the document status to failed"""
+        if document:
+            try:
+                logger.info(
+                    "trying_change_document_status_to_failed",
+                    user_id=user_id,
+                    document_id=document.id,
+                )
+
+                await self.repository.update_document_fields(
+                    document_id=document.id,
+                    temp_filename=None,
+                    document_status=DocumentStatus.failed,
+                    error_trace="Document processing failed",
+                )
+                logger.info(
+                    "document_status_changed_to_failed",
+                    user_id=user_id,
+                    document_id=document.id,
+                )
+            except Exception as err:
+                logger.warning(
+                    "document_status_was_not_changed_to_failed",
+                    user_id=user_id,
+                    document_id=document.id,
+                    error_type=type(err).__name__,
+                )
+            return
+
     @staticmethod
     def _remove_from_temp(path: Path) -> None:
         """Removes the uploaded file from the temp folder"""
-        if path.exists():
-            path.unlink(missing_ok=True)
+        try:
+            if path.exists():
+                path.unlink(missing_ok=True)
+        except OSError as err:
+            logger.warning(
+                "temp_file_removing_failed",
+                path=str(path),
+                err=str(err),
+            )
