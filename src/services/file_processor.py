@@ -141,37 +141,37 @@ class UploadService(BaseService[DocumentRepository]):
         if provider is None:
             provider = LLMProvider(settings.llm.default_provider)
 
-        try:
-            start_time = time.perf_counter()
-            with HashingFileSaver(temp_path) as saver:
-                saver.save_from_stream(uploaded_file.file)
-            file_hash = saver.get_hash()
-            duration_ms = round((time.perf_counter() - start_time) * 1000, 2)
-
-            logger.info(
-                "file_saved_to_disk",
-                filename=sanitized_filename,
-                file_size=file_size,
-                user_id=user_id,
-                duration_ms=duration_ms,
-                file_hash=file_hash[:16],
-            )
-        except OSError as err:
-            self._remove_from_temp(temp_path)
-            raise AppBaseError(
-                error_code="storage_error",
-                message="Failed to save the file to disk",
-                log_context={
-                    "event_name": "file_save_failed",
-                    "user_id": user_id,
-                    "filename": sanitized_filename,
-                    "file_size": file_size,
-                    "error_detail": str(err),
-                },
-            ) from err
-
         document = None
+
         try:
+            try:
+                start_time = time.perf_counter()
+                with HashingFileSaver(temp_path) as saver:
+                    saver.save_from_stream(uploaded_file.file)
+                file_hash = saver.get_hash()
+                duration_ms = round((time.perf_counter() - start_time) * 1000, 2)
+
+                logger.info(
+                    "file_saved_to_disk",
+                    filename=sanitized_filename,
+                    file_size=file_size,
+                    user_id=user_id,
+                    duration_ms=duration_ms,
+                    file_hash=file_hash[:16],
+                )
+            except OSError as err:
+                raise AppBaseError(
+                    error_code="storage_error",
+                    message="Failed to save the file to disk",
+                    log_context={
+                        "event_name": "file_save_failed",
+                        "user_id": user_id,
+                        "filename": sanitized_filename,
+                        "file_size": file_size,
+                        "error_detail": str(err),
+                    },
+                ) from err
+
             prepared_data = await self._determine_processing_path(file_hash=file_hash, user_id=user_id)
 
             upload_processor: Final[dict[ProcessingPath, ProcessingFunc]] = {
@@ -431,11 +431,11 @@ class UploadService(BaseService[DocumentRepository]):
         )
 
         if not prepared_upload.raw_text:
-            raise ValueError("raw_text is None in analyzing only processing path")
+            raise ValueError("raw_text is missing or empty in analysis-only processing path")
 
         try:
             await self.mongo_repository.upsert_raw_text(document_id=document.id, raw_text=prepared_upload.raw_text)
-        except ConnectionFailure as e:
+        except ConnectionFailure:
             logger.warning(
                 "processing_path_degradated_to_extraction_only",
                 user_id=document.user_id,
@@ -561,7 +561,7 @@ class UploadService(BaseService[DocumentRepository]):
             document_id: int, mime_type: str, request_id: str, user_id: int, provider: str
     ) -> None:
         """Publishes document to analysis queue"""
-        return await asyncio.to_thread(
+        await asyncio.to_thread(
             publish_document_text_extracted,
             document_id=document_id,
             user_id=user_id,
