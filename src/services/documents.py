@@ -8,6 +8,7 @@ from src.core.exceptions import ResourceNotFoundError
 from src.models.documents import Document
 from src.models.mongo_documents import MongoDocument
 from src.repositories.documents import DocumentRepository
+from src.repositories.mongo_documents import MongoDocumentRepository
 from src.schemas.documents import DocumentListResponse, DocumentResponse
 from src.schemas.users import User
 from src.services.base import BaseService
@@ -17,6 +18,10 @@ logger = structlog.get_logger(__name__)
 
 class DocumentService(BaseService[DocumentRepository]):
     """Service for documents"""
+
+    def __init__(self, repository: DocumentRepository, mongo_repository: MongoDocumentRepository):
+        super().__init__(repository)
+        self.mongo_repository = mongo_repository
 
     async def get_document_by_id(self, document_id: int, user: User) -> DocumentResponse:
         """Gets document by document_id"""

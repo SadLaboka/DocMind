@@ -1,12 +1,10 @@
 from typing import TypeVar
 
 from src.repositories.base import BaseRepository
-from src.repositories.mongo_documents import MongoDocumentRepository
 
 T = TypeVar("T", bound=BaseRepository)
 
 
 class BaseService[T]:
-    def __init__(self, repository: T, mongo_repository: MongoDocumentRepository | None = None):
+    def __init__(self, repository: T):
         self.repository = repository
-        self.mongo_repository = mongo_repository

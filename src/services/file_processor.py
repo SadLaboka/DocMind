@@ -189,7 +189,7 @@ class UploadService(BaseService[DocumentRepository]):
                 ProcessingPath.ANALYSIS_ONLY: self._analyzing_only_processing,
             }
 
-            db_kwargs = {
+            db_kwargs: dict[ProcessingPath, dict[str, DocumentStatus | str | None]] = {
                 ProcessingPath.FULL_PIPELINE: {
                     "document_status": DocumentStatus.created,
                     "temp_filename": temp_filename,
@@ -446,13 +446,13 @@ class UploadService(BaseService[DocumentRepository]):
                 error_type=ConnectionFailure,
             )
 
-            document = await self.repository.update_document_fields(
+            updated_document = await self.repository.update_document_fields(
                 document_id=document.id,
                 document_status=DocumentStatus.uploaded,
                 temp_filename=temp_filename,
             )
 
-            document = DocumentResponse.model_validate(document)
+            document = DocumentResponse.model_validate(updated_document)
 
             return await self._extracting_only_processing(
                 document=document,

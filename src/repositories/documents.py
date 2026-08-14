@@ -75,4 +75,4 @@ class DocumentRepository(BaseRepository):
             )
         )
         result = await self.session.execute(stmt)
-        return result.scalars().all()
+        return list(result.scalars().all())
