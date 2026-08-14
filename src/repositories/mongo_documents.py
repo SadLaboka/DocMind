@@ -1,5 +1,7 @@
 import datetime
+
 from beanie.operators import Set
+from beanie.operators import In, NotIn
 
 from src.models.mongo_documents import MongoDocument
 
@@ -22,17 +24,26 @@ class MongoDocumentRepository:
         return document_content
 
     async def upsert_raw_text(self, document_id: int, raw_text: str) -> None:
-        await (MongoDocument.find_one(
-            MongoDocument.document_id == document_id)
-               .upsert(
-            Set({
-                MongoDocument.raw_text: raw_text,
-                MongoDocument.updated_at: datetime.datetime.now(datetime.UTC),
-            }),
-            on_insert=MongoDocument(document_id=document_id, raw_text=raw_text)))
+         MongoDocument.find_one(MongoDocument.document_id == document_id).upsert(
+            Set(
+                {
+                    MongoDocument.raw_text: raw_text,
+                    MongoDocument.updated_at: datetime.datetime.now(datetime.UTC),
+                }
+            ),
+            on_insert=MongoDocument(document_id=document_id, raw_text=raw_text),
+        )
 
     async def get_content(self, document_id: int) -> MongoDocument | None:
         return await MongoDocument.find_one(MongoDocument.document_id == document_id)
+
+    async def get_content_for_deduplicate(self, candidates_ids: list[int]) -> MongoDocument | None:
+        content = await MongoDocument.find_one(
+            In(MongoDocument.document_id, candidates_ids),
+            NotIn(MongoDocument.raw_text, [None, ""]),
+        )
+
+        return content
 
     async def update_content(self, document_id: int, **kwargs) -> MongoDocument | None:
         document_content = await self.get_content(document_id)
