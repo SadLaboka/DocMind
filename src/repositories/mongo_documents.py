@@ -23,7 +23,7 @@ class MongoDocumentRepository:
         return document_content
 
     async def upsert_raw_text(self, document_id: int, raw_text: str) -> None:
-        MongoDocument.find_one(MongoDocument.document_id == document_id).upsert(
+        await MongoDocument.find_one(MongoDocument.document_id == document_id).upsert(
             Set(
                 {
                     MongoDocument.raw_text: raw_text,
