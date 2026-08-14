@@ -438,12 +438,12 @@ class UploadService(BaseService[DocumentRepository]):
 
         try:
             await self.mongo_repository.upsert_raw_text(document_id=document.id, raw_text=prepared_upload.raw_text)
-        except ConnectionFailure:
+        except ConnectionFailure as err:
             logger.warning(
                 "processing_path_degraded_to_extraction_only",
                 user_id=document.user_id,
                 document_id=document.id,
-                error_type=ConnectionFailure,
+                error_type=type(err).__name__,
             )
 
             updated_document = await self.repository.update_document_fields(
