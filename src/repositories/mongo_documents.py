@@ -1,7 +1,6 @@
 import datetime
 
-from beanie.operators import Set
-from beanie.operators import In, NotIn
+from beanie.operators import In, NotIn, Set
 
 from src.models.mongo_documents import MongoDocument
 
@@ -24,7 +23,7 @@ class MongoDocumentRepository:
         return document_content
 
     async def upsert_raw_text(self, document_id: int, raw_text: str) -> None:
-         MongoDocument.find_one(MongoDocument.document_id == document_id).upsert(
+        MongoDocument.find_one(MongoDocument.document_id == document_id).upsert(
             Set(
                 {
                     MongoDocument.raw_text: raw_text,

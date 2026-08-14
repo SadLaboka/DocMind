@@ -12,7 +12,7 @@ class DocumentBase(BaseModel):
     description: str | None = Field(max_length=300, default=None)
     mime_type: MimeType
     file_size: int
-    provider: LLMProvider | None = None
+    provider: LLMProvider
 
 
 class DocumentResponse(DocumentBase):

@@ -1,12 +1,12 @@
 import asyncio
-from collections.abc import Callable, Coroutine
 import hashlib
 import string
 import time
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import BinaryIO, Final, Any
+from typing import Any, BinaryIO, Final
 from uuid import uuid4
 
 import filetype
@@ -16,10 +16,11 @@ from fastapi import UploadFile
 from pymongo.errors import ConnectionFailure
 
 from src.core.config import settings
-from src.core.enums import LLMProvider, MimeType, DocumentStatus
-from src.core.exceptions import BadRequestError, AppBaseError
+from src.core.enums import DocumentStatus, LLMProvider, MimeType
+from src.core.exceptions import AppBaseError, BadRequestError
 from src.events.publisher import publish_document_text_extracted
 from src.repositories.documents import DocumentRepository
+from src.repositories.mongo_documents import MongoDocumentRepository
 from src.schemas.documents import DocumentData, DocumentResponse
 from src.services.base import BaseService
 from src.worker.antivirus_tasks import scan_file_task
@@ -28,7 +29,9 @@ from src.worker.s3_upload_task import upload_document_task
 
 logger = structlog.get_logger(__name__)
 
-type ProcessingFunc = Callable[[DocumentResponse, PreparedUpload, str, Path, str], Coroutine[Any, Any, DocumentResponse]]
+type ProcessingFunc = Callable[
+    [DocumentResponse, PreparedUpload, str, Path, str], Coroutine[Any, Any, DocumentResponse]
+]
 
 ALPHABET_RU = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя"
 ALPHABET_RU_UPPER = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
@@ -64,6 +67,7 @@ ALLOWED_MIME_VALUES = {m.value for m in MimeType}
 
 class ProcessingPath(Enum):
     """Processing options when loading a document"""
+
     FULL_PIPELINE = "full_pipeline"
     EXTRACTION_ONLY = "extraction_only"
     ANALYSIS_ONLY = "analysis_only"
@@ -72,6 +76,7 @@ class ProcessingPath(Enum):
 @dataclass(frozen=True, slots=True)
 class PreparedUpload:
     """Prepared data for upload process"""
+
     path: ProcessingPath
     source_document_id: int | None = None
     file_key: str | None = None
@@ -117,6 +122,10 @@ class HashingFileSaver:
 
 
 class UploadService(BaseService[DocumentRepository]):
+
+    def __init__(self, repository: DocumentRepository, mongo_repository: MongoDocumentRepository):
+        super().__init__(repository)
+        self.mongo_repository = mongo_repository
 
     async def process_upload(
         self,
@@ -189,12 +198,12 @@ class UploadService(BaseService[DocumentRepository]):
                 ProcessingPath.EXTRACTION_ONLY: {
                     "document_status": DocumentStatus.uploaded,
                     "temp_filename": temp_filename,
-                    "file_key": prepared_data.file_key
+                    "file_key": prepared_data.file_key,
                 },
                 ProcessingPath.ANALYSIS_ONLY: {
                     "document_status": DocumentStatus.extracted,
                     "temp_filename": None,
-                    "file_key": prepared_data.file_key
+                    "file_key": prepared_data.file_key,
                 },
             }
 
@@ -206,7 +215,7 @@ class UploadService(BaseService[DocumentRepository]):
                 file_size=file_size,
                 file_hash=file_hash,
                 provider=provider,
-                **db_kwargs[prepared_data.path]
+                **db_kwargs[prepared_data.path],
             )
 
             response_data = await upload_processor[prepared_data.path](
@@ -232,15 +241,15 @@ class UploadService(BaseService[DocumentRepository]):
         return response_data
 
     async def _create_document_for_processing(
-            self,
-            user_id: int,
-            sanitized_filename: str,
-            mime_type: MimeType,
-            description: str | None,
-            file_size: int,
-            file_hash: str,
-            provider: LLMProvider,
-            **db_kwargs
+        self,
+        user_id: int,
+        sanitized_filename: str,
+        mime_type: MimeType,
+        description: str | None,
+        file_size: int,
+        file_hash: str,
+        provider: LLMProvider,
+        **db_kwargs,
     ) -> DocumentResponse:
 
         logger.info(
@@ -256,7 +265,7 @@ class UploadService(BaseService[DocumentRepository]):
             file_size=file_size,
             file_hash=file_hash,
             provider=provider,
-            **db_kwargs
+            **db_kwargs,
         )
         start_time = time.perf_counter()
         doc = await self.repository.create_document(data)
@@ -271,7 +280,6 @@ class UploadService(BaseService[DocumentRepository]):
         )
 
         return DocumentResponse.model_validate(doc)
-
 
     async def _determine_processing_path(self, file_hash: str, user_id: int) -> PreparedUpload:
         """Determines which document processing path is needed"""
@@ -301,10 +309,10 @@ class UploadService(BaseService[DocumentRepository]):
 
                     if document:
                         return PreparedUpload(
-                        path=ProcessingPath.ANALYSIS_ONLY,
-                        source_document_id=document.id,
-                        file_key=document.file_key,
-                        raw_text=content.raw_text,
+                            path=ProcessingPath.ANALYSIS_ONLY,
+                            source_document_id=document.id,
+                            file_key=document.file_key,
+                            raw_text=content.raw_text,
                         )
 
             except ConnectionFailure as err:
@@ -313,7 +321,7 @@ class UploadService(BaseService[DocumentRepository]):
                     user_id=user_id,
                     file_hash=file_hash[:16],
                     reason="mongo_error",
-                    error_type=type(err).__name__
+                    error_type=type(err).__name__,
                 )
 
             logger.info(
@@ -326,7 +334,7 @@ class UploadService(BaseService[DocumentRepository]):
                 path=ProcessingPath.EXTRACTION_ONLY,
                 source_document_id=candidates[0].id,
                 file_key=candidates[0].file_key,
-                raw_text=None
+                raw_text=None,
             )
 
         logger.info(
@@ -335,20 +343,15 @@ class UploadService(BaseService[DocumentRepository]):
             file_hash=file_hash[:16],
             chosen_path=ProcessingPath.FULL_PIPELINE.value,
         )
-        return PreparedUpload(
-            path=ProcessingPath.FULL_PIPELINE,
-            source_document_id=None,
-            file_key=None,
-            raw_text=None
-        )
+        return PreparedUpload(path=ProcessingPath.FULL_PIPELINE, source_document_id=None, file_key=None, raw_text=None)
 
     async def _full_pipeline_processing(
-            self,
-            document: DocumentResponse,
-            prepared_upload: PreparedUpload,
-            request_id: str,
-            temp_path: Path,
-            temp_filename: str,
+        self,
+        document: DocumentResponse,
+        prepared_upload: PreparedUpload,
+        request_id: str,
+        temp_path: Path,
+        temp_filename: str,
     ) -> DocumentResponse:
         """
         Publishing a task for full document processing without deduplication
@@ -384,12 +387,12 @@ class UploadService(BaseService[DocumentRepository]):
         return document
 
     async def _extracting_only_processing(
-            self,
-            document: DocumentResponse,
-            prepared_upload: PreparedUpload,
-            request_id: str,
-            temp_path: Path,
-            temp_filename: str,
+        self,
+        document: DocumentResponse,
+        prepared_upload: PreparedUpload,
+        request_id: str,
+        temp_path: Path,
+        temp_filename: str,
     ) -> DocumentResponse:
         """
         Publishing a task for partial processing with text extraction only
@@ -413,12 +416,12 @@ class UploadService(BaseService[DocumentRepository]):
         return document
 
     async def _analyzing_only_processing(
-            self,
-            document: DocumentResponse,
-            prepared_upload: PreparedUpload,
-            request_id: str,
-            temp_path: Path,
-            temp_filename: str,
+        self,
+        document: DocumentResponse,
+        prepared_upload: PreparedUpload,
+        request_id: str,
+        temp_path: Path,
+        temp_filename: str,
     ) -> DocumentResponse:
         """
         Full deduplication processing. Publishes an event for document analysis or degrades to partial processing
@@ -558,7 +561,7 @@ class UploadService(BaseService[DocumentRepository]):
 
     @staticmethod
     async def _publish_to_analysis(
-            document_id: int, mime_type: str, request_id: str, user_id: int, provider: str
+        document_id: int, mime_type: str, request_id: str, user_id: int, provider: str
     ) -> None:
         """Publishes document to analysis queue"""
         await asyncio.to_thread(
@@ -599,7 +602,6 @@ class UploadService(BaseService[DocumentRepository]):
             request_id=request_id,
             provider=provider,
         )
-
 
     @staticmethod
     async def _send_to_queue_for_extraction(
