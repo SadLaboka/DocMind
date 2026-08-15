@@ -164,30 +164,40 @@ def temp_file(tmp_path):
 
 
 class MockMongoContent(BaseModel):
-    document_id: int = 1
+    document_id: int
     raw_text: str | None = None
     analysis: dict | None = None
     analysis_version: str | None = None
 
 
 @pytest.fixture
-def mock_mongo_content():
-    return MockMongoContent(
-        raw_text="Mocked extracted text",
-        analysis={"key": "value"},
-        analysis_version="v1.0",
-    )
+def mongo_content_factory():
+    def content(document_id: int = 1, raw_text: str | None = None):
+        return MockMongoContent(
+            document_id=document_id,
+            raw_text=raw_text,
+            analysis=None,
+            analysis_version=None,
+        )
+
+    return content
+
+
+@pytest.fixture
+def mock_mongo_content(request, mongo_content_factory):
+    params = getattr(request, "param", {})
+    return mongo_content_factory(**params)
 
 
 @pytest.fixture
 def mock_mongo_repo(mock_mongo_content):
     mock_repo = AsyncMock(spec=MongoDocumentRepository)
-    mock_repo.get_content = AsyncMock(return_value=mock_mongo_content)
-    mock_repo.create_content = AsyncMock(return_value=mock_mongo_content)
-    mock_repo.get_content_for_deduplicate = AsyncMock(return_value=mock_mongo_content)
-    mock_repo.upsert_raw_text = AsyncMock(return_value=mock_mongo_content)
-    return mock_repo
 
+    mock_repo.get_content.return_value = mock_mongo_content
+    mock_repo.create_content.return_value = mock_mongo_content
+    mock_repo.get_content_for_deduplicate.return_value = mock_mongo_content
+    mock_repo.upsert_raw_text.return_value = mock_mongo_content
+    return mock_repo
 
 # Redis mocks
 
