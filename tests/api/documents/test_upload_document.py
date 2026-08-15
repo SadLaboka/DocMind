@@ -67,7 +67,7 @@ async def test_upload_document_success_new_file_without_provider(
 
 
 @pytest.mark.asyncio
-async def test_upload_document_duplicate_fast_path(
+async def test_upload_document_extracting_only_path(
     client: AsyncClient, create_token_pair, create_document, test_password, test_db_session, mock_mongo_content
 ):
     _, hashed_pw = test_password
@@ -85,8 +85,9 @@ async def test_upload_document_duplicate_fast_path(
         mime_type=MimeType.txt,
         file_size=len(test_file_bytes),
         temp_filename=None,
-        document_status=DocumentStatus.extracted,
+        document_status=DocumentStatus.uploaded,
         file_hash=file_hash,
+        file_key="file_key",
     )
 
     with patch("src.services.file_processor.asyncio.to_thread") as mock_to_thread:
@@ -104,13 +105,13 @@ async def test_upload_document_duplicate_fast_path(
     resp_data = response.json()
 
     assert isinstance(resp_data["id"], int)
-    assert resp_data["document_status"] == DocumentStatus.extracted.value
+    assert resp_data["document_status"] == DocumentStatus.uploaded.value
 
-    mock_to_thread.assert_not_called()
+    mock_to_thread.assert_called_once()
 
 
 @pytest.mark.asyncio
-async def test_upload_document_duplicate_fast_path_different_providers(
+async def test_upload_document_extracting_only_path_different_providers(
     client: AsyncClient, create_token_pair, create_document, test_password, test_db_session, mock_mongo_content
 ):
     _, hashed_pw = test_password
@@ -131,6 +132,7 @@ async def test_upload_document_duplicate_fast_path_different_providers(
         document_status=DocumentStatus.extracted,
         file_hash=file_hash,
         provider=LLMProvider.deepseek,
+        file_key="file_key",
     )
 
     with patch("src.services.file_processor.asyncio.to_thread") as mock_to_thread:
@@ -148,7 +150,9 @@ async def test_upload_document_duplicate_fast_path_different_providers(
     resp_data = response.json()
 
     assert isinstance(resp_data["id"], int)
-    assert resp_data["document_status"] == DocumentStatus.created.value
+    assert resp_data["document_status"] == DocumentStatus.uploaded.value
+
+    mock_to_thread.assert_called_once()
 
 
 # AUTHORIZATION & VALIDATION CASES

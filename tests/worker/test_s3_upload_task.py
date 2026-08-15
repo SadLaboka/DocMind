@@ -16,7 +16,7 @@ from src.worker.s3_upload_task import (
 )
 
 FIXED_UUID = "fixed-uuid"
-EXPECTED_FILE_KEY = f"documents/1/{FIXED_UUID}"
+EXPECTED_FILE_KEY = f"documents/{FIXED_UUID}"
 
 
 @pytest.fixture
@@ -66,10 +66,10 @@ async def test_execute_success_uploads_file_and_enqueues_extraction(
     ):
         await upload_task.execute()
 
-    mock_worker_repo.update_document_fields.assert_awaited_once_with(
+    mock_worker_repo.update_document_fields.assert_awaited_with(
         document_id=upload_task.document_id,
         file_key=EXPECTED_FILE_KEY,
-        document_status=DocumentStatus.uploading,
+        document_status=DocumentStatus.uploaded,
     )
 
     mock_storage.upload_file.assert_awaited_once_with(
@@ -114,7 +114,6 @@ async def test_execute_storage_config_error_marks_failed_and_removes_file(
     assert mock_worker_repo.update_document_fields.await_args_list == [
         call(
             document_id=upload_task.document_id,
-            file_key=EXPECTED_FILE_KEY,
             document_status=DocumentStatus.uploading,
         ),
         call(
@@ -155,7 +154,6 @@ async def test_execute_non_retryable_upload_error_marks_failed(
     assert mock_worker_repo.update_document_fields.await_args_list == [
         call(
             document_id=upload_task.document_id,
-            file_key=EXPECTED_FILE_KEY,
             document_status=DocumentStatus.uploading,
         ),
         call(
@@ -201,7 +199,6 @@ async def test_execute_retryable_upload_error_propagates_and_preserves_file(
 
     mock_worker_repo.update_document_fields.assert_awaited_once_with(
         document_id=upload_task.document_id,
-        file_key=EXPECTED_FILE_KEY,
         document_status=DocumentStatus.uploading,
     )
 
@@ -249,7 +246,6 @@ async def test_execute_retryable_or_unexpected_error_propagates(
 
     mock_worker_repo.update_document_fields.assert_awaited_once_with(
         document_id=upload_task.document_id,
-        file_key=EXPECTED_FILE_KEY,
         document_status=DocumentStatus.uploading,
     )
 

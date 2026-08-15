@@ -164,6 +164,7 @@ def temp_file(tmp_path):
 
 
 class MockMongoContent(BaseModel):
+    document_id: int = 1
     raw_text: str | None = None
     analysis: dict | None = None
     analysis_version: str | None = None
@@ -183,7 +184,8 @@ def mock_mongo_repo(mock_mongo_content):
     mock_repo = AsyncMock(spec=MongoDocumentRepository)
     mock_repo.get_content = AsyncMock(return_value=mock_mongo_content)
     mock_repo.create_content = AsyncMock(return_value=mock_mongo_content)
-    mock_repo.create_duplicate_content = AsyncMock(return_value=mock_mongo_content)
+    mock_repo.get_content_for_deduplicate = AsyncMock(return_value=mock_mongo_content)
+    mock_repo.upsert_raw_text = AsyncMock(return_value=mock_mongo_content)
     return mock_repo
 
 
@@ -292,6 +294,7 @@ async def create_document():
         document_status: DocumentStatus = DocumentStatus.created,
         file_hash: str | None = None,
         provider: LLMProvider | None = None,
+        file_key: str | None = None,
     ):
         from src.models.documents import Document
 
@@ -308,6 +311,7 @@ async def create_document():
             provider=provider,
             document_status=document_status,
             file_hash=file_hash,
+            file_key=file_key,
         )
         session.add(document)
         await session.flush()

@@ -60,7 +60,7 @@ async def test_execute_success(
 
         await task.execute()
 
-    mock_mongo_repo.create_content.assert_awaited_once_with(
+    mock_mongo_repo.upsert_raw_text.assert_awaited_once_with(
         document_id=1,
         raw_text="Mocked extracted text",
     )
