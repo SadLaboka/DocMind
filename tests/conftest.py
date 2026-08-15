@@ -300,6 +300,7 @@ async def create_document():
         description: str,
         mime_type: MimeType,
         file_size: int,
+        _id: int | None = None,
         temp_filename: str | None = None,
         document_status: DocumentStatus = DocumentStatus.created,
         file_hash: str | None = None,
@@ -323,6 +324,8 @@ async def create_document():
             file_hash=file_hash,
             file_key=file_key,
         )
+        if _id:
+            document.id = _id
         session.add(document)
         await session.flush()
         await session.refresh(document)
