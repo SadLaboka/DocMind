@@ -462,6 +462,8 @@ class UploadService(BaseService[DocumentRepository]):
                 temp_filename=temp_filename,
             )
 
+        document.document_text = prepared_upload.raw_text
+
         self._remove_from_temp(temp_path)
 
         await self._publish_to_analysis(
