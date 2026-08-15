@@ -155,6 +155,57 @@ async def test_upload_document_extracting_only_path_different_providers(
     mock_to_thread.assert_called_once()
 
 
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "mock_mongo_content",
+    [{"document_id": 999, "raw_text": "extracted_text"}],
+    indirect=True,
+)
+async def test_upload_document_analyzing_only_path(
+    client: AsyncClient, create_token_pair, create_document, test_password, test_db_session, mock_mongo_content
+):
+    _, hashed_pw = test_password
+    tokens = await create_token_pair(login="uploader", email="up@test.com", password_hash=hashed_pw)
+
+    test_file_path = FIXTURES_DIR / "documents" / "test.txt"
+    test_file_bytes = test_file_path.read_bytes()
+    file_hash = hashlib.sha256(test_file_bytes).hexdigest()
+
+    await create_document(
+        _id=999,
+        session=test_db_session,
+        user_id=tokens["user_id"],
+        filename="test.txt",
+        description="First upload",
+        mime_type=MimeType.txt,
+        file_size=len(test_file_bytes),
+        temp_filename=None,
+        document_status=DocumentStatus.extracted,
+        file_hash=file_hash,
+        file_key="file_key",
+    )
+
+    with patch("src.services.file_processor.asyncio.to_thread") as mock_to_thread:
+        mock_to_thread.return_value = AsyncMock(id="fake-task-id-2")
+
+        files = {"file": ("test.txt", test_file_bytes, "text/plain")}
+        response = await client.post(
+            "/documents/",
+            files=files,
+            data={"description": "Duplicate upload"},
+            headers={"Authorization": f"Bearer {tokens['access_token']}"},
+        )
+
+    assert response.status_code == 201
+    resp_data = response.json()
+
+    assert isinstance(resp_data["id"], int)
+    assert resp_data["document_status"] == DocumentStatus.extracted.value
+    assert resp_data["document_text"] == "extracted_text"
+
+    mock_to_thread.assert_called_once()
+
+
 # AUTHORIZATION & VALIDATION CASES
 
 
