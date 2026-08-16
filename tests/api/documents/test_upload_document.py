@@ -74,10 +74,7 @@ async def test_upload_document_extracting_only_path(
     _, hashed_pw = test_password
     tokens = await create_token_pair(login="uploader", email="up@test.com", password_hash=hashed_pw)
 
-    async def return_none_mock(*args, **kwargs) -> None:
-        return
-
-    mock_mongo_repo.get_content_for_deduplicate = return_none_mock
+    mock_mongo_repo.get_content_for_deduplicate.return_value = None
 
     test_file_path = FIXTURES_DIR / "documents" / "test.txt"
     test_file_bytes = test_file_path.read_bytes()
@@ -123,10 +120,7 @@ async def test_upload_document_extracting_only_path_different_providers(
     _, hashed_pw = test_password
     tokens = await create_token_pair(login="uploader", email="up@test.com", password_hash=hashed_pw)
 
-    async def return_none_mock(*args, **kwargs) -> None:
-        return
-
-    mock_mongo_repo.get_content_for_deduplicate = return_none_mock
+    mock_mongo_repo.get_content_for_deduplicate.return_value = None
 
     test_file_path = FIXTURES_DIR / "documents" / "test.txt"
     test_file_bytes = test_file_path.read_bytes()
@@ -162,6 +156,7 @@ async def test_upload_document_extracting_only_path_different_providers(
 
     assert isinstance(resp_data["id"], int)
     assert resp_data["document_status"] == DocumentStatus.uploaded.value
+    assert resp_data["provider"] == LLMProvider.gemini.value
 
     mock_to_thread.assert_called_once()
 
@@ -279,7 +274,7 @@ async def test_upload_document_analyzing_only_path_cross_user(
 
     assert isinstance(resp_data["id"], int)
     assert resp_data["id"] != 999
-    assert resp_data["user_id"] != tokens["user_id"]
+    assert resp_data["user_id"] == tokens2["user_id"]
     assert resp_data["filename"] == "test2.txt"
     assert resp_data["document_status"] == DocumentStatus.extracted.value
     assert resp_data["document_text"] == "extracted_text"
