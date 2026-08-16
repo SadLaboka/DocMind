@@ -5,6 +5,7 @@ import pytest
 from httpx import AsyncClient
 
 from src.core.enums import DocumentStatus, LLMProvider, MimeType
+from src.events.publisher import publish_document_text_extracted
 from tests.conftest import FIXTURES_DIR
 
 # SUCCESS CASES
@@ -68,10 +69,15 @@ async def test_upload_document_success_new_file_without_provider(
 
 @pytest.mark.asyncio
 async def test_upload_document_extracting_only_path(
-    client: AsyncClient, create_token_pair, create_document, test_password, test_db_session, mock_mongo_content
+    client: AsyncClient, create_token_pair, create_document, test_password, test_db_session, mock_mongo_repo
 ):
     _, hashed_pw = test_password
     tokens = await create_token_pair(login="uploader", email="up@test.com", password_hash=hashed_pw)
+
+    async def return_none_mock(*args, **kwargs) -> None:
+        return
+
+    mock_mongo_repo.get_content_for_deduplicate = return_none_mock
 
     test_file_path = FIXTURES_DIR / "documents" / "test.txt"
     test_file_bytes = test_file_path.read_bytes()
@@ -112,10 +118,15 @@ async def test_upload_document_extracting_only_path(
 
 @pytest.mark.asyncio
 async def test_upload_document_extracting_only_path_different_providers(
-    client: AsyncClient, create_token_pair, create_document, test_password, test_db_session, mock_mongo_content
+    client: AsyncClient, create_token_pair, create_document, test_password, test_db_session, mock_mongo_repo
 ):
     _, hashed_pw = test_password
     tokens = await create_token_pair(login="uploader", email="up@test.com", password_hash=hashed_pw)
+
+    async def return_none_mock(*args, **kwargs) -> None:
+        return
+
+    mock_mongo_repo.get_content_for_deduplicate = return_none_mock
 
     test_file_path = FIXTURES_DIR / "documents" / "test.txt"
     test_file_bytes = test_file_path.read_bytes()
@@ -162,7 +173,12 @@ async def test_upload_document_extracting_only_path_different_providers(
     indirect=True,
 )
 async def test_upload_document_analyzing_only_path(
-    client: AsyncClient, create_token_pair, create_document, test_password, test_db_session, mock_mongo_content
+        client: AsyncClient,
+        create_token_pair,
+        create_document,
+        test_password,
+        test_db_session,
+        mock_mongo_content
 ):
     _, hashed_pw = test_password
     tokens = await create_token_pair(login="uploader", email="up@test.com", password_hash=hashed_pw)
@@ -184,17 +200,18 @@ async def test_upload_document_analyzing_only_path(
         file_hash=file_hash,
         file_key="file_key",
     )
+    expected_request_id = "1"
+    with patch("src.core.middlewares.request_context.uuid4", return_value=expected_request_id):
+        with patch("src.services.file_processor.asyncio.to_thread") as mock_to_thread:
+            mock_to_thread.return_value = AsyncMock(id="fake-task-id-2")
 
-    with patch("src.services.file_processor.asyncio.to_thread") as mock_to_thread:
-        mock_to_thread.return_value = AsyncMock(id="fake-task-id-2")
-
-        files = {"file": ("test.txt", test_file_bytes, "text/plain")}
-        response = await client.post(
-            "/documents/",
-            files=files,
-            data={"description": "Duplicate upload"},
-            headers={"Authorization": f"Bearer {tokens['access_token']}"},
-        )
+            files = {"file": ("test.txt", test_file_bytes, "text/plain")}
+            response = await client.post(
+                "/documents/",
+                files=files,
+                data={"description": "Duplicate upload"},
+                headers={"Authorization": f"Bearer {tokens['access_token']}"},
+            )
 
     assert response.status_code == 201
     resp_data = response.json()
@@ -203,7 +220,14 @@ async def test_upload_document_analyzing_only_path(
     assert resp_data["document_status"] == DocumentStatus.extracted.value
     assert resp_data["document_text"] == "extracted_text"
 
-    mock_to_thread.assert_called_once()
+    mock_to_thread.assert_called_once_with(
+        publish_document_text_extracted,
+        document_id=resp_data["id"],
+        user_id=tokens["user_id"],
+        mime_type=MimeType.txt.value,
+        request_id=expected_request_id,
+        provider=LLMProvider.deepseek.value,
+    )
 
 
 @pytest.mark.asyncio
@@ -237,27 +261,37 @@ async def test_upload_document_analyzing_only_path_cross_user(
         file_key="file_key",
     )
 
-    with patch("src.services.file_processor.asyncio.to_thread") as mock_to_thread:
-        mock_to_thread.return_value = AsyncMock(id="fake-task-id-2")
+    expected_request_id = "1"
+    with patch("src.core.middlewares.request_context.uuid4", return_value=expected_request_id):
+        with patch("src.services.file_processor.asyncio.to_thread") as mock_to_thread:
+            mock_to_thread.return_value = AsyncMock(id="fake-task-id-2")
 
-        files = {"file": ("test2.txt", test_file_bytes, "text/plain")}
-        response = await client.post(
-            "/documents/",
-            files=files,
-            data={"description": "Duplicate upload"},
-            headers={"Authorization": f"Bearer {tokens2['access_token']}"},
-        )
+            files = {"file": ("test2.txt", test_file_bytes, "text/plain")}
+            response = await client.post(
+                "/documents/",
+                files=files,
+                data={"description": "Duplicate upload"},
+                headers={"Authorization": f"Bearer {tokens2['access_token']}"},
+            )
 
     assert response.status_code == 201
     resp_data = response.json()
 
     assert isinstance(resp_data["id"], int)
+    assert resp_data["id"] != 999
     assert resp_data["user_id"] != tokens["user_id"]
     assert resp_data["filename"] == "test2.txt"
     assert resp_data["document_status"] == DocumentStatus.extracted.value
     assert resp_data["document_text"] == "extracted_text"
 
-    mock_to_thread.assert_called_once()
+    mock_to_thread.assert_called_once_with(
+        publish_document_text_extracted,
+        document_id=resp_data["id"],
+        user_id=tokens2["user_id"],
+        mime_type=MimeType.txt.value,
+        request_id=expected_request_id,
+        provider=LLMProvider.deepseek.value,
+    )
 
 
 # AUTHORIZATION & VALIDATION CASES
