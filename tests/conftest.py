@@ -1,10 +1,12 @@
 from contextlib import ExitStack
 from datetime import UTC, datetime
+from io import BytesIO
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 import pytest_asyncio
+from fastapi import UploadFile
 from httpx import ASGITransport, AsyncClient
 from main import app
 from pydantic import BaseModel
@@ -27,10 +29,13 @@ from src.DependencyInjection.auth import (
 )
 from src.DependencyInjection.documents import get_mongo_document_repository
 from src.DependencyInjection.prompts import get_mongo_prompt_repository
+from src.models.documents import Document
 from src.repositories.documents import DocumentRepository
 from src.repositories.mongo_documents import MongoDocumentRepository
 from src.repositories.mongo_prompts import MongoPromptsRepository
 from src.storage.s3_storage import S3Storage
+from src.services.file_processor import UploadService
+from src.schemas.documents import DocumentData
 
 TEST_DB_URL = settings.db.url
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
@@ -221,6 +226,80 @@ def mock_user_active_cache():
 @pytest.fixture
 def mock_mongo_prompt_repository():
     return AsyncMock(spec=MongoPromptsRepository)
+
+
+@pytest.fixture
+def mock_mongo_document_repository() -> AsyncMock:
+    repository = AsyncMock(spec=MongoDocumentRepository)
+    repository.get_content_for_deduplicate.return_value = None
+    repository.upsert_raw_text.return_value = None
+    return repository
+
+
+# Repository mocks
+@pytest.fixture
+def document_factory():
+    def _create(
+        *,
+        document_id: int = 101,
+        user_id: int = 1,
+        filename: str = "test.txt",
+        description: str | None = "unit test",
+        mime_type: MimeType = MimeType.txt,
+        file_size: int = 12,
+        provider: LLMProvider = LLMProvider.deepseek,
+        document_status: DocumentStatus = DocumentStatus.created,
+        temp_filename: str | None = "unit-upload.txt",
+        file_hash: str | None = "a" * 64,
+        file_key: str | None = None,
+    ) -> Document:
+        now = datetime.now(UTC)
+
+        document = Document(
+            user_id=user_id,
+            filename=filename,
+            description=description,
+            mime_type=mime_type,
+            file_size=file_size,
+            provider=provider,
+            document_status=document_status,
+            temp_filename=temp_filename,
+            file_hash=file_hash,
+            file_key=file_key,
+        )
+        document.id = document_id
+        document.created_at = now
+        document.updated_at = now
+
+        return document
+
+    return _create
+
+
+@pytest.fixture
+def mock_document_repository(document_factory) -> AsyncMock:
+    repository = AsyncMock(spec=DocumentRepository)
+    repository.get_reuse_candidates.return_value = []
+
+    def create_document(data: DocumentData) -> Document:
+        return document_factory(
+            document_id=101,
+            user_id=data.user_id,
+            filename=data.filename,
+            description=data.description,
+            mime_type=data.mime_type,
+            file_size=data.file_size,
+            provider=data.provider,
+            document_status=data.document_status,
+            temp_filename=data.temp_filename,
+            file_hash=data.file_hash,
+            file_key=data.file_key,
+        )
+
+    repository.create_document.side_effect = create_document
+    repository.update_document_fields.return_value = None
+
+    return repository
 
 
 # Client
@@ -424,3 +503,34 @@ def create_admin_token_pair(create_token_pair, test_password):
 def test_password():
     plain = "SecureTestPass123!"
     return plain, get_password_hash(plain)
+
+
+@pytest.fixture
+def upload_service(
+    mock_document_repository: AsyncMock,
+    mock_mongo_document_repository: AsyncMock,
+) -> UploadService:
+    return UploadService(
+        repository=mock_document_repository,
+        mongo_repository=mock_mongo_document_repository,
+    )
+
+
+@pytest.fixture
+def uploaded_file() -> UploadFile:
+    return UploadFile(
+        filename="test.txt",
+        file=BytesIO(b"unit test content"),
+    )
+
+
+@pytest.fixture
+def upload_temp_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    monkeypatch.setattr(settings, "base_dir", str(tmp_path / "src"))
+    monkeypatch.setattr(
+        UploadService,
+        "_get_temp_filename",
+        staticmethod(lambda extension: f"unit-upload{extension}"),
+    )
+
+    return tmp_path / "temp" / "unit-upload.txt"
