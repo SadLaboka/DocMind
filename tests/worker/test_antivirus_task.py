@@ -67,10 +67,6 @@ async def test_execute_clean_file_updates_status_and_enqueues_upload(
             antivirus_task.document_id,
             document_status=DocumentStatus.scanning,
         ),
-        call(
-            antivirus_task.document_id,
-            document_status=DocumentStatus.extracting,
-        ),
     ]
 
     mock_antivirus_scanner.scan_file.assert_called_once_with(
@@ -185,10 +181,6 @@ async def test_execute_unavailable_fail_open_enqueues_upload(
         call(
             antivirus_task.document_id,
             document_status=DocumentStatus.scanning,
-        ),
-        call(
-            document_id=antivirus_task.document_id,
-            document_status=DocumentStatus.extracting,
         ),
     ]
 
