@@ -54,7 +54,7 @@ class BaseTask:
                 if temp_path.exists():
                     temp_path.unlink(missing_ok=True)
 
-                task_logger.info("temp_file_sucessfully_removed")
+                    task_logger.info("temp_file_successfully_removed")
 
             except OSError as err:
                 task_logger.warning(
