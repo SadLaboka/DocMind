@@ -39,8 +39,16 @@ class BaseTask:
                 user_id=user_id,
                 error_detail=str(exc),
             )
-
-            asyncio.run(cls._update_status_after_failure(document_id, str(exc)))
+            try:
+                asyncio.run(cls._update_status_after_failure(document_id, str(exc)))
+            except Exception as err:
+                task_logger.error(
+                    "update_status_after_failure_failed",
+                    document_id=document_id,
+                    task_id=task_id,
+                    user_id=user_id,
+                    error_detail=str(err),
+                )
 
             try:
                 if temp_path.exists():
@@ -48,14 +56,11 @@ class BaseTask:
 
                 task_logger.info("temp_file_sucessfully_removed")
 
-            except Exception as e:
-                task_logger.error(
-                    "cleanup_temp_file_failure",
-                    document_id=document_id,
-                    task_id=task_id,
-                    user_id=user_id,
-                    temp_path=temp_path,
-                    error_detail=str(e),
+            except OSError as err:
+                task_logger.warning(
+                    "temp_file_removing_failed",
+                    path=str(temp_path),
+                    err=str(err),
                 )
 
     @staticmethod
