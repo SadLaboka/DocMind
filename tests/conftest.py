@@ -33,9 +33,9 @@ from src.models.documents import Document
 from src.repositories.documents import DocumentRepository
 from src.repositories.mongo_documents import MongoDocumentRepository
 from src.repositories.mongo_prompts import MongoPromptsRepository
-from src.storage.s3_storage import S3Storage
-from src.services.file_processor import UploadService
 from src.schemas.documents import DocumentData
+from src.services.file_processor import UploadService
+from src.storage.s3_storage import S3Storage
 
 TEST_DB_URL = settings.db.url
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
@@ -203,6 +203,7 @@ def mock_mongo_repo(mock_mongo_content):
     mock_repo.get_content_for_deduplicate.return_value = mock_mongo_content
     mock_repo.upsert_raw_text.return_value = mock_mongo_content
     return mock_repo
+
 
 # Redis mocks
 

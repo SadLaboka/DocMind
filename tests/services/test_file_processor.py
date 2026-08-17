@@ -9,7 +9,6 @@ from src.core.config import settings
 from src.core.enums import DocumentStatus, LLMProvider, MimeType
 from src.services.file_processor import PreparedUpload, ProcessingPath, UploadService
 
-
 pytestmark = pytest.mark.asyncio
 
 USER_ID = 1
@@ -45,9 +44,7 @@ async def test_analysis_only_connection_failure_degrades_to_extraction(
         raw_text="reused text",
     )
 
-    mock_mongo_document_repository.upsert_raw_text.side_effect = ConnectionFailure(
-        "Mongo unavailable"
-    )
+    mock_mongo_document_repository.upsert_raw_text.side_effect = ConnectionFailure("Mongo unavailable")
 
     mock_document_repository.update_document_fields.return_value = document_factory(
         document_id=101,
@@ -143,9 +140,9 @@ async def test_analysis_only_unexpected_mongo_error_marks_document_failed_and_re
             "_publish_to_analysis",
             new=mock_publish,
         ),
+        pytest.raises(RuntimeError) as exc_info,
     ):
-        with pytest.raises(RuntimeError) as exc_info:
-            await process_upload(upload_service, uploaded_file)
+        await process_upload(upload_service, uploaded_file)
 
     assert exc_info.value is primary_error
 
@@ -197,9 +194,9 @@ async def test_analysis_publish_failure_marks_document_failed_without_extraction
             "_publish_to_analysis",
             new=mock_publish,
         ),
+        pytest.raises(RuntimeError) as exc_info,
     ):
-        with pytest.raises(RuntimeError) as exc_info:
-            await process_upload(upload_service, uploaded_file)
+        await process_upload(upload_service, uploaded_file)
 
     assert exc_info.value is primary_error
 
@@ -255,9 +252,9 @@ async def test_full_pipeline_dispatch_failure_marks_document_failed_and_removes_
             "_send_to_queue_for_uploading",
             new=mock_upload,
         ),
+        pytest.raises(RuntimeError) as exc_info,
     ):
-        with pytest.raises(RuntimeError) as exc_info:
-            await process_upload(upload_service, uploaded_file)
+        await process_upload(upload_service, uploaded_file)
 
     assert exc_info.value is primary_error
 
@@ -300,9 +297,9 @@ async def test_extraction_only_dispatch_failure_marks_document_failed_and_remove
             "_send_to_queue_for_extraction",
             new=mock_extract,
         ),
+        pytest.raises(RuntimeError) as exc_info,
     ):
-        with pytest.raises(RuntimeError) as exc_info:
-            await process_upload(upload_service, uploaded_file)
+        await process_upload(upload_service, uploaded_file)
 
     assert exc_info.value is primary_error
 
@@ -348,9 +345,9 @@ async def test_mark_failed_error_does_not_mask_primary_error_and_cleanup_still_r
             "_send_to_queue_for_scanning",
             new=mock_scan,
         ),
+        pytest.raises(RuntimeError) as exc_info,
     ):
-        with pytest.raises(RuntimeError) as exc_info:
-            await process_upload(upload_service, uploaded_file)
+        await process_upload(upload_service, uploaded_file)
 
     assert exc_info.value is primary_error
 
@@ -398,9 +395,9 @@ async def test_cleanup_error_does_not_mask_primary_error(
             "unlink",
             side_effect=cleanup_error,
         ),
+        pytest.raises(RuntimeError) as exc_info,
     ):
-        with pytest.raises(RuntimeError) as exc_info:
-            await process_upload(upload_service, uploaded_file)
+        await process_upload(upload_service, uploaded_file)
 
     assert exc_info.value is primary_error
 

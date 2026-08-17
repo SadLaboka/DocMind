@@ -168,12 +168,7 @@ async def test_upload_document_extracting_only_path_different_providers(
     indirect=True,
 )
 async def test_upload_document_analyzing_only_path(
-        client: AsyncClient,
-        create_token_pair,
-        create_document,
-        test_password,
-        test_db_session,
-        mock_mongo_content
+    client: AsyncClient, create_token_pair, create_document, test_password, test_db_session, mock_mongo_content
 ):
     _, hashed_pw = test_password
     tokens = await create_token_pair(login="uploader", email="up@test.com", password_hash=hashed_pw)
