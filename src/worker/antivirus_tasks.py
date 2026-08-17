@@ -58,10 +58,6 @@ class DocumentScanTask(BaseTask):
                         document_id=self.document_id,
                         user_id=self.user_id,
                     )
-                    await repo.update_document_fields(
-                        document_id=self.document_id,
-                        document_status=DocumentStatus.uploading,
-                    )
                     await self._publish_to_upload()
                 return
 
@@ -89,7 +85,6 @@ class DocumentScanTask(BaseTask):
                         user_id=self.user_id,
                     )
 
-                    await repo.update_document_fields(self.document_id, document_status=DocumentStatus.uploading)
                     await self._publish_to_upload()
 
     async def _publish_to_upload(self) -> None:
