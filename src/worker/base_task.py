@@ -106,5 +106,12 @@ class BaseTask:
 
     def _cleanup_file(self) -> None:
         """Safely cleanup file"""
-        if self.temp_path.exists():
-            self.temp_path.unlink(missing_ok=True)
+        try:
+            if self.temp_path.exists():
+                self.temp_path.unlink(missing_ok=True)
+        except OSError as err:
+            self.logger.warning(
+                "temp_file_removing_failed",
+                path=str(self.temp_path),
+                err=str(err),
+            )
