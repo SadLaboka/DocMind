@@ -73,6 +73,7 @@ class DocumentScanTask(BaseTask):
                     await repo.update_document_fields(
                         self.document_id,
                         document_status=DocumentStatus.infected,
+                        temp_filename=None,
                         error_trace=f"Malware detected: {scan_result.signature}",
                     )
                     self._cleanup_file()
