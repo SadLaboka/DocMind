@@ -60,7 +60,7 @@ class DocumentScanTask(BaseTask):
                     )
                     await repo.update_document_fields(
                         document_id=self.document_id,
-                        document_status=DocumentStatus.extracting,
+                        document_status=DocumentStatus.uploading,
                     )
                     await self._publish_to_upload()
                 return
