@@ -25,7 +25,6 @@ class BaseTask:
         """
         Celery callback for on_failure
         Called after all retries have been exhausted
-        Does not delete the tempo file here to allow manual restarts
         """
         document_id = kwargs.get("document_id")
         temp_path = Path(kwargs.get("temp_path"))
