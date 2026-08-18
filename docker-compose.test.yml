@@ -5,42 +5,49 @@ services:
       POSTGRES_USER: test_user
       POSTGRES_PASSWORD: test_pass
       POSTGRES_DB: test_db
+
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U test_user -d test_db"]
       interval: 2s
       timeout: 3s
       retries: 5
-    networks: [test_net]
+
+    networks:
+      - test_net
 
   app-test:
     build:
       context: .
-      dockerfile: Dockerfile
-      args:
-        INSTALL_MODE: test
+      dockerfile: Dockerfile.test
+
     environment:
-      - DB_USER=test_user
-      - DB_PASSWORD=test_pass
-      - DB_NAME=test_db
-      - DB_HOST=db-test
-      - DB_PORT=5432
-      - ENVIRONMENT=test
-      - LOGS_DEV=false
-      - LOGS_LEVEL=30
+      DB_USER: test_user
+      DB_PASSWORD: test_pass
+      DB_NAME: test_db
+      DB_HOST: db-test
+      DB_PORT: 5432
+
+      ENVIRONMENT: test
+      LOGS_DEV: "false"
+      LOGS_LEVEL: 30
+
+      PYTHONPATH: /usr/src/app
+
     depends_on:
       db-test:
         condition: service_healthy
+
     working_dir: /usr/src/app
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
-    command: >
-      sh -c "
-          poetry install --no-interaction --no-ansi --no-root &&
-          alembic upgrade head &&
-          pytest -v --tb=short -x --color=yes
-        "
-    networks: [test_net]
+
+    command:
+      [
+        "sh",
+        "-c",
+        "alembic upgrade head && exec pytest -v --tb=short -x --color=yes"
+      ]
+
+    networks:
+      - test_net
 
 networks:
   test_net:
