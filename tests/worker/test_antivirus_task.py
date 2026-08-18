@@ -113,6 +113,7 @@ async def test_execute_infected_file_marks_document_and_removes_file(
         call(
             antivirus_task.document_id,
             document_status=DocumentStatus.infected,
+            temp_filename=None,
             error_trace="Malware detected: Eicar-Test-Signature",
         ),
     ]
