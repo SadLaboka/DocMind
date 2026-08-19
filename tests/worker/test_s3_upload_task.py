@@ -15,7 +15,6 @@ from src.worker.s3_upload_task import (
     extract_text_task,
 )
 
-
 EXPECTED_FILE_KEY = "documents/test.txt"
 
 
@@ -98,7 +97,6 @@ async def test_execute_storage_config_error_marks_failed_and_removes_file(
     mock_extraction_publisher,
 ) -> None:
     _, mock_unlink = mock_path_operations
-
 
     mock_storage.upload_file.side_effect = StorageConfigError(
         message="Missing credentials",

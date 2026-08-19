@@ -27,4 +27,3 @@ COPY \
     ./alembic.ini \
     ./pytest.ini \
     ./
- 

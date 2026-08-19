@@ -191,17 +191,19 @@ async def test_upload_document_analyzing_only_path(
         file_key="file_key",
     )
     expected_request_id = "1"
-    with patch("src.core.middlewares.request_context.uuid4", return_value=expected_request_id):
-        with patch("src.services.file_processor.asyncio.to_thread") as mock_to_thread:
-            mock_to_thread.return_value = AsyncMock(id="fake-task-id-2")
+    with (
+        patch("src.core.middlewares.request_context.uuid4", return_value=expected_request_id),
+        patch("src.services.file_processor.asyncio.to_thread") as mock_to_thread,
+    ):
+        mock_to_thread.return_value = AsyncMock(id="fake-task-id-2")
 
-            files = {"file": ("test.txt", test_file_bytes, "text/plain")}
-            response = await client.post(
-                "/documents/",
-                files=files,
-                data={"description": "Duplicate upload"},
-                headers={"Authorization": f"Bearer {tokens['access_token']}"},
-            )
+        files = {"file": ("test.txt", test_file_bytes, "text/plain")}
+        response = await client.post(
+            "/documents/",
+            files=files,
+            data={"description": "Duplicate upload"},
+            headers={"Authorization": f"Bearer {tokens['access_token']}"},
+        )
 
     assert response.status_code == 201
     resp_data = response.json()
@@ -252,17 +254,19 @@ async def test_upload_document_analyzing_only_path_cross_user(
     )
 
     expected_request_id = "1"
-    with patch("src.core.middlewares.request_context.uuid4", return_value=expected_request_id):
-        with patch("src.services.file_processor.asyncio.to_thread") as mock_to_thread:
-            mock_to_thread.return_value = AsyncMock(id="fake-task-id-2")
+    with (
+        patch("src.core.middlewares.request_context.uuid4", return_value=expected_request_id),
+        patch("src.services.file_processor.asyncio.to_thread") as mock_to_thread,
+    ):
+        mock_to_thread.return_value = AsyncMock(id="fake-task-id-2")
 
-            files = {"file": ("test2.txt", test_file_bytes, "text/plain")}
-            response = await client.post(
-                "/documents/",
-                files=files,
-                data={"description": "Duplicate upload"},
-                headers={"Authorization": f"Bearer {tokens2['access_token']}"},
-            )
+        files = {"file": ("test2.txt", test_file_bytes, "text/plain")}
+        response = await client.post(
+            "/documents/",
+            files=files,
+            data={"description": "Duplicate upload"},
+            headers={"Authorization": f"Bearer {tokens2['access_token']}"},
+        )
 
     assert response.status_code == 201
     resp_data = response.json()
