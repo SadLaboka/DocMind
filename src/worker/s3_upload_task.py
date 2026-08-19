@@ -1,5 +1,4 @@
 import asyncio
-import uuid
 
 import structlog
 
@@ -56,7 +55,7 @@ class UploadTask(BaseTask):
             if not await self._is_path_exists(repo):
                 return
 
-            file_key = self._generate_file_key()
+            file_key = self._generate_file_key(self.temp_path.name)
             await repo.update_document_fields(
                 document_id=self.document_id,
                 document_status=DocumentStatus.uploading,
@@ -165,7 +164,8 @@ class UploadTask(BaseTask):
             document_id=self.document_id,
             file_key=file_key,
         )
-        await self.storage.upload_file(self.temp_path, file_key)
+        if not await self.storage.file_exists(file_key):
+            await self.storage.upload_file(self.temp_path, file_key)
 
     async def _publish_to_extract(self) -> None:
         """Publish document to extract text task"""
@@ -179,9 +179,10 @@ class UploadTask(BaseTask):
             provider=self.provider,
         )
 
-    def _generate_file_key(self) -> str:
-        """Generates a unique file key for s3 storage"""
-        return f"documents/{uuid.uuid4()}"
+    @staticmethod
+    def _generate_file_key(name: str) -> str:
+        """Creates a unique file key for s3 storage"""
+        return f"documents/{name}"
 
 
 @celery_app.task(
