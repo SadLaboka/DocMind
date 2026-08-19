@@ -15,13 +15,15 @@ from src.worker.s3_upload_task import (
     extract_text_task,
 )
 
-FIXED_UUID = "fixed-uuid"
-EXPECTED_FILE_KEY = f"documents/{FIXED_UUID}"
+
+EXPECTED_FILE_KEY = "documents/test.txt"
 
 
 @pytest.fixture
 def mock_storage() -> AsyncMock:
-    return AsyncMock(spec=S3Storage)
+    mock_storage = AsyncMock(spec=S3Storage)
+    mock_storage.file_exists.return_value = False
+    return mock_storage
 
 
 @pytest.fixture
@@ -60,11 +62,7 @@ async def test_execute_success_uploads_file_and_enqueues_extraction(
 ) -> None:
     _, mock_unlink = mock_path_operations
 
-    with patch(
-        "src.worker.s3_upload_task.uuid.uuid4",
-        return_value=FIXED_UUID,
-    ):
-        await upload_task.execute()
+    await upload_task.execute()
 
     mock_worker_repo.update_document_fields.assert_awaited_with(
         document_id=upload_task.document_id,
@@ -101,15 +99,12 @@ async def test_execute_storage_config_error_marks_failed_and_removes_file(
 ) -> None:
     _, mock_unlink = mock_path_operations
 
+
     mock_storage.upload_file.side_effect = StorageConfigError(
         message="Missing credentials",
     )
 
-    with patch(
-        "src.worker.s3_upload_task.uuid.uuid4",
-        return_value=FIXED_UUID,
-    ):
-        await upload_task.execute()
+    await upload_task.execute()
 
     assert mock_worker_repo.update_document_fields.await_args_list == [
         call(
@@ -145,11 +140,7 @@ async def test_execute_non_retryable_upload_error_marks_failed(
         key=EXPECTED_FILE_KEY,
     )
 
-    with patch(
-        "src.worker.s3_upload_task.uuid.uuid4",
-        return_value=FIXED_UUID,
-    ):
-        await upload_task.execute()
+    await upload_task.execute()
 
     assert mock_worker_repo.update_document_fields.await_args_list == [
         call(
@@ -186,13 +177,7 @@ async def test_execute_retryable_upload_error_propagates_and_preserves_file(
     )
     mock_storage.upload_file.side_effect = upload_error
 
-    with (
-        patch(
-            "src.worker.s3_upload_task.uuid.uuid4",
-            return_value=FIXED_UUID,
-        ),
-        pytest.raises(S3UploadError) as exc_info,
-    ):
+    with pytest.raises(S3UploadError) as exc_info:
         await upload_task.execute()
 
     assert exc_info.value is upload_error
@@ -233,13 +218,7 @@ async def test_execute_retryable_or_unexpected_error_propagates(
 
     mock_storage.upload_file.side_effect = storage_error
 
-    with (
-        patch(
-            "src.worker.s3_upload_task.uuid.uuid4",
-            return_value=FIXED_UUID,
-        ),
-        pytest.raises(type(storage_error)) as exc_info,
-    ):
+    with pytest.raises(type(storage_error)) as exc_info:
         await upload_task.execute()
 
     assert exc_info.value is storage_error
@@ -268,12 +247,8 @@ async def test_execute_cancelled_document_skips_upload(
         document_status=DocumentStatus.cancelled,
     )
 
-    with patch(
-        "src.worker.s3_upload_task.uuid.uuid4",
-    ) as mock_uuid:
-        await upload_task.execute()
+    await upload_task.execute()
 
-    mock_uuid.assert_not_called()
     mock_storage.upload_file.assert_not_awaited()
     mock_worker_repo.update_document_fields.assert_not_awaited()
     mock_extraction_publisher.assert_not_awaited()
@@ -293,12 +268,8 @@ async def test_execute_missing_document_skips_upload(
 
     mock_worker_repo.get_document_by_id.return_value = None
 
-    with patch(
-        "src.worker.s3_upload_task.uuid.uuid4",
-    ) as mock_uuid:
-        await upload_task.execute()
+    await upload_task.execute()
 
-    mock_uuid.assert_not_called()
     mock_storage.upload_file.assert_not_awaited()
     mock_worker_repo.update_document_fields.assert_not_awaited()
     mock_extraction_publisher.assert_not_awaited()
@@ -317,17 +288,13 @@ async def test_execute_missing_file_marks_document_cancelled(
     mock_exists, mock_unlink = mock_path_operations
     mock_exists.return_value = False
 
-    with patch(
-        "src.worker.s3_upload_task.uuid.uuid4",
-    ) as mock_uuid:
-        await upload_task.execute()
+    await upload_task.execute()
 
     mock_worker_repo.update_document_fields.assert_awaited_once_with(
         upload_task.document_id,
         document_status=DocumentStatus.cancelled,
     )
 
-    mock_uuid.assert_not_called()
     mock_storage.upload_file.assert_not_awaited()
     mock_extraction_publisher.assert_not_awaited()
     mock_unlink.assert_not_called()
