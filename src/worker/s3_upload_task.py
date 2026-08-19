@@ -55,7 +55,7 @@ class UploadTask(BaseTask):
             if not await self._is_path_exists(repo):
                 return
 
-            file_key = self._generate_file_key(self.temp_path.name)
+            file_key = self._make_file_key(self.temp_path.name)
             await repo.update_document_fields(
                 document_id=self.document_id,
                 document_status=DocumentStatus.uploading,
@@ -180,7 +180,7 @@ class UploadTask(BaseTask):
         )
 
     @staticmethod
-    def _generate_file_key(name: str) -> str:
+    def _make_file_key(name: str) -> str:
         """Creates a unique file key for s3 storage"""
         return f"documents/{name}"
 
