@@ -296,3 +296,117 @@ async def test_execute_missing_file_marks_document_cancelled(
     mock_storage.upload_file.assert_not_awaited()
     mock_extraction_publisher.assert_not_awaited()
     mock_unlink.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_execute_existing_file_skips_upload_and_enqueues_extraction(
+    mock_celery_session,
+    mock_worker_repo,
+    mock_path_operations,
+    mock_storage,
+    upload_task,
+    mock_extraction_publisher,
+) -> None:
+    _, mock_unlink = mock_path_operations
+    mock_storage.file_exists.return_value = True
+
+    await upload_task.execute()
+
+    mock_storage.file_exists.assert_awaited_once_with(EXPECTED_FILE_KEY)
+    mock_storage.upload_file.assert_not_awaited()
+
+    assert mock_worker_repo.update_document_fields.await_args_list == [
+        call(
+            document_id=upload_task.document_id,
+            document_status=DocumentStatus.uploading,
+        ),
+        call(
+            document_id=upload_task.document_id,
+            file_key=EXPECTED_FILE_KEY,
+            document_status=DocumentStatus.uploaded,
+        ),
+    ]
+
+    mock_extraction_publisher.assert_awaited_once_with(
+        extract_text_task.delay,
+        document_id=upload_task.document_id,
+        temp_path=str(upload_task.temp_path),
+        mime_type=upload_task.mime_type,
+        user_id=upload_task.user_id,
+        request_id=upload_task.request_id,
+        provider=upload_task.provider,
+    )
+
+    mock_unlink.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_execute_retry_after_db_failure_does_not_upload_file_again(
+    mock_celery_session,
+    mock_worker_repo,
+    mock_path_operations,
+    mock_storage,
+    upload_task,
+    mock_extraction_publisher,
+) -> None:
+    _, mock_unlink = mock_path_operations
+
+    mock_storage.file_exists.side_effect = [False, True]
+
+    db_error = RuntimeError("Database unavailable")
+    mock_worker_repo.update_document_fields.side_effect = [
+        None,      # first attempt: status -> uploading
+        db_error,  # first attempt: file_key + uploaded -> failure
+        None,      # retry: status -> uploading
+        None,      # retry: file_key + uploaded -> success
+    ]
+
+    with pytest.raises(RuntimeError, match="Database unavailable"):
+        await upload_task.execute()
+
+    mock_extraction_publisher.assert_not_awaited()
+
+    await upload_task.execute()
+
+    assert mock_storage.file_exists.await_args_list == [
+        call(EXPECTED_FILE_KEY),
+        call(EXPECTED_FILE_KEY),
+    ]
+
+    mock_storage.upload_file.assert_awaited_once_with(
+        upload_task.temp_path,
+        EXPECTED_FILE_KEY,
+    )
+
+    assert mock_worker_repo.update_document_fields.await_args_list == [
+        call(
+            document_id=upload_task.document_id,
+            document_status=DocumentStatus.uploading,
+        ),
+        call(
+            document_id=upload_task.document_id,
+            file_key=EXPECTED_FILE_KEY,
+            document_status=DocumentStatus.uploaded,
+        ),
+        call(
+            document_id=upload_task.document_id,
+            document_status=DocumentStatus.uploading,
+        ),
+        call(
+            document_id=upload_task.document_id,
+            file_key=EXPECTED_FILE_KEY,
+            document_status=DocumentStatus.uploaded,
+        ),
+    ]
+
+    mock_extraction_publisher.assert_awaited_once_with(
+        extract_text_task.delay,
+        document_id=upload_task.document_id,
+        temp_path=str(upload_task.temp_path),
+        mime_type=upload_task.mime_type,
+        user_id=upload_task.user_id,
+        request_id=upload_task.request_id,
+        provider=upload_task.provider,
+    )
+
+    mock_unlink.assert_not_called()
