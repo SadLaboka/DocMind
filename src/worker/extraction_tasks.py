@@ -177,7 +177,7 @@ class DocumentExtractionTask(BaseTask):
     retry_backoff=True,
     retry_backoff_max=60,
     max_retries=3,
-    exclude_exceptions=(ExtractionError, ValueError),
+    dont_autoretry_for=(ExtractionError, ValueError),
     task_acks_late=True,
     on_failure=DocumentExtractionTask._on_task_failure,
 )

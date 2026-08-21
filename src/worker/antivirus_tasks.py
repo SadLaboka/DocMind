@@ -132,8 +132,8 @@ class DocumentScanTask(BaseTask):
 
 
 @celery_app.task(
-    autoretry_for=(),
-    exclude_exceptions=(FileNotFoundError, ValueError),
+    autoretry_for=(Exception,),
+    dont_autoretry_for=(FileNotFoundError, ValueError),
     task_acks_late=True,
     on_failure=DocumentScanTask._on_task_failure,
 )

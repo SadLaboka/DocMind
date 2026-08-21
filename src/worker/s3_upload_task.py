@@ -126,15 +126,32 @@ class UploadTask(BaseTask):
                 raise
 
             except StorageError as e:
+                if e.retryable:
+                    self.logger.warning(
+                        "upload_storage_error",
+                        error_code=e.error_code,
+                        error_detail=e.message,
+                        document_id=self.document_id,
+                        user_id=self.user_id,
+                        file_key=file_key,
+                    )
+                    raise
                 self.logger.error(
-                    "upload_storage_error",
+                    "upload_storage_non_retryable_error",
                     error_code=e.error_code,
                     error_detail=e.message,
                     document_id=self.document_id,
                     user_id=self.user_id,
                     file_key=file_key,
                 )
-                raise
+                await repo.update_document_fields(
+                    document_id=self.document_id,
+                    document_status=DocumentStatus.failed,
+                    temp_filename=None,
+                    error_trace=f"S3 Storage Error: {e.message}",
+                )
+                self._cleanup_file()
+                return
 
             except Exception as e:
                 self.logger.error(
@@ -190,7 +207,7 @@ class UploadTask(BaseTask):
     retry_backoff=True,
     retry_backoff_max=60,
     max_retries=3,
-    exclude_exceptions=(FileNotFoundError, ValueError, StorageConfigError),
+    dont_autoretry_for=(FileNotFoundError, ValueError, StorageConfigError),
     task_acks_late=True,
     on_failure=UploadTask._on_task_failure,
 )
