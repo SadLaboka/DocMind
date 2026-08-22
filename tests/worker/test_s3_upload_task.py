@@ -194,7 +194,10 @@ async def test_execute_retryable_upload_error_propagates_and_preserves_file(
     "storage_error",
     [
         S3ConnectionError(message="Connection timeout"),
-        StorageError(message="Generic storage failure"),
+        StorageError(
+            message="Temporary generic storage failure",
+            retryable=True,
+        ),
         RuntimeError("Unexpected failure"),
     ],
     ids=[
@@ -227,6 +230,41 @@ async def test_execute_retryable_or_unexpected_error_propagates(
     )
 
     mock_unlink.assert_not_called()
+    mock_extraction_publisher.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_execute_non_retryable_storage_error_marks_failed_and_removes_file(
+    mock_celery_session,
+    mock_worker_repo,
+    mock_path_operations,
+    mock_storage,
+    upload_task,
+    mock_extraction_publisher,
+) -> None:
+    _, mock_unlink = mock_path_operations
+
+    mock_storage.upload_file.side_effect = StorageError(
+        message="Generic storage failure",
+        retryable=False,
+    )
+
+    await upload_task.execute()
+
+    assert mock_worker_repo.update_document_fields.await_args_list == [
+        call(
+            document_id=upload_task.document_id,
+            document_status=DocumentStatus.uploading,
+        ),
+        call(
+            document_id=upload_task.document_id,
+            document_status=DocumentStatus.failed,
+            temp_filename=None,
+            error_trace="S3 Storage Error: Generic storage failure",
+        ),
+    ]
+
+    mock_unlink.assert_called_once_with(missing_ok=True)
     mock_extraction_publisher.assert_not_awaited()
 
 
@@ -355,10 +393,10 @@ async def test_execute_retry_after_db_failure_does_not_upload_file_again(
 
     db_error = RuntimeError("Database unavailable")
     mock_worker_repo.update_document_fields.side_effect = [
-        None,      # first attempt: status -> uploading
-        db_error,  # first attempt: file_key + uploaded -> failure
-        None,      # retry: status -> uploading
-        None,      # retry: file_key + uploaded -> success
+        None,
+        db_error,
+        None,
+        None,
     ]
 
     with pytest.raises(RuntimeError, match="Database unavailable"):
