@@ -7,7 +7,7 @@ from src.models.mongo_base import BaseDocument
 
 class DocumentAnalysis(BaseDocument):
     id: BeanieObjectId
-    document_id: int  #type: ignore
+    document_id: int
     request_id: str
     provider: LLMProvider
     prompt_version: str | None = None
