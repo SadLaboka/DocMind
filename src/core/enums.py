@@ -22,6 +22,18 @@ class DocumentStatus(Enum):
     cancelled = "cancelled"
 
 
+class AnalysisStatus(Enum):
+    queued = "queued"
+    analyzing = "analyzing"
+    success = "success"
+    failed = "failed"
+
+
+class AnalysisFailureKind(Enum):
+    transient = "transient"
+    permanent = "permanent"
+
+
 class LLMProvider(Enum):
     gemini = "gemini"
     deepseek = "deepseek"
