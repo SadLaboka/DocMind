@@ -3,6 +3,7 @@ from beanie import BeanieObjectId
 
 from src.core.enums import LLMProvider, AnalysisStatus, AnalysisFailureKind
 from src.models.mongo_base import BaseDocument
+from src.schemas.analyses import AnalysisResult
 
 
 class DocumentAnalysis(BaseDocument):
@@ -11,7 +12,7 @@ class DocumentAnalysis(BaseDocument):
     request_id: str
     provider: LLMProvider
     prompt_version: str | None = None
-    result: str | None = None
+    result: AnalysisResult | None = None
     status: AnalysisStatus
     failure_kind: AnalysisFailureKind | None = None
     error_code: str | None = None
