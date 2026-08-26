@@ -13,7 +13,7 @@ class DocumentAnalysis(BaseDocument):
     provider: LLMProvider
     prompt_version: str | None = None
     result: AnalysisResult | None = None
-    status: AnalysisStatus
+    status: AnalysisStatus = AnalysisStatus.queued
     failure_kind: AnalysisFailureKind | None = None
     error_code: str | None = None
     error_detail: str | None = None
