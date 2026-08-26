@@ -8,7 +8,7 @@ from google.genai.types import GenerateContentConfig
 from src.llm.base import BaseLLMService
 from src.llm.base_mapper import BaseMapper
 from src.llm.exceptions import LLMException
-from src.llm.schemas import AnalysisResult
+from schemas.analyses import AnalysisResult
 
 logger = structlog.get_logger(__name__)
 
