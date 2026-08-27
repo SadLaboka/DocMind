@@ -26,3 +26,6 @@ class MongoAnalysisRepository:
         await analysis.insert()
 
         return analysis
+
+    async def get_analysis_by_id(self, analysis_id: int) -> DocumentAnalysis | None:
+        return await DocumentAnalysis.find_one(id=analysis_id)
