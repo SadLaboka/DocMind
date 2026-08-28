@@ -1,7 +1,7 @@
 import pymongo
 from beanie import BeanieObjectId
 
-from src.core.enums import LLMProvider, AnalysisStatus, AnalysisFailureKind
+from src.core.enums import AnalysisFailureKind, AnalysisStatus, LLMProvider
 from src.models.mongo_base import BaseDocument
 from src.schemas.analyses import AnalysisResult
 
@@ -20,5 +20,5 @@ class DocumentAnalysis(BaseDocument):
 
     class Settings:
         indexes = [
-            pymongo.IndexModel([("document_id", pymongo.ASCENDING), ("request_id", pymongo.ASCENDING)] , unique=True),
+            pymongo.IndexModel([("document_id", pymongo.ASCENDING), ("request_id", pymongo.ASCENDING)], unique=True),
         ]
