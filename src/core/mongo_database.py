@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from pymongo import AsyncMongoClient
 
 from src.core.config import settings
+from src.models.mongo_analysis import DocumentAnalysis
 from src.models.mongo_documents import MongoDocument
 from src.models.mongo_prompts import Prompt
 
@@ -17,7 +18,7 @@ async def init_mongo_db(app: FastAPI):
 
     await init_beanie(
         database=database,
-        document_models=[MongoDocument, Prompt],
+        document_models=[MongoDocument, Prompt, DocumentAnalysis],
     )
 
     yield
@@ -29,5 +30,5 @@ async def init_mongo_for_worker() -> None:
     database = client[settings.mongo.name]
     await init_beanie(
         database=database,
-        document_models=[MongoDocument, Prompt],
+        document_models=[MongoDocument, Prompt, DocumentAnalysis],
     )
