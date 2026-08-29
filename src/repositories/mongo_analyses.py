@@ -12,10 +12,15 @@ class MongoAnalysisRepository:
         document_id: int,
         request_id: str,
         provider: LLMProvider,
-        **kwargs,
+        prompt_version: str | None = None,
     ) -> DocumentAnalysis:
 
-        analysis = DocumentAnalysis(document_id=document_id, request_id=request_id, provider=provider, **kwargs)
+        analysis = DocumentAnalysis(
+            document_id=document_id,
+            request_id=request_id,
+            provider=provider,
+            prompt_version=prompt_version
+        )
 
         await analysis.insert()
 
