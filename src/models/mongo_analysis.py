@@ -1,5 +1,4 @@
 import pymongo
-from beanie import BeanieObjectId
 
 from src.core.enums import AnalysisFailureKind, AnalysisStatus, LLMProvider
 from src.models.mongo_base import BaseDocument
@@ -7,7 +6,6 @@ from src.schemas.analyses import AnalysisResult
 
 
 class DocumentAnalysis(BaseDocument):
-    id: BeanieObjectId
     document_id: int
     request_id: str
     provider: LLMProvider
