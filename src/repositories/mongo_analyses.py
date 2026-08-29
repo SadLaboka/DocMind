@@ -1,3 +1,5 @@
+from beanie import BeanieObjectId
+
 from src.core.enums import AnalysisStatus, LLMProvider
 from src.models.mongo_analysis import DocumentAnalysis
 
@@ -18,7 +20,7 @@ class MongoAnalysisRepository:
 
         return analysis
 
-    async def get_analysis_by_id(self, analysis_id: int) -> DocumentAnalysis | None:
+    async def get_analysis_by_id(self, analysis_id: BeanieObjectId) -> DocumentAnalysis | None:
         return await DocumentAnalysis.get(analysis_id)
 
     async def get_analysis_by_document_and_request(self, document_id: int, request_id: str) -> DocumentAnalysis | None:
