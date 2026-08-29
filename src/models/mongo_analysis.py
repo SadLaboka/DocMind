@@ -17,6 +17,8 @@ class DocumentAnalysis(BaseDocument):
     error_detail: str | None = None
 
     class Settings:
+        name = "document_analyses"
+
         indexes = [
             pymongo.IndexModel([("document_id", pymongo.ASCENDING), ("request_id", pymongo.ASCENDING)], unique=True),
         ]
