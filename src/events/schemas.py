@@ -1,9 +1,8 @@
 from pydantic import BaseModel
 
 
-class DocumentTextExtractedEvent(BaseModel):
+class AnalysisRequestedEvent(BaseModel):
+    analysis_id: str
     document_id: int
-    mime_type: str
     user_id: int
     request_id: str
-    provider: str
