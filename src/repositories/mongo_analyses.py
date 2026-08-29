@@ -19,10 +19,10 @@ class MongoAnalysisRepository:
         return analysis
 
     async def get_analysis_by_id(self, analysis_id: int) -> DocumentAnalysis | None:
-        return await DocumentAnalysis.find_one(_id=analysis_id)
+        return await DocumentAnalysis.get(analysis_id)
 
     async def get_analysis_by_document_and_request(self, document_id: int, request_id: str) -> DocumentAnalysis | None:
-        return await DocumentAnalysis.find_one(document_id=document_id, request_id=request_id)
+        return await DocumentAnalysis.find_one(DocumentAnalysis.document_id == document_id, DocumentAnalysis.request_id == request_id)
 
     async def get_successful_analyses(self, document_id: int) -> list[DocumentAnalysis]:
-        return await DocumentAnalysis.find_many(document_id=document_id, status=AnalysisStatus.success).to_list()
+        return await DocumentAnalysis.find_many(DocumentAnalysis.document_id == document_id, DocumentAnalysis.status == AnalysisStatus.success).to_list()
