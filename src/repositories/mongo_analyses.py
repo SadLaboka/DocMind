@@ -1,3 +1,4 @@
+import datetime
 from beanie import BeanieObjectId
 
 from src.core.enums import AnalysisStatus, LLMProvider
@@ -28,3 +29,20 @@ class MongoAnalysisRepository:
 
     async def get_successful_analyses(self, document_id: int) -> list[DocumentAnalysis]:
         return await DocumentAnalysis.find_many(DocumentAnalysis.document_id == document_id, DocumentAnalysis.status == AnalysisStatus.success).to_list()
+
+    async def update_analysis_fields(
+            self,
+            document_id: int,
+            request_id: str,
+            **kwargs,
+    ) -> DocumentAnalysis | None:
+        analysis = await self.get_analysis_by_document_and_request(document_id, request_id)
+        if analysis:
+            for key, value in kwargs.items():
+                setattr(analysis, key, value)
+
+            analysis.updated_at = datetime.datetime.now(datetime.UTC)
+
+            await analysis.save()
+            return analysis
+        return None
