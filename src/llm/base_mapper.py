@@ -3,7 +3,7 @@ import re
 
 from pydantic import ValidationError
 
-from schemas.analyses import AnalysisResult
+from src.schemas.analyses import AnalysisResult
 from src.llm.exceptions import LLMException
 
 
