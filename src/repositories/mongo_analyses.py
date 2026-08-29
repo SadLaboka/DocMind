@@ -28,7 +28,11 @@ class MongoAnalysisRepository:
         return await DocumentAnalysis.find_one(DocumentAnalysis.document_id == document_id, DocumentAnalysis.request_id == request_id)
 
     async def get_successful_analyses(self, document_id: int) -> list[DocumentAnalysis]:
-        return await DocumentAnalysis.find_many(DocumentAnalysis.document_id == document_id, DocumentAnalysis.status == AnalysisStatus.success).to_list()
+        return await (DocumentAnalysis.find_many(
+            DocumentAnalysis.document_id == document_id,
+            DocumentAnalysis.status == AnalysisStatus.success)
+                      .sort("-created_at")
+                      .to_list())
 
     async def update_analysis_fields(
             self,
