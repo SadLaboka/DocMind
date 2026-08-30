@@ -5,6 +5,14 @@ from src.repositories.mongo_analyses import MongoAnalysisRepository
 from src.core.enums import LLMProvider
 
 
+class AnalysisProviderError(Exception):
+    pass
+
+
+class AnalysisNotFoundError(Exception):
+    pass
+
+
 class AnalysisService:
     def __init__(self, analysis_repository: MongoAnalysisRepository) -> None:
         self.repository = analysis_repository
@@ -23,5 +31,11 @@ class AnalysisService:
                 analysis = await self.repository.create_analysis(document_id, request_id, provider)
             except DuplicateKeyError:
                 analysis = await self.repository.get_analysis_by_document_and_request(document_id, request_id)
+
+        if not analysis:
+            raise AnalysisNotFoundError()
+
+        if not analysis.provider == provider:
+            raise AnalysisProviderError()
 
         return analysis
