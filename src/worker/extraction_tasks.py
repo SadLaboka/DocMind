@@ -3,7 +3,7 @@ import time
 
 import structlog
 
-from core.enums import LLMProvider
+from src.core.enums import LLMProvider
 from src.core.database import celery_session_factory
 from src.core.exceptions import ExtractionError
 from src.core.mongo_database import init_mongo_for_worker
