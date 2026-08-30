@@ -7,7 +7,7 @@ document_exchange = Exchange(settings.rabbit.document_exchange_name, type="direc
 
 queue_arguments = {
     "x-dead-letter-exchange": settings.rabbit.document_exchange_name + ".dlx",
-    "x-dead-letter-routing-key": settings.rabbit.extracted_routing_key + ".retry",
+    "x-dead-letter-routing-key": settings.rabbit.analysis_routing_key + ".retry",
 }
 
 document_analysis_queue = Queue(
