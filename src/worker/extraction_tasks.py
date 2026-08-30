@@ -3,12 +3,11 @@ import time
 
 import structlog
 
-from src.core.enums import LLMProvider
+from src.core.enums import LLMProvider, DocumentStatus, MimeType
 from src.core.database import celery_session_factory
 from src.core.exceptions import ExtractionError
 from src.core.mongo_database import init_mongo_for_worker
 from src.events.publisher import publish_document_analysis_requested
-from src.models.documents import DocumentStatus, MimeType
 from src.repositories.documents import DocumentRepository
 from src.repositories.mongo_documents import MongoDocumentRepository
 from src.repositories.mongo_analyses import MongoAnalysisRepository
