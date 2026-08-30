@@ -4,8 +4,9 @@ from pathlib import Path
 import structlog
 
 from src.core.database import celery_session_factory
-from src.core.enums import DocumentStatus
+from src.core.enums import DocumentStatus, AnalysisStatus, AnalysisFailureKind
 from src.repositories.documents import DocumentRepository
+from src.repositories.mongo_analyses import MongoAnalysisRepository
 
 
 class BaseTask:
@@ -27,6 +28,7 @@ class BaseTask:
         Called after all retries have been exhausted
         """
         document_id = kwargs.get("document_id")
+        request_id = kwargs.get("request_id")
         temp_path = Path(kwargs.get("temp_path"))
         task_logger = structlog.get_logger(cls.__name__)
         user_id = kwargs.get("user_id")
@@ -39,7 +41,7 @@ class BaseTask:
                 error_detail=str(exc),
             )
             try:
-                asyncio.run(cls._update_status_after_failure(document_id, str(exc)))
+                asyncio.run(cls._update_status_after_failure(request_id, document_id, exc))
             except Exception as err:
                 task_logger.error(
                     "update_status_after_failure_failed",
@@ -63,19 +65,44 @@ class BaseTask:
                 )
 
     @staticmethod
-    async def _update_status_after_failure(document_id: int, error_detail: str) -> None:
+    async def _update_status_after_failure(request_id: str, document_id: int, exc: Exception) -> None:
         """Updates document status after final failure"""
         async with celery_session_factory() as session:
             repo = DocumentRepository(session)
             current_doc = await repo.get_document_by_id(document_id)
 
-            if current_doc and current_doc.document_status != DocumentStatus.cancelled:
-                await repo.update_document_fields(
-                    document_id=document_id,
-                    document_status=DocumentStatus.failed,
-                    temp_filename=None,
-                    error_trace=f"Task failed after all retries: {error_detail}",
-                )
+            if not current_doc.document_status == DocumentStatus.extracted:
+
+                if current_doc and current_doc.document_status != DocumentStatus.cancelled:
+                    await repo.update_document_fields(
+                        document_id=document_id,
+                        document_status=DocumentStatus.failed,
+                        temp_filename=None,
+                        error_trace=f"Task failed after all retries: {str(exc)}",
+                    )
+
+                    return
+
+        analysis_repo = MongoAnalysisRepository()
+
+        analysis = await analysis_repo.get_analysis_by_document_and_request(
+            document_id=document_id,
+            request_id=request_id,
+        )
+
+        if not analysis:
+            return
+
+        await analysis_repo.update_analysis_fields(
+            document_id=document_id,
+            request_id=request_id,
+            status=AnalysisStatus.failed,
+            failure_kind=AnalysisFailureKind.transient,
+            error_code=getattr(exc, "error_code", None),
+            error_detail=str(exc),
+        )
+        return
+
 
     async def _is_document_cancelled(self, repo: DocumentRepository) -> bool:
         """Checks whether document processing has been canceled"""
