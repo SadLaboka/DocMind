@@ -50,7 +50,7 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
 
         analysis = await self.analysis_repo.get_analysis_by_id(BeanieObjectId(analysis_id))
 
-        if not (analysis.document_id == document_id or analysis.request_id==request_id):
+        if not (analysis.document_id == document_id and analysis.request_id==request_id):
 
             await self.analysis_repo.update_analysis_fields(
                 document_id=analysis.document_id,
