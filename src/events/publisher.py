@@ -25,7 +25,7 @@ def publish_document_text_extracted(
     request_id: str,
 ) -> None:
     """
-    Publish event: text was extracted
+    Publish event: analysis requested
     Sync publication to rabbitmq by kombu
     """
     event = AnalysisRequestedEvent(
