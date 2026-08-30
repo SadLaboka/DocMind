@@ -15,8 +15,6 @@ class DocumentStatus(Enum):
     uploaded = "uploaded"
     extracting = "extracting"
     extracted = "extracted"
-    analyzing = "analyzing"
-    success = "success"
     infected = "infected"
     failed = "failed"
     cancelled = "cancelled"

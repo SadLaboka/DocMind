@@ -11,12 +11,8 @@ class MongoDocumentRepository:
         self,
         document_id: int,
         raw_text: str | None = None,
-        analysis: dict | None = None,
-        analysis_version: str | None = None,
     ) -> MongoDocument:
-        document_content = MongoDocument(
-            document_id=document_id, raw_text=raw_text, analysis=analysis, analysis_version=analysis_version
-        )
+        document_content = MongoDocument(document_id=document_id, raw_text=raw_text)
 
         await document_content.insert()
 
