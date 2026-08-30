@@ -18,11 +18,13 @@ from pymongo.errors import ConnectionFailure
 from src.core.config import settings
 from src.core.enums import DocumentStatus, LLMProvider, MimeType
 from src.core.exceptions import AppBaseError, BadRequestError
-from src.events.publisher import publish_document_text_extracted
+from src.events.publisher import publish_document_analysis_requested
 from src.repositories.documents import DocumentRepository
 from src.repositories.mongo_documents import MongoDocumentRepository
+from src.repositories.mongo_analyses import MongoAnalysisRepository
 from src.schemas.documents import DocumentData, DocumentResponse
 from src.services.base import BaseService
+from src.services.analysis import AnalysisService
 from src.worker.antivirus_tasks import scan_file_task
 from src.worker.extraction_tasks import extract_text_task
 from src.worker.s3_upload_task import upload_document_task
@@ -78,6 +80,7 @@ class PreparedUpload:
     """Prepared data for upload process"""
 
     path: ProcessingPath
+    provider: LLMProvider
     source_document_id: int | None = None
     file_key: str | None = None
     raw_text: str | None = None
@@ -123,9 +126,14 @@ class HashingFileSaver:
 
 class UploadService(BaseService[DocumentRepository]):
 
-    def __init__(self, repository: DocumentRepository, mongo_repository: MongoDocumentRepository):
+    def __init__(
+            self,
+            repository: DocumentRepository,
+            mongo_repository: MongoDocumentRepository,
+            analysis_repository: MongoAnalysisRepository) -> None:
         super().__init__(repository)
         self.mongo_repository = mongo_repository
+        self.analysis_service = AnalysisService(analysis_repository)
 
     async def process_upload(
         self,
@@ -181,7 +189,11 @@ class UploadService(BaseService[DocumentRepository]):
                     },
                 ) from err
 
-            prepared_data = await self._determine_processing_path(file_hash=file_hash, user_id=user_id)
+            prepared_data = await self._determine_processing_path(
+                file_hash=file_hash,
+                user_id=user_id,
+                provider=provider
+            )
 
             upload_processor: Final[dict[ProcessingPath, ProcessingFunc]] = {
                 ProcessingPath.FULL_PIPELINE: self._full_pipeline_processing,
@@ -281,7 +293,7 @@ class UploadService(BaseService[DocumentRepository]):
 
         return DocumentResponse.model_validate(doc)
 
-    async def _determine_processing_path(self, file_hash: str, user_id: int) -> PreparedUpload:
+    async def _determine_processing_path(self, file_hash: str, user_id: int, provider: LLMProvider) -> PreparedUpload:
         """Determines which document processing path is needed"""
 
         logger.info(
@@ -313,6 +325,7 @@ class UploadService(BaseService[DocumentRepository]):
                             source_document_id=document.id,
                             file_key=document.file_key,
                             raw_text=content.raw_text,
+                            provider=provider,
                         )
 
             except ConnectionFailure as err:
@@ -335,6 +348,7 @@ class UploadService(BaseService[DocumentRepository]):
                 source_document_id=candidates[0].id,
                 file_key=candidates[0].file_key,
                 raw_text=None,
+                provider=provider,
             )
 
         logger.info(
@@ -343,7 +357,13 @@ class UploadService(BaseService[DocumentRepository]):
             file_hash=file_hash[:16],
             chosen_path=ProcessingPath.FULL_PIPELINE.value,
         )
-        return PreparedUpload(path=ProcessingPath.FULL_PIPELINE, source_document_id=None, file_key=None, raw_text=None)
+        return PreparedUpload(
+            path=ProcessingPath.FULL_PIPELINE,
+            source_document_id=None,
+            file_key=None,
+            raw_text=None,
+            provider=provider,
+        )
 
     async def _full_pipeline_processing(
         self,
@@ -466,16 +486,31 @@ class UploadService(BaseService[DocumentRepository]):
 
         self._remove_from_temp(temp_path)
 
+        analysis = await self.analysis_service.get_or_create_analysis(
+            document_id=document.id,
+            request_id=request_id,
+            provider=prepared_upload.provider,
+        )
+
+        analysis_id = str(analysis.id)
+
+        logger.info(
+            "document_analysis_created",
+            analysis_id=analysis_id,
+            document_id=document.id,
+            provider=prepared_upload.provider.value,
+            user_id=document.user_id,
+        )
+
         await self._publish_to_analysis(
+            analysis_id=analysis_id,
             document_id=document.id,
             user_id=document.user_id,
-            mime_type=document.mime_type.value,
             request_id=request_id,
-            provider=document.provider.value,
         )
 
         logger.info(
-            "document_text_extracted_event_published",
+            "document_analysis_request_published",
             document_id=document.id,
             user_id=document.user_id,
         )
@@ -565,16 +600,15 @@ class UploadService(BaseService[DocumentRepository]):
 
     @staticmethod
     async def _publish_to_analysis(
-        document_id: int, mime_type: str, request_id: str, user_id: int, provider: str
+        analysis_id: str, document_id: int, request_id: str, user_id: int
     ) -> None:
         """Publishes document to analysis queue"""
         await asyncio.to_thread(
-            publish_document_text_extracted,
+            publish_document_analysis_requested,
+            analysis_id=analysis_id,
             document_id=document_id,
             user_id=user_id,
-            mime_type=mime_type,
             request_id=request_id,
-            provider=provider,
         )
 
     @staticmethod
