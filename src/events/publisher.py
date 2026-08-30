@@ -1,7 +1,7 @@
 from kombu import Connection, Exchange, Queue
 
 from src.core.config import settings
-from src.events.schemas import DocumentTextExtractedEvent
+from src.events.schemas import AnalysisRequestedEvent
 
 document_exchange = Exchange(settings.rabbit.document_exchange_name, type="direct")
 
@@ -10,7 +10,7 @@ queue_arguments = {
     "x-dead-letter-routing-key": settings.rabbit.extracted_routing_key + ".retry",
 }
 
-document_text_extracted_queue = Queue(
+document_analysis_queue = Queue(
     settings.rabbit.extracted_routing_key,
     exchange=document_exchange,
     routing_key=settings.rabbit.extracted_routing_key,
@@ -19,22 +19,20 @@ document_text_extracted_queue = Queue(
 
 
 def publish_document_text_extracted(
+    analysis_id: str,
     document_id: int,
-    mime_type: str,
     user_id: int,
     request_id: str,
-    provider: str,
 ) -> None:
     """
     Publish event: text was extracted
     Sync publication to rabbitmq by kombu
     """
-    event = DocumentTextExtractedEvent(
+    event = AnalysisRequestedEvent(
+        analysis_id=analysis_id,
         document_id=document_id,
-        mime_type=mime_type,
         user_id=user_id,
         request_id=request_id,
-        provider=provider,
     )
 
     with Connection(settings.rabbit.url) as conn:
@@ -43,5 +41,5 @@ def publish_document_text_extracted(
             event.model_dump(),
             exchange=document_exchange,
             routing_key=settings.rabbit.extracted_routing_key,
-            declare=[document_text_extracted_queue],
+            declare=[document_analysis_queue],
         )
