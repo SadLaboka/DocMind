@@ -11,9 +11,9 @@ queue_arguments = {
 }
 
 document_analysis_queue = Queue(
-    settings.rabbit.extracted_routing_key,
+    settings.rabbit.analysis_routing_key,
     exchange=document_exchange,
-    routing_key=settings.rabbit.extracted_routing_key,
+    routing_key=settings.rabbit.analysis_routing_key,
     queue_arguments=queue_arguments,
 )
 
@@ -40,6 +40,6 @@ def publish_document_analysis_requested(
         producer.publish(
             event.model_dump(),
             exchange=document_exchange,
-            routing_key=settings.rabbit.extracted_routing_key,
+            routing_key=settings.rabbit.analysis_routing_key,
             declare=[document_analysis_queue],
         )
