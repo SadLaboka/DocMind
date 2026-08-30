@@ -84,7 +84,7 @@ class RabbitSettings(SettingsBase):
     user: str = "guest"
     password: str = ""
     document_exchange_name: str = "documents"
-    extracted_routing_key: str = "documents.text.extracted"
+    analysis_routing_key: str = "documents.analysis.requested"
 
     @property
     def url(self) -> str:
