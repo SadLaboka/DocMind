@@ -3,14 +3,17 @@ import time
 
 import structlog
 
+from core.enums import LLMProvider
 from src.core.database import celery_session_factory
 from src.core.exceptions import ExtractionError
 from src.core.mongo_database import init_mongo_for_worker
-from src.events.publisher import publish_document_text_extracted
+from src.events.publisher import publish_document_analysis_requested
 from src.models.documents import DocumentStatus, MimeType
 from src.repositories.documents import DocumentRepository
 from src.repositories.mongo_documents import MongoDocumentRepository
+from src.repositories.mongo_analyses import MongoAnalysisRepository
 from src.services.extractors import TextExtractor
+from src.services.analysis import AnalysisService
 from src.worker.base_task import BaseTask
 from src.worker.celery_app import app as celery_app
 
@@ -87,6 +90,8 @@ class DocumentExtractionTask(BaseTask):
         """Launch extraction logic"""
 
         mongo_repo = MongoDocumentRepository()
+        analysis_repo = MongoAnalysisRepository()
+        analysis_service = AnalysisService(analysis_repo)
 
         try:
             start_time = time.perf_counter()
@@ -113,16 +118,32 @@ class DocumentExtractionTask(BaseTask):
                 text_length=len(text),
             )
 
-            publish_document_text_extracted(
+            analysis = await analysis_service.get_or_create_analysis(
+                self.document_id,
+                self.request_id,
+                LLMProvider(self.provider)
+            )
+
+            analysis_id = str(analysis.id)
+
+            self.logger.info(
+                "analysis_created",
+                analysis_id=analysis_id,
                 document_id=self.document_id,
-                user_id=self.user_id,
-                mime_type=self.mime_type,
                 request_id=self.request_id,
                 provider=self.provider,
+                user_id=self.user_id,
+            )
+
+            publish_document_analysis_requested(
+                analysis_id=analysis_id,
+                document_id=self.document_id,
+                user_id=self.user_id,
+                request_id=self.request_id,
             )
 
             self.logger.info(
-                "document_text_extracted_event_published",
+                "document_analysis_request_published",
                 document_id=self.document_id,
                 user_id=self.user_id,
                 request_id=self.request_id,

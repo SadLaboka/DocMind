@@ -18,7 +18,7 @@ document_analysis_queue = Queue(
 )
 
 
-def publish_document_text_extracted(
+def publish_document_analysis_requested(
     analysis_id: str,
     document_id: int,
     user_id: int,
