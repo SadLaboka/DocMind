@@ -41,7 +41,7 @@ class BaseTask:
                 error_detail=str(exc),
             )
             try:
-                asyncio.run(cls._update_status_after_failure(request_id, document_id, exc))
+                asyncio.run(cls._handle_final_failure(request_id, document_id, exc))
             except Exception as err:
                 task_logger.error(
                     "update_status_after_failure_failed",
@@ -64,6 +64,10 @@ class BaseTask:
                     err=str(err),
                 )
 
+    @classmethod
+    async def _handle_final_failure(cls, document_id: int, request_id: str, exc: Exception) -> None:
+        await cls._update_status_after_failure(request_id, document_id, exc)
+
     @staticmethod
     async def _update_status_after_failure(request_id: str, document_id: int, exc: Exception) -> None:
         """Updates document status after final failure"""
@@ -71,38 +75,15 @@ class BaseTask:
             repo = DocumentRepository(session)
             current_doc = await repo.get_document_by_id(document_id)
 
-            if not current_doc.document_status == DocumentStatus.extracted:
+            if current_doc and current_doc.document_status != DocumentStatus.cancelled:
+                await repo.update_document_fields(
+                    document_id=document_id,
+                    document_status=DocumentStatus.failed,
+                    temp_filename=None,
+                    error_trace=f"Task failed after all retries: {str(exc)}",
+                )
 
-                if current_doc and current_doc.document_status != DocumentStatus.cancelled:
-                    await repo.update_document_fields(
-                        document_id=document_id,
-                        document_status=DocumentStatus.failed,
-                        temp_filename=None,
-                        error_trace=f"Task failed after all retries: {str(exc)}",
-                    )
-
-                    return
-
-        analysis_repo = MongoAnalysisRepository()
-
-        analysis = await analysis_repo.get_analysis_by_document_and_request(
-            document_id=document_id,
-            request_id=request_id,
-        )
-
-        if not analysis:
             return
-
-        await analysis_repo.update_analysis_fields(
-            document_id=document_id,
-            request_id=request_id,
-            status=AnalysisStatus.failed,
-            failure_kind=AnalysisFailureKind.transient,
-            error_code=getattr(exc, "error_code", None),
-            error_detail=str(exc),
-        )
-        return
-
 
     async def _is_document_cancelled(self, repo: DocumentRepository) -> bool:
         """Checks whether document processing has been canceled"""
