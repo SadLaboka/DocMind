@@ -40,7 +40,7 @@ class BaseTask:
                 error_detail=str(exc),
             )
             try:
-                asyncio.run(cls._handle_final_failure(request_id, document_id, exc))
+                asyncio.run(cls._handle_final_failure(document_id, request_id, exc))
             except Exception as err:
                 task_logger.error(
                     "update_status_after_failure_failed",
@@ -65,10 +65,10 @@ class BaseTask:
 
     @classmethod
     async def _handle_final_failure(cls, document_id: int, request_id: str, exc: Exception) -> None:
-        await cls._update_status_after_failure(request_id, document_id, exc)
+        await cls._update_status_after_failure(document_id, exc)
 
     @staticmethod
-    async def _update_status_after_failure(request_id: str, document_id: int, exc: Exception) -> None:
+    async def _update_status_after_failure(document_id: int, exc: Exception) -> None:
         """Updates document status after final failure"""
         async with celery_session_factory() as session:
             repo = DocumentRepository(session)

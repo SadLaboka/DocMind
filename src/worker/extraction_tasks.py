@@ -200,6 +200,9 @@ class DocumentExtractionTask(BaseTask):
             if not current_doc:
                 return
 
+            if current_doc.document_status != DocumentStatus.extracted:
+                await super()._handle_final_failure(document_id, request_id, exc)
+
             analysis_repo = MongoAnalysisRepository()
 
             analysis = await analysis_repo.get_analysis_by_document_and_request(
@@ -207,7 +210,7 @@ class DocumentExtractionTask(BaseTask):
                 request_id=request_id,
             )
 
-            if not analysis:
+            if not analysis or analysis.status != AnalysisStatus.queued:
                 return
 
             await analysis_repo.update_analysis_fields(
@@ -215,7 +218,7 @@ class DocumentExtractionTask(BaseTask):
                 request_id=request_id,
                 status=AnalysisStatus.failed,
                 failure_kind=AnalysisFailureKind.transient,
-                error_code=getattr(exc, "error_code", None),
+                error_code="analysis_dispatch_failed",
                 error_detail=str(exc),
             )
             return
