@@ -19,10 +19,10 @@ broker.add_middleware(RetryLoggingMiddleware)
 
 app = FastStream(broker)
 
-main_queue_name = settings.rabbit.extracted_routing_key
+main_queue_name = settings.rabbit.analysis_routing_key
 dead_letter_exchange = settings.rabbit.document_exchange_name + ".dlx"
-retry_name = settings.rabbit.extracted_routing_key + ".retry"
-dlq_name = settings.rabbit.extracted_routing_key + ".dlq"
+retry_name = settings.rabbit.analysis_routing_key + ".retry"
+dlq_name = settings.rabbit.analysis_routing_key + ".dlq"
 
 documents_exchange = RabbitExchange(settings.rabbit.document_exchange_name, type=ExchangeType.DIRECT)
 
@@ -70,7 +70,7 @@ async def on_startup():
         )
 
         retry_queue = await channel.declare_queue(retry_name, durable=True, arguments=retry_queue_args)
-        await retry_queue.bind(dlx_exchange, routing_key=settings.rabbit.extracted_routing_key + ".retry")
+        await retry_queue.bind(dlx_exchange, routing_key=settings.rabbit.analysis_routing_key + ".retry")
 
         await channel.declare_queue(
             dlq_name,
