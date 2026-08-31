@@ -60,7 +60,7 @@ class DocumentRepository(BaseRepository):
         stmt = select(Document).where(
             and_(
                 Document.file_hash == file_hash,
-                Document.document_status.in_([DocumentStatus.success, DocumentStatus.extracted]),
+                Document.document_status == DocumentStatus.extracted,
                 Document.provider == provider,
             )
         )
