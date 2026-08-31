@@ -39,7 +39,7 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
         return AnalysisRequestedEvent
 
     def _get_queue_name(self) -> str:
-        return settings.rabbit.extracted_routing_key
+        return settings.rabbit.analysis_routing_key
 
     async def handle(self, event: AnalysisRequestedEvent) -> None:  # type: ignore[override]
         """Main logic for analyzing extracted text"""
