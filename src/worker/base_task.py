@@ -4,9 +4,8 @@ from pathlib import Path
 import structlog
 
 from src.core.database import celery_session_factory
-from src.core.enums import DocumentStatus, AnalysisStatus, AnalysisFailureKind
+from src.core.enums import DocumentStatus
 from src.repositories.documents import DocumentRepository
-from src.repositories.mongo_analyses import MongoAnalysisRepository
 
 
 class BaseTask:
