@@ -3,7 +3,7 @@ import time
 
 import structlog
 
-from src.core.enums import LLMProvider, DocumentStatus, MimeType
+from src.core.enums import LLMProvider, DocumentStatus, MimeType, AnalysisStatus, AnalysisFailureKind
 from src.core.database import celery_session_factory
 from src.core.exceptions import ExtractionError
 from src.core.mongo_database import init_mongo_for_worker
@@ -190,6 +190,35 @@ class DocumentExtractionTask(BaseTask):
                 exc_info=True,
             )
             raise
+
+    @classmethod
+    async def _handle_final_failure(cls, document_id: int, request_id: str, exc: Exception) -> None:
+        async with celery_session_factory() as session:
+            repo = DocumentRepository(session)
+            current_doc = await repo.get_document_by_id(document_id)
+
+            if not current_doc:
+                return
+
+            analysis_repo = MongoAnalysisRepository()
+
+            analysis = await analysis_repo.get_analysis_by_document_and_request(
+                document_id=document_id,
+                request_id=request_id,
+            )
+
+            if not analysis:
+                return
+
+            await analysis_repo.update_analysis_fields(
+                document_id=document_id,
+                request_id=request_id,
+                status=AnalysisStatus.failed,
+                failure_kind=AnalysisFailureKind.transient,
+                error_code=getattr(exc, "error_code", None),
+                error_detail=str(exc),
+            )
+            return
 
 
 @celery_app.task(
