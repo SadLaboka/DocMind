@@ -3,8 +3,8 @@ import re
 
 from pydantic import ValidationError
 
-from src.schemas.analyses import AnalysisResult
 from src.llm.exceptions import LLMException
+from src.schemas.analyses import AnalysisResult
 
 
 class BaseMapper:

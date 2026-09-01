@@ -5,10 +5,10 @@ from google import genai
 from google.genai.errors import ClientError, ServerError
 from google.genai.types import GenerateContentConfig
 
-from src.schemas.analyses import AnalysisResult
 from src.llm.base import BaseLLMService
 from src.llm.base_mapper import BaseMapper
 from src.llm.exceptions import LLMException
+from src.schemas.analyses import AnalysisResult
 
 logger = structlog.get_logger(__name__)
 

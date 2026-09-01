@@ -3,14 +3,14 @@ from beanie import BeanieObjectId
 
 from src.core.config import settings
 from src.core.database import async_session_factory
-from src.core.enums import DocumentStatus, PromptType, AnalysisStatus, AnalysisFailureKind
+from src.core.enums import AnalysisFailureKind, AnalysisStatus, DocumentStatus, PromptType
 from src.events.schemas import AnalysisRequestedEvent
 from src.llm.exceptions import LLMException
 from src.llm.factory import LLMServiceFactory
 from src.repositories.documents import DocumentRepository
+from src.repositories.mongo_analyses import MongoAnalysisRepository
 from src.repositories.mongo_documents import MongoDocumentRepository
 from src.repositories.mongo_prompts import MongoPromptsRepository
-from src.repositories.mongo_analyses import MongoAnalysisRepository
 from src.stream.consumers.base import BaseConsumer
 
 logger = structlog.get_logger(__name__)
@@ -50,7 +50,7 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
 
         analysis = await self.analysis_repo.get_analysis_by_id(BeanieObjectId(analysis_id))
 
-        if not (analysis.document_id == document_id and analysis.request_id==request_id):
+        if not (analysis.document_id == document_id and analysis.request_id == request_id):
 
             await self.analysis_repo.update_analysis_fields(
                 document_id=analysis.document_id,
@@ -64,7 +64,6 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
                 message="event_corrupted",
                 retryable=False,
             )
-
 
         llm_service = self.llm_service_factory.create(analysis.provider.value)
 
@@ -105,7 +104,6 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
                     error_trace="Text not found in MongoDB after extraction",
                 )
             return
-
 
         await self.analysis_repo.update_analysis_fields(
             document_id=document_id,

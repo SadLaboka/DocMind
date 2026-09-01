@@ -2,10 +2,10 @@ import asyncio
 
 from openai import APIError, AsyncOpenAI
 
-from src.schemas.analyses import AnalysisResult
 from src.llm.base import BaseLLMService
 from src.llm.base_mapper import BaseMapper
 from src.llm.exceptions import LLMException
+from src.schemas.analyses import AnalysisResult
 
 
 class OpenAICompatibleService(BaseLLMService):

@@ -1,8 +1,8 @@
 from pymongo.errors import DuplicateKeyError
 
+from src.core.enums import LLMProvider
 from src.models.mongo_analysis import DocumentAnalysis
 from src.repositories.mongo_analyses import MongoAnalysisRepository
-from src.core.enums import LLMProvider
 
 
 class AnalysisProviderError(Exception):
@@ -18,10 +18,10 @@ class AnalysisService:
         self.repository = analysis_repository
 
     async def get_or_create_analysis(
-            self,
-            document_id: int,
-            request_id: str,
-            provider: LLMProvider,
+        self,
+        document_id: int,
+        request_id: str,
+        provider: LLMProvider,
     ) -> DocumentAnalysis:
 
         analysis = await self.repository.get_analysis_by_document_and_request(document_id, request_id)

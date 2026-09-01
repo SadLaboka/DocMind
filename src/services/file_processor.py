@@ -20,11 +20,11 @@ from src.core.enums import DocumentStatus, LLMProvider, MimeType
 from src.core.exceptions import AppBaseError, BadRequestError
 from src.events.publisher import publish_document_analysis_requested
 from src.repositories.documents import DocumentRepository
-from src.repositories.mongo_documents import MongoDocumentRepository
 from src.repositories.mongo_analyses import MongoAnalysisRepository
+from src.repositories.mongo_documents import MongoDocumentRepository
 from src.schemas.documents import DocumentData, DocumentResponse
-from src.services.base import BaseService
 from src.services.analysis import AnalysisService
+from src.services.base import BaseService
 from src.worker.antivirus_tasks import scan_file_task
 from src.worker.extraction_tasks import extract_text_task
 from src.worker.s3_upload_task import upload_document_task
@@ -127,10 +127,11 @@ class HashingFileSaver:
 class UploadService(BaseService[DocumentRepository]):
 
     def __init__(
-            self,
-            repository: DocumentRepository,
-            mongo_repository: MongoDocumentRepository,
-            analysis_repository: MongoAnalysisRepository) -> None:
+        self,
+        repository: DocumentRepository,
+        mongo_repository: MongoDocumentRepository,
+        analysis_repository: MongoAnalysisRepository,
+    ) -> None:
         super().__init__(repository)
         self.mongo_repository = mongo_repository
         self.analysis_service = AnalysisService(analysis_repository)
@@ -190,9 +191,7 @@ class UploadService(BaseService[DocumentRepository]):
                 ) from err
 
             prepared_data = await self._determine_processing_path(
-                file_hash=file_hash,
-                user_id=user_id,
-                provider=provider
+                file_hash=file_hash, user_id=user_id, provider=provider
             )
 
             upload_processor: Final[dict[ProcessingPath, ProcessingFunc]] = {
@@ -599,9 +598,7 @@ class UploadService(BaseService[DocumentRepository]):
             )
 
     @staticmethod
-    async def _publish_to_analysis(
-        analysis_id: str, document_id: int, request_id: str, user_id: int
-    ) -> None:
+    async def _publish_to_analysis(analysis_id: str, document_id: int, request_id: str, user_id: int) -> None:
         """Publishes document to analysis queue"""
         await asyncio.to_thread(
             publish_document_analysis_requested,

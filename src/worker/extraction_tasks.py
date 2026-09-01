@@ -3,16 +3,16 @@ import time
 
 import structlog
 
-from src.core.enums import LLMProvider, DocumentStatus, MimeType, AnalysisStatus, AnalysisFailureKind
 from src.core.database import celery_session_factory
+from src.core.enums import AnalysisFailureKind, AnalysisStatus, DocumentStatus, LLMProvider, MimeType
 from src.core.exceptions import ExtractionError
 from src.core.mongo_database import init_mongo_for_worker
 from src.events.publisher import publish_document_analysis_requested
 from src.repositories.documents import DocumentRepository
-from src.repositories.mongo_documents import MongoDocumentRepository
 from src.repositories.mongo_analyses import MongoAnalysisRepository
-from src.services.extractors import TextExtractor
+from src.repositories.mongo_documents import MongoDocumentRepository
 from src.services.analysis import AnalysisService
+from src.services.extractors import TextExtractor
 from src.worker.base_task import BaseTask
 from src.worker.celery_app import app as celery_app
 
@@ -118,9 +118,7 @@ class DocumentExtractionTask(BaseTask):
             )
 
             analysis = await analysis_service.get_or_create_analysis(
-                self.document_id,
-                self.request_id,
-                LLMProvider(self.provider)
+                self.document_id, self.request_id, LLMProvider(self.provider)
             )
 
             analysis_id = str(analysis.id)

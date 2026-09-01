@@ -79,7 +79,7 @@ class BaseTask:
                     document_id=document_id,
                     document_status=DocumentStatus.failed,
                     temp_filename=None,
-                    error_trace=f"Task failed after all retries: {str(exc)}",
+                    error_trace=f"Task failed after all retries: {exc!s}",
                 )
 
             return
