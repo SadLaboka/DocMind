@@ -50,6 +50,17 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
 
         analysis = await self.analysis_repo.get_analysis_by_id(BeanieObjectId(analysis_id))
 
+        if not analysis:
+            logger.error(
+                "analysis_not_found",
+                error_detail="Analysis with this document_id and request_id not found",
+                analysis_id=analysis_id,
+                document_id=document_id,
+                user_id=user_id,
+                request_id=request_id,
+            )
+            return
+
         if not (analysis.document_id == document_id and analysis.request_id == request_id):
 
             await self.analysis_repo.update_analysis_fields(
