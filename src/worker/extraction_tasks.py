@@ -53,13 +53,24 @@ class DocumentExtractionTask(BaseTask):
         async with celery_session_factory() as session:
             repo = DocumentRepository(session)
 
-            if await self._is_document_cancelled(repo):
+            document_status = await self._get_current_document_status(repo)
+
+            if not document_status:
+                self._cleanup_file()
+
+                self.logger.info(
+                    "document_status_is_cancelled",
+                    user_id=self.user_id,
+                    document_id=self.document_id,
+                )
+
                 return
 
             if not await self._is_path_exists(repo):
                 return
 
-            await repo.update_document_fields(self.document_id, document_status=DocumentStatus.extracting)
+            if not document_status == DocumentStatus.extracted:
+                await repo.update_document_fields(self.document_id, document_status=DocumentStatus.extracting)
 
             await self._process_extraction(repo, mime_enum)
 

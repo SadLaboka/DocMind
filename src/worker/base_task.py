@@ -100,6 +100,11 @@ class BaseTask:
             return True
         return False
 
+    async def _get_current_document_status(self, repo: DocumentRepository) -> DocumentStatus | None:
+        """Checks current document status"""
+        current_doc = await repo.get_document_by_id(self.document_id)
+        return current_doc.document_status if current_doc else None
+
     async def _is_path_exists(self, repo: DocumentRepository) -> bool:
         """Checks whether path exists"""
         if not self.temp_path.exists():
