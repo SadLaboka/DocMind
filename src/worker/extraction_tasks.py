@@ -211,6 +211,7 @@ class DocumentExtractionTask(BaseTask):
 
             if current_doc.document_status != DocumentStatus.extracted:
                 await super()._handle_final_failure(document_id, request_id, exc)
+                return
 
             analysis_repo = MongoAnalysisRepository()
 
