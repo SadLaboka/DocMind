@@ -78,13 +78,17 @@ class DocumentExtractionTask(BaseTask):
 
                 return
 
-            if not await self._is_path_exists(repo):
-                return
-
             if document_status != DocumentStatus.extracted:
+
+                if not await self._is_path_exists(repo):
+                    return
+
                 await repo.update_document_fields(self.document_id, document_status=DocumentStatus.extracting)
 
                 await self._process_extraction(repo, mime_enum)
+                return
+
+            await self._dispatch_analysis()
 
     def _validate_mime_type(self) -> MimeType:
         """Validates mime type"""
@@ -112,8 +116,6 @@ class DocumentExtractionTask(BaseTask):
         """Launch extraction logic"""
 
         mongo_repo = MongoDocumentRepository()
-        analysis_repo = MongoAnalysisRepository()
-        analysis_service = AnalysisService(analysis_repo)
 
         try:
             start_time = time.perf_counter()
@@ -140,36 +142,9 @@ class DocumentExtractionTask(BaseTask):
                 text_length=len(text),
             )
 
-            analysis = await analysis_service.get_or_create_analysis(
-                self.document_id, self.request_id, LLMProvider(self.provider)
-            )
-
-            analysis_id = str(analysis.id)
-
-            self.logger.info(
-                "analysis_created",
-                analysis_id=analysis_id,
-                document_id=self.document_id,
-                request_id=self.request_id,
-                provider=self.provider,
-                user_id=self.user_id,
-            )
-
-            publish_document_analysis_requested(
-                analysis_id=analysis_id,
-                document_id=self.document_id,
-                user_id=self.user_id,
-                request_id=self.request_id,
-            )
-
-            self.logger.info(
-                "document_analysis_request_published",
-                document_id=self.document_id,
-                user_id=self.user_id,
-                request_id=self.request_id,
-            )
-
             self._cleanup_file()
+
+            await self._dispatch_analysis()
 
         except ExtractionError as err:
             if err.error_code == "file_not_found":
@@ -211,6 +186,39 @@ class DocumentExtractionTask(BaseTask):
                 exc_info=True,
             )
             raise
+
+    async def _dispatch_analysis(self):
+        """Creates analysis and dispatches it to processing queue"""
+        analysis_repo = MongoAnalysisRepository()
+        analysis_service = AnalysisService(analysis_repo)
+        analysis = await analysis_service.get_or_create_analysis(
+            self.document_id, self.request_id, LLMProvider(self.provider)
+        )
+
+        analysis_id = str(analysis.id)
+
+        self.logger.info(
+            "analysis_created",
+            analysis_id=analysis_id,
+            document_id=self.document_id,
+            request_id=self.request_id,
+            provider=self.provider,
+            user_id=self.user_id,
+        )
+
+        publish_document_analysis_requested(
+            analysis_id=analysis_id,
+            document_id=self.document_id,
+            user_id=self.user_id,
+            request_id=self.request_id,
+        )
+
+        self.logger.info(
+            "document_analysis_request_published",
+            document_id=self.document_id,
+            user_id=self.user_id,
+            request_id=self.request_id,
+        )
 
     @classmethod
     async def _handle_final_failure(cls, document_id: int, request_id: str, exc: Exception) -> None:
