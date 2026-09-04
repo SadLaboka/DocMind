@@ -223,14 +223,15 @@ class DocumentExtractionTask(BaseTask):
             if not analysis or analysis.status != AnalysisStatus.queued:
                 return
 
-            await analysis_repo.update_analysis_fields(
-                document_id=document_id,
-                request_id=request_id,
-                status=AnalysisStatus.failed,
-                failure_kind=AnalysisFailureKind.transient,
-                error_code="analysis_dispatch_failed",
-                error_detail=str(exc),
-            )
+            if analysis.status == AnalysisStatus.queued:
+                await analysis_repo.update_analysis_fields(
+                    document_id=document_id,
+                    request_id=request_id,
+                    status=AnalysisStatus.failed,
+                    failure_kind=AnalysisFailureKind.transient,
+                    error_code="analysis_dispatch_failed",
+                    error_detail=str(exc),
+                )
             return
 
 
