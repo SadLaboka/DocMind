@@ -88,6 +88,8 @@ class DocumentExtractionTask(BaseTask):
                 await self._process_extraction(repo, mime_enum)
                 return
 
+            self._cleanup_file()
+
             await self._dispatch_analysis()
 
     def _validate_mime_type(self) -> MimeType:
@@ -187,7 +189,7 @@ class DocumentExtractionTask(BaseTask):
             )
             raise
 
-    async def _dispatch_analysis(self):
+    async def _dispatch_analysis(self) -> None:
         """Creates analysis and dispatches it to processing queue"""
         analysis_repo = MongoAnalysisRepository()
         analysis_service = AnalysisService(analysis_repo)
