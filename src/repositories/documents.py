@@ -54,19 +54,6 @@ class DocumentRepository(BaseRepository):
         await self.session.refresh(document)
         return document
 
-    async def get_document_by_hash_and_active_status_and_provider(
-        self, file_hash: str, provider: LLMProvider
-    ) -> Document | None:
-        stmt = select(Document).where(
-            and_(
-                Document.file_hash == file_hash,
-                Document.document_status == DocumentStatus.extracted,
-                Document.provider == provider,
-            )
-        )
-        result = await self.session.execute(stmt)
-        return result.scalar_one_or_none()
-
     async def get_reuse_candidates(self, file_hash: str) -> list[Document]:
         stmt = select(Document).where(
             and_(
