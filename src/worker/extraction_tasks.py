@@ -56,6 +56,18 @@ class DocumentExtractionTask(BaseTask):
             document_status = await self._get_current_document_status(repo)
 
             if not document_status:
+
+                self._cleanup_file()
+
+                self.logger.info(
+                    "document_not_found",
+                    user_id=self.user_id,
+                    document_id=self.document_id,
+                )
+
+                return
+
+            if document_status == DocumentStatus.cancelled:
                 self._cleanup_file()
 
                 self.logger.info(
@@ -69,10 +81,10 @@ class DocumentExtractionTask(BaseTask):
             if not await self._is_path_exists(repo):
                 return
 
-            if not document_status == DocumentStatus.extracted:
+            if document_status != DocumentStatus.extracted:
                 await repo.update_document_fields(self.document_id, document_status=DocumentStatus.extracting)
 
-            await self._process_extraction(repo, mime_enum)
+                await self._process_extraction(repo, mime_enum)
 
     def _validate_mime_type(self) -> MimeType:
         """Validates mime type"""
