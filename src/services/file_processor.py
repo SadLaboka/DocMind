@@ -23,7 +23,7 @@ from src.repositories.documents import DocumentRepository
 from src.repositories.mongo_analyses import MongoAnalysisRepository
 from src.repositories.mongo_documents import MongoDocumentRepository
 from src.schemas.documents import DocumentData, DocumentResponse
-from src.services.analysis import AnalysisService
+from src.services.analysis import AnalysisService, AnalysisStartError
 from src.services.base import BaseService
 from src.worker.antivirus_tasks import scan_file_task
 from src.worker.extraction_tasks import extract_text_task
@@ -236,6 +236,19 @@ class UploadService(BaseService[DocumentRepository]):
                 temp_path,
                 temp_filename,
             )
+
+        except AnalysisStartError as err:
+
+            logger.warning(
+                "analysis_start_error",
+                document_id=document.id if document else None,
+                user_id=user_id,
+                error_type=type(err).__name__,
+            )
+            self._remove_from_temp(temp_path)
+
+            raise
+
         except Exception as err:
             logger.warning(
                 "document_processing_failed",
@@ -485,34 +498,40 @@ class UploadService(BaseService[DocumentRepository]):
 
         self._remove_from_temp(temp_path)
 
-        analysis = await self.analysis_service.get_or_create_analysis(
-            document_id=document.id,
-            request_id=request_id,
-            provider=prepared_upload.provider,
-        )
+        try:
 
-        analysis_id = str(analysis.id)
+            analysis = await self.analysis_service.get_or_create_analysis(
+                document_id=document.id,
+                request_id=request_id,
+                provider=prepared_upload.provider,
+            )
 
-        logger.info(
-            "document_analysis_created",
-            analysis_id=analysis_id,
-            document_id=document.id,
-            provider=prepared_upload.provider.value,
-            user_id=document.user_id,
-        )
+            analysis_id = str(analysis.id)
 
-        await self._publish_to_analysis(
-            analysis_id=analysis_id,
-            document_id=document.id,
-            user_id=document.user_id,
-            request_id=request_id,
-        )
+            logger.info(
+                "document_analysis_created",
+                analysis_id=analysis_id,
+                document_id=document.id,
+                provider=prepared_upload.provider.value,
+                user_id=document.user_id,
+            )
 
-        logger.info(
-            "document_analysis_request_published",
-            document_id=document.id,
-            user_id=document.user_id,
-        )
+            await self._publish_to_analysis(
+                analysis_id=analysis_id,
+                document_id=document.id,
+                user_id=document.user_id,
+                request_id=request_id,
+            )
+
+            logger.info(
+                "document_analysis_request_published",
+                document_id=document.id,
+                user_id=document.user_id,
+            )
+
+        except Exception as err:
+
+            raise AnalysisStartError from err
 
         return document
 

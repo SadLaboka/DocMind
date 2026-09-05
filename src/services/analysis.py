@@ -13,6 +13,10 @@ class AnalysisNotFoundError(Exception):
     pass
 
 
+class AnalysisStartError(Exception):
+    pass
+
+
 class AnalysisService:
     def __init__(self, analysis_repository: MongoAnalysisRepository) -> None:
         self.repository = analysis_repository
