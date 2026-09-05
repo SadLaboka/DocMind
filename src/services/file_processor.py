@@ -23,7 +23,7 @@ from src.repositories.documents import DocumentRepository
 from src.repositories.mongo_analyses import MongoAnalysisRepository
 from src.repositories.mongo_documents import MongoDocumentRepository
 from src.schemas.documents import DocumentData, DocumentResponse
-from src.services.analysis import AnalysisService, AnalysisStartError
+from src.services.analysis import AnalysisService
 from src.services.base import BaseService
 from src.worker.antivirus_tasks import scan_file_task
 from src.worker.extraction_tasks import extract_text_task
@@ -65,6 +65,10 @@ RESERVED_NAMES = {
     "LPT10",
 }
 ALLOWED_MIME_VALUES = {m.value for m in MimeType}
+
+
+class AnalysisStartError(Exception):
+    pass
 
 
 class ProcessingPath(Enum):
@@ -515,6 +519,11 @@ class UploadService(BaseService[DocumentRepository]):
                 provider=prepared_upload.provider.value,
                 user_id=document.user_id,
             )
+
+        except Exception as err:
+            raise AnalysisStartError from err
+
+        try:
 
             await self._publish_to_analysis(
                 analysis_id=analysis_id,

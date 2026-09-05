@@ -4,7 +4,7 @@ import time
 import structlog
 
 from src.core.database import celery_session_factory
-from src.core.enums import AnalysisFailureKind, AnalysisStatus, DocumentStatus, LLMProvider, MimeType
+from src.core.enums import DocumentStatus, LLMProvider, MimeType
 from src.core.exceptions import ExtractionError
 from src.core.mongo_database import init_mongo_for_worker
 from src.events.publisher import publish_document_analysis_requested
