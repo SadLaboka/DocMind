@@ -236,24 +236,10 @@ class DocumentExtractionTask(BaseTask):
                 return
 
             analysis_repo = MongoAnalysisRepository()
+            analysis_service = AnalysisService(analysis_repo)
 
-            analysis = await analysis_repo.get_analysis_by_document_and_request(
-                document_id=document_id,
-                request_id=request_id,
-            )
+            await analysis_service.mark_dispatch_failed(document_id, request_id, exc)
 
-            if not analysis or analysis.status != AnalysisStatus.queued:
-                return
-
-            if analysis.status == AnalysisStatus.queued:
-                await analysis_repo.update_analysis_fields(
-                    document_id=document_id,
-                    request_id=request_id,
-                    status=AnalysisStatus.failed,
-                    failure_kind=AnalysisFailureKind.transient,
-                    error_code="analysis_dispatch_failed",
-                    error_detail=str(exc),
-                )
             return
 
 
