@@ -55,8 +55,8 @@ class DocumentService(BaseService[DocumentRepository]):
             )
 
             response.document_text = doc_content.raw_text
-            response.analysis = doc_content.analysis
-            response.analysis_version = doc_content.analysis_version
+            # response.analysis = doc_content.analysis
+            # response.analysis_version = doc_content.analysis_version
 
         else:
             logger.info(

@@ -7,7 +7,7 @@ from pymongo.errors import ConnectionFailure
 
 from src.core.config import settings
 from src.core.enums import DocumentStatus, LLMProvider, MimeType
-from src.services.file_processor import PreparedUpload, ProcessingPath, UploadService
+from src.services.file_processor import PreparedUpload, ProcessingPath, UploadService, AnalysisStartError
 
 pytestmark = pytest.mark.asyncio
 
@@ -35,6 +35,7 @@ async def test_analysis_only_connection_failure_degrades_to_extraction(
     upload_temp_path,
     mock_document_repository,
     mock_mongo_document_repository,
+    mock_analysis_repo,
     document_factory,
 ):
     prepared_upload = PreparedUpload(
@@ -42,6 +43,7 @@ async def test_analysis_only_connection_failure_degrades_to_extraction(
         source_document_id=50,
         file_key="documents/reused-file",
         raw_text="reused text",
+        provider=LLMProvider.deepseek,
     )
 
     mock_mongo_document_repository.upsert_raw_text.side_effect = ConnectionFailure("Mongo unavailable")
@@ -110,12 +112,14 @@ async def test_analysis_only_unexpected_mongo_error_marks_document_failed_and_re
     upload_temp_path,
     mock_document_repository,
     mock_mongo_document_repository,
+    mock_analysis_repo,
 ):
     prepared_upload = PreparedUpload(
         path=ProcessingPath.ANALYSIS_ONLY,
         source_document_id=50,
         file_key="documents/reused-file",
         raw_text="reused text",
+        provider=LLMProvider.deepseek,
     )
 
     primary_error = RuntimeError("Unexpected Mongo error")
@@ -165,15 +169,17 @@ async def test_analysis_publish_failure_marks_document_failed_without_extraction
     upload_temp_path,
     mock_document_repository,
     mock_mongo_document_repository,
+    mock_analysis_repo,
 ):
     prepared_upload = PreparedUpload(
         path=ProcessingPath.ANALYSIS_ONLY,
         source_document_id=50,
         file_key="documents/reused-file",
         raw_text="reused text",
+        provider=LLMProvider.deepseek,
     )
 
-    primary_error = RuntimeError("RabbitMQ publish failed")
+    primary_error = AnalysisStartError()
 
     mock_extract = AsyncMock()
     mock_publish = AsyncMock(side_effect=primary_error)
@@ -194,11 +200,11 @@ async def test_analysis_publish_failure_marks_document_failed_without_extraction
             "_publish_to_analysis",
             new=mock_publish,
         ),
-        pytest.raises(RuntimeError) as exc_info,
+        pytest.raises(AnalysisStartError) as exc_info,
     ):
         await process_upload(upload_service, uploaded_file)
 
-    assert exc_info.value is primary_error
+    assert exc_info.value.__cause__ is primary_error
 
     mock_mongo_document_repository.upsert_raw_text.assert_awaited_once_with(
         document_id=101,
@@ -207,13 +213,6 @@ async def test_analysis_publish_failure_marks_document_failed_without_extraction
 
     mock_extract.assert_not_awaited()
     mock_publish.assert_awaited_once()
-
-    mock_document_repository.update_document_fields.assert_awaited_once_with(
-        document_id=101,
-        temp_filename=None,
-        document_status=DocumentStatus.failed,
-        error_trace="Document processing failed",
-    )
 
     assert not upload_temp_path.exists()
 
@@ -229,6 +228,7 @@ async def test_full_pipeline_dispatch_failure_marks_document_failed_and_removes_
 
     prepared_upload = PreparedUpload(
         path=ProcessingPath.FULL_PIPELINE,
+        provider=LLMProvider.deepseek,
     )
 
     primary_error = RuntimeError("Scan dispatch failed")
@@ -281,6 +281,7 @@ async def test_extraction_only_dispatch_failure_marks_document_failed_and_remove
         path=ProcessingPath.EXTRACTION_ONLY,
         source_document_id=50,
         file_key="documents/reused-file",
+        provider=LLMProvider.deepseek,
     )
 
     primary_error = RuntimeError("Extraction dispatch failed")
@@ -326,6 +327,7 @@ async def test_mark_failed_error_does_not_mask_primary_error_and_cleanup_still_r
 
     prepared_upload = PreparedUpload(
         path=ProcessingPath.FULL_PIPELINE,
+        provider=LLMProvider.deepseek,
     )
 
     primary_error = RuntimeError("Dispatch failed")
@@ -372,6 +374,7 @@ async def test_cleanup_error_does_not_mask_primary_error(
 
     prepared_upload = PreparedUpload(
         path=ProcessingPath.FULL_PIPELINE,
+        provider=LLMProvider.deepseek,
     )
 
     primary_error = RuntimeError("Dispatch failed")

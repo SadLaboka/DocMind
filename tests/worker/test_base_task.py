@@ -52,7 +52,7 @@ def test_on_task_failure_attempts_cleanup_when_status_recovery_fails(
 
     mock_update_status.assert_awaited_once_with(
         1,
-        str(primary_error),
+        primary_error,
     )
     mock_unlink.assert_called_once_with(missing_ok=True)
 
@@ -85,6 +85,6 @@ def test_on_task_failure_does_not_raise_when_cleanup_fails(
 
     mock_update_status.assert_awaited_once_with(
         1,
-        str(primary_error),
+        primary_error,
     )
     mock_unlink.assert_called_once_with(missing_ok=True)

@@ -5,7 +5,7 @@ import pytest
 from httpx import AsyncClient
 
 from src.core.enums import DocumentStatus, LLMProvider, MimeType
-from src.events.publisher import publish_document_text_extracted
+from src.events.publisher import publish_document_analysis_requested
 from tests.conftest import FIXTURES_DIR
 
 # SUCCESS CASES
@@ -163,12 +163,19 @@ async def test_upload_document_extracting_only_path_different_providers(
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "mock_mongo_content",
-    [{"document_id": 999, "raw_text": "extracted_text"}],
+    ("mock_mongo_content", "mock_analysis_content"),
+    [({"document_id": 999, "raw_text": "extracted_text"}, {"document_id": 999, "request_id": "1"})],
     indirect=True,
 )
 async def test_upload_document_analyzing_only_path(
-    client: AsyncClient, create_token_pair, create_document, test_password, test_db_session, mock_mongo_content
+        client: AsyncClient,
+        create_token_pair,
+        create_document,
+        test_password,
+        test_db_session,
+        mock_analysis_repo,
+        mock_mongo_content,
+        mock_analysis_content,
 ):
     _, hashed_pw = test_password
     tokens = await create_token_pair(login="uploader", email="up@test.com", password_hash=hashed_pw)
@@ -213,12 +220,11 @@ async def test_upload_document_analyzing_only_path(
     assert resp_data["document_text"] == "extracted_text"
 
     mock_to_thread.assert_called_once_with(
-        publish_document_text_extracted,
+        publish_document_analysis_requested,
+        analysis_id="mock-analysis-id",
         document_id=resp_data["id"],
         user_id=tokens["user_id"],
-        mime_type=MimeType.txt.value,
         request_id=expected_request_id,
-        provider=LLMProvider.deepseek.value,
     )
 
 
@@ -279,12 +285,11 @@ async def test_upload_document_analyzing_only_path_cross_user(
     assert resp_data["document_text"] == "extracted_text"
 
     mock_to_thread.assert_called_once_with(
-        publish_document_text_extracted,
+        publish_document_analysis_requested,
+        analysis_id="mock-analysis-id",
         document_id=resp_data["id"],
         user_id=tokens2["user_id"],
-        mime_type=MimeType.txt.value,
         request_id=expected_request_id,
-        provider=LLMProvider.deepseek.value,
     )
 
 

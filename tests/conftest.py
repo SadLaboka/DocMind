@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import (
 
 from src.core.config import settings
 from src.core.database import get_session
-from src.core.enums import DocumentStatus, LLMProvider, MimeType
+from src.core.enums import DocumentStatus, LLMProvider, MimeType, AnalysisStatus, AnalysisFailureKind
 from src.core.jwt import JWTManager
 from src.core.security import get_password_hash
 from src.core.token_blacklist import TokenBlackList
@@ -27,12 +27,14 @@ from src.DependencyInjection.auth import (
     get_token_blacklist,
     get_user_active_cache,
 )
-from src.DependencyInjection.documents import get_mongo_document_repository
+from src.DependencyInjection.documents import get_mongo_document_repository, get_analysis_repository
 from src.DependencyInjection.prompts import get_mongo_prompt_repository
 from src.models.documents import Document
 from src.repositories.documents import DocumentRepository
 from src.repositories.mongo_documents import MongoDocumentRepository
 from src.repositories.mongo_prompts import MongoPromptsRepository
+from src.repositories.mongo_analyses import MongoAnalysisRepository
+from src.schemas.analyses import AnalysisResult
 from src.schemas.documents import DocumentData
 from src.services.file_processor import UploadService
 from src.storage.s3_storage import S3Storage
@@ -171,8 +173,26 @@ def temp_file(tmp_path):
 class MockMongoContent(BaseModel):
     document_id: int
     raw_text: str | None = None
-    analysis: dict | None = None
-    analysis_version: str | None = None
+
+
+class MockAnalysisContent(BaseModel):
+    id: str | None = "mock-analysis-id"
+    document_id: int
+    request_id: str
+    status: AnalysisStatus = AnalysisStatus.queued
+    provider: LLMProvider = LLMProvider.deepseek
+    prompt_version: str | None = None
+    failure_kind: AnalysisFailureKind | None = None
+    result: AnalysisResult | None = None
+    error_code: str | None = None
+    error_detail: str | None = None
+
+
+@pytest.fixture
+def analysis_content_factory():
+    def content(document_id: int = 1, request_id: str = "1"):
+        return MockAnalysisContent(document_id=document_id, request_id=request_id)
+    return content
 
 
 @pytest.fixture
@@ -181,11 +201,15 @@ def mongo_content_factory():
         return MockMongoContent(
             document_id=document_id,
             raw_text=raw_text,
-            analysis=None,
-            analysis_version=None,
         )
 
     return content
+
+
+@pytest.fixture
+def mock_analysis_content(request, analysis_content_factory):
+    params = getattr(request, "params", {})
+    return analysis_content_factory(**params)
 
 
 @pytest.fixture
@@ -202,6 +226,18 @@ def mock_mongo_repo(mock_mongo_content):
     mock_repo.create_content.return_value = mock_mongo_content
     mock_repo.get_content_for_deduplicate.return_value = mock_mongo_content
     mock_repo.upsert_raw_text.return_value = mock_mongo_content
+    return mock_repo
+
+
+@pytest.fixture
+def mock_analysis_repo(mock_analysis_content):
+    mock_repo = AsyncMock(spec=MongoAnalysisRepository)
+
+    mock_repo.create_analysis.return_value = mock_analysis_content
+    mock_repo.get_analysis_by_id.return_value = mock_analysis_content
+    mock_repo.get_analysis_by_document_and_request.return_value = mock_analysis_content
+    mock_repo.get_successful_analyses.return_value = []
+    mock_repo.update_analysis_fields.return_value = mock_analysis_content
     return mock_repo
 
 
@@ -310,6 +346,7 @@ def mock_document_repository(document_factory) -> AsyncMock:
 async def client(
     test_db_session,
     mock_mongo_repo,
+    mock_analysis_repo,
     mock_token_blacklist,
     mock_user_active_cache,
     mock_mongo_prompt_repository,
@@ -320,6 +357,10 @@ async def client(
     def override_get_mongo_repo():
         return mock_mongo_repo
 
+    def override_get_analysis_repo():
+        return mock_analysis_repo
+
+    app.dependency_overrides[get_analysis_repository] = override_get_analysis_repo
     app.dependency_overrides[get_mongo_document_repository] = override_get_mongo_repo
     app.dependency_overrides[get_session] = override_get_session
     app.dependency_overrides[get_jwt_manager] = get_test_jwt_manager
@@ -510,10 +551,12 @@ def test_password():
 def upload_service(
     mock_document_repository: AsyncMock,
     mock_mongo_document_repository: AsyncMock,
+    mock_analysis_repo: AsyncMock,
 ) -> UploadService:
     return UploadService(
         repository=mock_document_repository,
         mongo_repository=mock_mongo_document_repository,
+        analysis_repository=mock_analysis_repo,
     )
 
 
