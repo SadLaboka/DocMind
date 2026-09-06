@@ -1,6 +1,5 @@
 from sqlalchemy import and_, func, select
 
-from src.core.enums import DocumentStatus, LLMProvider
 from src.models.documents import Document
 from src.repositories.base import BaseRepository
 from src.schemas.documents import DocumentData

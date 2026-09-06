@@ -1,6 +1,6 @@
 from pymongo.errors import DuplicateKeyError
 
-from src.core.enums import LLMProvider, AnalysisStatus, AnalysisFailureKind
+from src.core.enums import AnalysisFailureKind, AnalysisStatus, LLMProvider
 from src.models.mongo_analysis import DocumentAnalysis
 from src.repositories.mongo_analyses import MongoAnalysisRepository
 
