@@ -6,7 +6,13 @@ from fastapi import UploadFile
 from pymongo.errors import ConnectionFailure
 
 from src.core.config import settings
-from src.core.enums import DocumentStatus, LLMProvider, MimeType
+from src.core.enums import (
+    AnalysisFailureKind,
+    AnalysisStatus,
+    DocumentStatus,
+    LLMProvider,
+    MimeType,
+)
 from src.services.file_processor import PreparedUpload, ProcessingPath, UploadService, AnalysisStartError
 
 pytestmark = pytest.mark.asyncio
@@ -27,6 +33,74 @@ async def process_upload(
         request_id=REQUEST_ID,
         provider=LLMProvider.deepseek,
     )
+
+
+async def test_analysis_only_creates_new_analysis_and_publishes_request(
+    upload_service,
+    uploaded_file,
+    upload_temp_path,
+    mock_document_repository,
+    mock_mongo_document_repository,
+    mock_analysis_repo,
+    mock_analysis_content,
+):
+    prepared_upload = PreparedUpload(
+        path=ProcessingPath.ANALYSIS_ONLY,
+        source_document_id=50,
+        file_key="documents/reused-file",
+        raw_text="reused text",
+        provider=LLMProvider.deepseek,
+    )
+
+    mock_analysis_repo.get_analysis_by_document_and_request.return_value = None
+    mock_analysis_repo.create_analysis.return_value = mock_analysis_content
+
+    mock_publish = AsyncMock()
+
+    with (
+        patch.object(
+            upload_service,
+            "_determine_processing_path",
+            new=AsyncMock(return_value=prepared_upload),
+        ),
+        patch.object(
+            upload_service,
+            "_publish_to_analysis",
+            new=mock_publish,
+        ),
+    ):
+        response = await process_upload(upload_service, uploaded_file)
+
+    assert response.status == DocumentStatus.extracted
+    assert response.document_text == "reused text"
+
+    mock_mongo_document_repository.upsert_raw_text.assert_awaited_once_with(
+        document_id=101,
+        raw_text="reused text",
+    )
+
+    mock_analysis_repo.get_analysis_by_document_and_request.assert_awaited_once_with(
+        101,
+        REQUEST_ID,
+    )
+
+    mock_analysis_repo.create_analysis.assert_awaited_once_with(
+        101,
+        REQUEST_ID,
+        LLMProvider.deepseek,
+    )
+
+    mock_publish.assert_awaited_once_with(
+        analysis_id=str(mock_analysis_content.id),
+        document_id=101,
+        user_id=USER_ID,
+        request_id=REQUEST_ID,
+    )
+
+    mock_document_repository.update_document_fields.assert_not_awaited()
+    mock_analysis_repo.update_analysis_fields.assert_not_awaited()
+
+    assert not upload_temp_path.exists()
 
 
 async def test_analysis_only_connection_failure_degrades_to_extraction(
@@ -163,13 +237,14 @@ async def test_analysis_only_unexpected_mongo_error_marks_document_failed_and_re
     assert not upload_temp_path.exists()
 
 
-async def test_analysis_publish_failure_marks_document_failed_without_extraction(
+async def test_analysis_publish_failure_keeps_document_extracted_and_marks_analysis_failed(
     upload_service,
     uploaded_file,
     upload_temp_path,
     mock_document_repository,
     mock_mongo_document_repository,
     mock_analysis_repo,
+    mock_analysis_content,
 ):
     prepared_upload = PreparedUpload(
         path=ProcessingPath.ANALYSIS_ONLY,
@@ -179,7 +254,7 @@ async def test_analysis_publish_failure_marks_document_failed_without_extraction
         provider=LLMProvider.deepseek,
     )
 
-    primary_error = AnalysisStartError()
+    primary_error = RuntimeError("RabbitMQ publish failed")
 
     mock_extract = AsyncMock()
     mock_publish = AsyncMock(side_effect=primary_error)
@@ -211,8 +286,143 @@ async def test_analysis_publish_failure_marks_document_failed_without_extraction
         raw_text="reused text",
     )
 
+    mock_publish.assert_awaited_once_with(
+        analysis_id=str(mock_analysis_content.id),
+        document_id=101,
+        user_id=USER_ID,
+        request_id=REQUEST_ID,
+    )
+
+    mock_analysis_repo.update_analysis_fields.assert_awaited_once_with(
+        document_id=101,
+        request_id=REQUEST_ID,
+        status=AnalysisStatus.failed,
+        failure_kind=AnalysisFailureKind.transient,
+        error_code="analysis_dispatch_failed",
+        error_detail=str(primary_error),
+    )
+
+    mock_document_repository.update_document_fields.assert_not_awaited()
     mock_extract.assert_not_awaited()
+
+    assert not upload_temp_path.exists()
+
+
+async def test_analysis_dispatch_recovery_failure_does_not_mask_publish_error(
+    upload_service,
+    uploaded_file,
+    upload_temp_path,
+    mock_document_repository,
+):
+    prepared_upload = PreparedUpload(
+        path=ProcessingPath.ANALYSIS_ONLY,
+        source_document_id=50,
+        file_key="documents/reused-file",
+        raw_text="reused text",
+        provider=LLMProvider.deepseek,
+    )
+
+    primary_error = RuntimeError("RabbitMQ publish failed")
+    recovery_error = ConnectionFailure("Mongo unavailable during failure recovery")
+
+    mock_publish = AsyncMock(side_effect=primary_error)
+    mock_mark_dispatch_failed = AsyncMock(side_effect=recovery_error)
+
+    with (
+        patch.object(
+            upload_service,
+            "_determine_processing_path",
+            new=AsyncMock(return_value=prepared_upload),
+        ),
+        patch.object(
+            upload_service,
+            "_publish_to_analysis",
+            new=mock_publish,
+        ),
+        patch.object(
+            upload_service.analysis_service,
+            "mark_dispatch_failed",
+            new=mock_mark_dispatch_failed,
+        ),
+        pytest.raises(AnalysisStartError) as exc_info,
+    ):
+        await process_upload(upload_service, uploaded_file)
+
+    assert exc_info.value.__cause__ is primary_error
+
     mock_publish.assert_awaited_once()
+
+    mock_mark_dispatch_failed.assert_awaited_once_with(
+        document_id=101,
+        request_id=REQUEST_ID,
+        error_detail=primary_error,
+    )
+
+    mock_document_repository.update_document_fields.assert_not_awaited()
+
+    assert not upload_temp_path.exists()
+
+
+async def test_analysis_creation_failure_keeps_document_extracted(
+    upload_service,
+    uploaded_file,
+    upload_temp_path,
+    mock_document_repository,
+    mock_analysis_repo,
+):
+    prepared_upload = PreparedUpload(
+        path=ProcessingPath.ANALYSIS_ONLY,
+        source_document_id=50,
+        file_key="documents/reused-file",
+        raw_text="reused text",
+        provider=LLMProvider.deepseek,
+    )
+
+    primary_error = ConnectionFailure("Mongo unavailable while creating analysis")
+
+    mock_analysis_repo.get_analysis_by_document_and_request.return_value = None
+    mock_analysis_repo.create_analysis.side_effect = primary_error
+
+    mock_publish = AsyncMock()
+    mock_mark_dispatch_failed = AsyncMock()
+
+    with (
+        patch.object(
+            upload_service,
+            "_determine_processing_path",
+            new=AsyncMock(return_value=prepared_upload),
+        ),
+        patch.object(
+            upload_service,
+            "_publish_to_analysis",
+            new=mock_publish,
+        ),
+        patch.object(
+            upload_service.analysis_service,
+            "mark_dispatch_failed",
+            new=mock_mark_dispatch_failed,
+        ),
+        pytest.raises(AnalysisStartError) as exc_info,
+    ):
+        await process_upload(upload_service, uploaded_file)
+
+    assert exc_info.value.__cause__ is primary_error
+
+    mock_analysis_repo.get_analysis_by_document_and_request.assert_awaited_once_with(
+        101,
+        REQUEST_ID,
+    )
+
+    mock_analysis_repo.create_analysis.assert_awaited_once_with(
+        101,
+        REQUEST_ID,
+        LLMProvider.deepseek,
+    )
+
+    mock_publish.assert_not_awaited()
+    mock_mark_dispatch_failed.assert_not_awaited()
+
+    mock_document_repository.update_document_fields.assert_not_awaited()
 
     assert not upload_temp_path.exists()
 
