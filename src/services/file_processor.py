@@ -539,10 +539,17 @@ class UploadService(BaseService[DocumentRepository]):
             )
 
         except Exception as err:
-
-            await self.analysis_service.mark_dispatch_failed(
-                document_id=document.id, request_id=request_id, error_detail=err
-            )
+            try:
+                await self.analysis_service.mark_dispatch_failed(
+                    document_id=document.id, request_id=request_id, error_detail=err
+                )
+            except Exception as err:
+                logger.warning(
+                    "failed_mark_dispatch_failed",
+                    document_id=document.id,
+                    user_id=document.user_id,
+                    error_type=type(err).__name__,
+                )
 
             raise AnalysisStartError from err
 
