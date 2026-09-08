@@ -28,10 +28,17 @@ class ConsumerError(Exception):
 class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
     """FastStream consumer for analyzing extracted text"""
 
-    def __init__(self, llm_service_factory: LLMServiceFactory, prompt_repo: MongoPromptsRepository) -> None:
+    def __init__(
+            self,
+            llm_service_factory: LLMServiceFactory,
+            prompt_repo: MongoPromptsRepository,
+            document_repo: MongoDocumentRepository,
+            analysis_repo: MongoAnalysisRepository,
+    ) -> None:
         self.prompt_repo = prompt_repo
-        self.analysis_repo = MongoAnalysisRepository()
         self.llm_service_factory = llm_service_factory
+        self.document_repo = document_repo
+        self.analysis_repo = analysis_repo
 
     def _get_event_model(self) -> type[AnalysisRequestedEvent]:
         return AnalysisRequestedEvent
@@ -92,8 +99,7 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
             prompt_version=prompt.version,
         )
 
-        mongo_repo = MongoDocumentRepository()
-        content = await mongo_repo.get_content(document_id)
+        content = await self.document_repo.get_content(document_id)
 
         if not content or not content.raw_text:
             logger.error(

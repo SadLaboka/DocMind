@@ -9,6 +9,8 @@ from src.core.logging_config import setup_logging
 from src.core.mongo_database import init_mongo_for_worker
 from src.core.redis import get_redis
 from src.llm.factory import LLMServiceFactory
+from src.repositories.mongo_analyses import MongoAnalysisRepository
+from src.repositories.mongo_documents import MongoDocumentRepository
 from src.repositories.mongo_prompts import MongoPromptsRepository
 from src.stream.consumers.document_analysis import DocumentAnalysisConsumer
 from src.stream.middleware import RetryLoggingMiddleware
@@ -45,10 +47,14 @@ retry_queue_args = {
 
 prompt_repo = MongoPromptsRepository(redis_client=get_redis())
 llm_service_factory = LLMServiceFactory(settings)
+document_repo = MongoDocumentRepository()
+analysis_repo = MongoAnalysisRepository()
 
 analysis_consumer = DocumentAnalysisConsumer(
     llm_service_factory=llm_service_factory,
     prompt_repo=prompt_repo,
+    document_repo=document_repo,
+    analysis_repo=analysis_repo,
 )
 
 
