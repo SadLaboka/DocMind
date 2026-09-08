@@ -19,9 +19,11 @@ PROMPT_TYPE = PromptType.document_analysis.value
 class ConsumerError(Exception):
     """Exception for consumer errors"""
 
-    def __init__(self, message: str, retryable: bool = True):
+    def __init__(self, message: str, retryable: bool = True, **kwargs) -> None:
         self.message = message
         self.retryable = retryable
+        for key, value in kwargs.items():
+            setattr(self, key, value)
         super().__init__(message)
 
 
@@ -56,15 +58,17 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
         analysis = await self.analysis_repo.get_analysis_by_id(BeanieObjectId(analysis_id))
 
         if not analysis:
-            logger.error(
-                "analysis_not_found",
+
+            raise ConsumerError(
+                retryable=False,
+                message="Analysis not found",
+                error_code="analysis_not_found",
                 error_detail="Analysis with this document_id and request_id not found",
-                analysis_id=analysis_id,
-                document_id=document_id,
-                user_id=user_id,
-                request_id=request_id,
+                log_context={
+                    "request_id": request_id,
+                    "user_id": user_id,
+                }
             )
-            return
 
         if not (analysis.document_id == document_id and analysis.request_id == request_id):
 
