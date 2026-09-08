@@ -70,6 +70,9 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
                 }
             )
 
+        if analysis.status == AnalysisStatus.success or analysis.status == AnalysisStatus.failed:
+            return
+
         if not (analysis.document_id == document_id and analysis.request_id == request_id):
 
             await self.analysis_repo.update_analysis_fields(
