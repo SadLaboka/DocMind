@@ -2,12 +2,10 @@ import structlog
 from beanie import BeanieObjectId
 
 from src.core.config import settings
-from src.core.database import async_session_factory
-from src.core.enums import AnalysisFailureKind, AnalysisStatus, DocumentStatus, PromptType
+from src.core.enums import AnalysisFailureKind, AnalysisStatus, PromptType
 from src.events.schemas import AnalysisRequestedEvent
 from src.llm.exceptions import LLMException
 from src.llm.factory import LLMServiceFactory
-from src.repositories.documents import DocumentRepository
 from src.repositories.mongo_analyses import MongoAnalysisRepository
 from src.repositories.mongo_documents import MongoDocumentRepository
 from src.repositories.mongo_prompts import MongoPromptsRepository
@@ -107,13 +105,16 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
                 user_id=user_id,
                 request_id=request_id,
             )
-            async with async_session_factory() as session:
-                pg_repo = DocumentRepository(session)
-                await pg_repo.update_document_fields(
-                    document_id=document_id,
-                    document_status=DocumentStatus.failed,
-                    error_trace="Text not found in MongoDB after extraction",
-                )
+
+            await self.analysis_repo.update_analysis_fields(
+                document_id=document_id,
+                request_id=request_id,
+                status=AnalysisStatus.failed,
+                failure_kind=AnalysisFailureKind.permanent,
+                error_code="document_text_not_found",
+                error_detail="Raw text is missing in MongoDB",
+            )
+
             return
 
         await self.analysis_repo.update_analysis_fields(
