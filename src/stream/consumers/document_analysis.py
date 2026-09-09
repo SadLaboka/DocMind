@@ -31,11 +31,11 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
     """FastStream consumer for analyzing extracted text"""
 
     def __init__(
-            self,
-            llm_service_factory: LLMServiceFactory,
-            prompt_repo: MongoPromptsRepository,
-            document_repo: MongoDocumentRepository,
-            analysis_repo: MongoAnalysisRepository,
+        self,
+        llm_service_factory: LLMServiceFactory,
+        prompt_repo: MongoPromptsRepository,
+        document_repo: MongoDocumentRepository,
+        analysis_repo: MongoAnalysisRepository,
     ) -> None:
         self.prompt_repo = prompt_repo
         self.llm_service_factory = llm_service_factory
@@ -67,7 +67,7 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
                 log_context={
                     "request_id": request_id,
                     "user_id": user_id,
-                }
+                },
             )
 
         if analysis.status == AnalysisStatus.success or analysis.status == AnalysisStatus.failed:
@@ -86,6 +86,12 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
             raise ConsumerError(
                 message="event_corrupted",
                 retryable=False,
+                error_detail="Event has wrong document_id or request_id",
+                error_code="event_corrupted",
+                log_context={
+                    "request_id": request_id,
+                    "user_id": user_id,
+                },
             )
 
         llm_service = self.llm_service_factory.create(analysis.provider.value)

@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import (
 
 from src.core.config import settings
 from src.core.database import get_session
-from src.core.enums import DocumentStatus, LLMProvider, MimeType, AnalysisStatus, AnalysisFailureKind
+from src.core.enums import AnalysisFailureKind, AnalysisStatus, DocumentStatus, LLMProvider, MimeType
 from src.core.jwt import JWTManager
 from src.core.security import get_password_hash
 from src.core.token_blacklist import TokenBlackList
@@ -27,13 +27,13 @@ from src.DependencyInjection.auth import (
     get_token_blacklist,
     get_user_active_cache,
 )
-from src.DependencyInjection.documents import get_mongo_document_repository, get_analysis_repository
+from src.DependencyInjection.documents import get_analysis_repository, get_mongo_document_repository
 from src.DependencyInjection.prompts import get_mongo_prompt_repository
 from src.models.documents import Document
 from src.repositories.documents import DocumentRepository
+from src.repositories.mongo_analyses import MongoAnalysisRepository
 from src.repositories.mongo_documents import MongoDocumentRepository
 from src.repositories.mongo_prompts import MongoPromptsRepository
-from src.repositories.mongo_analyses import MongoAnalysisRepository
 from src.schemas.analyses import AnalysisResult
 from src.schemas.documents import DocumentData
 from src.services.file_processor import UploadService
@@ -192,6 +192,7 @@ class MockAnalysisContent(BaseModel):
 def analysis_content_factory():
     def content(document_id: int = 1, request_id: str = "1"):
         return MockAnalysisContent(document_id=document_id, request_id=request_id)
+
     return content
 
 

@@ -13,7 +13,7 @@ from src.core.enums import (
     LLMProvider,
     MimeType,
 )
-from src.services.file_processor import PreparedUpload, ProcessingPath, UploadService, AnalysisStartError
+from src.services.file_processor import AnalysisStartError, PreparedUpload, ProcessingPath, UploadService
 
 pytestmark = pytest.mark.asyncio
 
