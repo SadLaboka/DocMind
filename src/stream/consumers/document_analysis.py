@@ -108,30 +108,6 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
                 },
             )
 
-        llm_service = self.llm_service_factory.create(analysis.provider.value)
-
-        prompt = await self.prompt_repo.get_active_prompt(PROMPT_TYPE)
-        if not prompt:
-            raise ConsumerError(
-                message="Active prompt not found",
-                retryable=True,
-                error_detail="Active prompt not found",
-                error_code="prompt_not_found",
-                log_context={
-                    "request_id": request_id,
-                    "user_id": user_id,
-                },
-            )
-
-        logger.info(
-            "prompt_retrieved",
-            analysis_id=analysis_id,
-            document_id=document_id,
-            user_id=user_id,
-            request_id=request_id,
-            prompt_version=prompt.version,
-        )
-
         content = await self.document_repo.get_content(document_id)
 
         if not content or not content.raw_text:
@@ -155,6 +131,30 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
             )
 
             return
+
+        llm_service = self.llm_service_factory.create(analysis.provider.value)
+
+        prompt = await self.prompt_repo.get_active_prompt(PROMPT_TYPE)
+        if not prompt:
+            raise ConsumerError(
+                message="Active prompt not found",
+                retryable=True,
+                error_detail="Active prompt not found",
+                error_code="prompt_not_found",
+                log_context={
+                    "request_id": request_id,
+                    "user_id": user_id,
+                },
+            )
+
+        logger.info(
+            "prompt_retrieved",
+            analysis_id=analysis_id,
+            document_id=document_id,
+            user_id=user_id,
+            request_id=request_id,
+            prompt_version=prompt.version,
+        )
 
         await self.analysis_repo.update_analysis_fields(
             document_id=document_id,
