@@ -55,6 +55,20 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
         user_id = event.user_id
         request_id = event.request_id
 
+        try:
+            analysis_id = BeanieObjectId(analysis_id)
+        except ValueError:
+            raise ConsumerError(
+                message="Invalid analysis id",
+                retryable=False,
+                error_code="invalid_analysis_id",
+                error_detail="Invalid analysis id",
+                log_context={
+                    "request_id": request_id,
+                    "user_id": user_id,
+                }
+            )
+
         analysis = await self.analysis_repo.get_analysis_by_id(BeanieObjectId(analysis_id))
 
         if not analysis:
