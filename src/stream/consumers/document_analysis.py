@@ -93,7 +93,7 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
                 document_id=analysis.document_id,
                 request_id=analysis.request_id,
                 status=AnalysisStatus.failed,
-                failure_kind=AnalysisFailureKind.transient,
+                failure_kind=AnalysisFailureKind.permanent,
                 error_code="event_corrupted",
             )
 
