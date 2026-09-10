@@ -196,6 +196,9 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
             result=analysis_result,
             status=AnalysisStatus.success,
             prompt_version=prompt.version,
+            error_code=None,
+            error_detail=None,
+            failure_kind=None,
         )
 
         logger.info(
