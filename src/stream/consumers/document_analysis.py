@@ -101,6 +101,12 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
             raise ConsumerError(
                 message="Active prompt not found",
                 retryable=True,
+                error_detail="Active prompt not found",
+                error_code="prompt_not_found",
+                log_context={
+                    "request_id": request_id,
+                    "user_id": user_id,
+                },
             )
 
         logger.info(
