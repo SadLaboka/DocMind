@@ -57,7 +57,7 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
 
         try:
             analysis_object_id = BeanieObjectId(analysis_id)
-        except ValueError:
+        except Exception:
             raise ConsumerError(
                 message="Invalid analysis id",
                 retryable=False,
