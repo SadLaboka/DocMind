@@ -56,7 +56,7 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
         request_id = event.request_id
 
         try:
-            analysis_id = BeanieObjectId(analysis_id)
+            analysis_object_id = BeanieObjectId(analysis_id)
         except ValueError:
             raise ConsumerError(
                 message="Invalid analysis id",
@@ -69,7 +69,7 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
                 }
             )
 
-        analysis = await self.analysis_repo.get_analysis_by_id(BeanieObjectId(analysis_id))
+        analysis = await self.analysis_repo.get_analysis_by_id(analysis_object_id)
 
         if not analysis:
 
@@ -113,7 +113,7 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
         if not content or not content.raw_text:
             logger.error(
                 "document_text_not_found",
-                error_code="text_not_found",
+                error_code="analysis_text_not_found",
                 error_detail="Raw text is missing in MongoDB",
                 analysis_id=analysis_id,
                 document_id=document_id,
