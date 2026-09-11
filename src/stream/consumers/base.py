@@ -90,6 +90,7 @@ class BaseConsumer[T: BaseModel](ABC):
                 )
 
                 await self._on_final_failure(event, e)
+                return
 
             logger.warning(
                 "consumer_processing_error",

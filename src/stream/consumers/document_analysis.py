@@ -57,14 +57,15 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
                 request_id=event.request_id,
                 status=AnalysisStatus.failed,
                 failure_kind=AnalysisFailureKind.transient,
-                error_code=getattr(error, "error_code", None),
-                error_detail=getattr(error, "error_detail", None),
+                error_code=getattr(error, "error_code", "analysis_retries_exhausted"),
+                error_detail=getattr(error, "message", str(error)),
             )
-        except Exception:
+        except Exception as err:
             logger.error(
                 "changing status after final failure failed",
                 error_code="analysis_status_change_failed",
                 error_detail="Final failure status changing failed",
+                error_type=type(err).__name__,
                 analysis_id=event.analysis_id,
                 document_id=event.document_id,
                 user_id=event.user_id,
