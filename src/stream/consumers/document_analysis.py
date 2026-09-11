@@ -63,10 +63,6 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
                 retryable=False,
                 error_code="invalid_analysis_id",
                 error_detail="Invalid analysis id",
-                log_context={
-                    "request_id": request_id,
-                    "user_id": user_id,
-                }
             )
 
         analysis = await self.analysis_repo.get_analysis_by_id(analysis_object_id)
@@ -78,10 +74,6 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
                 message="Analysis not found",
                 error_code="analysis_not_found",
                 error_detail="Analysis with this document_id and request_id not found",
-                log_context={
-                    "request_id": request_id,
-                    "user_id": user_id,
-                },
             )
 
         if analysis.status == AnalysisStatus.success or analysis.status == AnalysisStatus.failed:
@@ -102,10 +94,6 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
                 retryable=False,
                 error_detail="Event has wrong document_id or request_id",
                 error_code="event_corrupted",
-                log_context={
-                    "request_id": request_id,
-                    "user_id": user_id,
-                },
             )
 
         content = await self.document_repo.get_content(document_id)
@@ -141,10 +129,6 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
                 retryable=True,
                 error_detail="Active prompt not found",
                 error_code="prompt_not_found",
-                log_context={
-                    "request_id": request_id,
-                    "user_id": user_id,
-                },
             )
 
         logger.info(
