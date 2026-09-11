@@ -77,7 +77,7 @@ class BaseConsumer[T: BaseModel](ABC):
 
                 return
 
-            if retry_count > MAX_RETRIES:
+            if retry_count >= MAX_RETRIES:
                 logger.error(
                     "consumer_max_retries_exceeded",
                     error_code=getattr(e, "error_code", "max_retries_exceeded"),
@@ -89,7 +89,7 @@ class BaseConsumer[T: BaseModel](ABC):
                     **log_context,
                 )
 
-                return
+                await self._on_final_failure(event, e)
 
             logger.warning(
                 "consumer_processing_error",
@@ -102,6 +102,9 @@ class BaseConsumer[T: BaseModel](ABC):
             )
 
             raise
+
+    async def _on_final_failure(self, event: BaseModel, error: Exception) -> None:
+        pass
 
     @abstractmethod
     async def handle(self, event: BaseModel) -> None:

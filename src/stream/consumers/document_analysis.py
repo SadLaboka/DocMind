@@ -48,6 +48,29 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
     def _get_queue_name(self) -> str:
         return settings.rabbit.analysis_routing_key
 
+    async def _on_final_failure(self, event: AnalysisRequestedEvent, error: Exception) -> None:
+        """Changes analysis status after final failure"""
+
+        try:
+            await self.analysis_repo.update_analysis_fields(
+                document_id=event.document_id,
+                request_id=event.request_id,
+                status=AnalysisStatus.failed,
+                failure_kind=AnalysisFailureKind.transient,
+                error_code=getattr(error, "error_code", None),
+                error_detail=getattr(error, "error_detail", None),
+            )
+        except Exception:
+            logger.error(
+                "changing status after final failure failed",
+                error_code="analysis_status_change_failed",
+                error_detail="Final failure status changing failed",
+                analysis_id=event.analysis_id,
+                document_id=event.document_id,
+                user_id=event.user_id,
+                request_id=event.request_id,
+            )
+
     async def handle(self, event: AnalysisRequestedEvent) -> None:  # type: ignore[override]
         """Main logic for analyzing extracted text"""
         analysis_id = event.analysis_id
