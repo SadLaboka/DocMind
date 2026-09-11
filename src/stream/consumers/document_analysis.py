@@ -52,6 +52,49 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
         """Changes analysis status after final failure"""
 
         try:
+            analysis_object_id = BeanieObjectId(event.analysis_id)
+        except Exception as error:
+            logger.error(
+                "invalid analysis id",
+                error_code="invalid_analysis_id",
+                error_detail="Invalid analysis id",
+                error_type=type(error).__name__,
+                analysis_id=event.analysis_id,
+                document_id=event.document_id,
+                user_id=event.user_id,
+                request_id=event.request_id,
+            )
+            return
+
+        analysis = await self.analysis_repo.get_analysis_by_id(analysis_object_id)
+
+        if not analysis:
+
+            logger.error(
+                "Analysis not found",
+                error_code="analysis_not_found",
+                error_detail="Analysis with this analysis_id not found",
+                analysis_id=event.analysis_id,
+                document_id=event.document_id,
+                user_id=event.user_id,
+                request_id=event.request_id,
+            )
+            return
+
+        if not (analysis.document_id == event.document_id and analysis.request_id == event.request_id):
+
+            logger.error(
+                "event_corrupted",
+                error_detail="Event has wrong document_id or request_id",
+                error_code="event_corrupted",
+                analysis_id=event.analysis_id,
+                document_id=event.document_id,
+                user_id=event.user_id,
+                request_id=event.request_id,
+            )
+            return
+
+        try:
             await self.analysis_repo.update_analysis_fields(
                 document_id=event.document_id,
                 request_id=event.request_id,
