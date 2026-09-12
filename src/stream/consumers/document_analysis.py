@@ -32,9 +32,9 @@ class FinalFailureError(Exception):
     def __init__(self, message: str, retryable: bool = True, **kwargs) -> None:
         self.message = message
         self.retryable = retryable
-        log_context = {}
+        self.log_context = {}
         for key, value in kwargs.items():
-            log_context[key] = value
+            self.log_context[key] = value
         super().__init__(message)
 
 
