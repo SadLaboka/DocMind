@@ -300,3 +300,93 @@ async def test_handle_non_retryable_llm_error_marks_analysis_failed(
             ),
         ]
     )
+
+
+async def test_final_failure_marks_analysis_failed_transient(
+    analysis_consumer,
+    analysis_event,
+    mock_analysis_repo,
+):
+    analysis = mock_analysis_repo.get_analysis_by_id.return_value
+    analysis.status = AnalysisStatus.analyzing
+
+    error = LLMException(
+        message="Provider temporarily unavailable",
+        error_code="llm_provider_error",
+        retryable=True,
+    )
+
+    await analysis_consumer._on_final_failure(
+        analysis_event,
+        error,
+    )
+
+    mock_analysis_repo.get_analysis_by_id.assert_awaited_once()
+
+    mock_analysis_repo.update_analysis_fields.assert_awaited_once_with(
+        document_id=1,
+        request_id="1",
+        status=AnalysisStatus.failed,
+        failure_kind=AnalysisFailureKind.transient,
+        error_code="llm_provider_error",
+        error_detail="Provider temporarily unavailable",
+    )
+
+
+@pytest.mark.parametrize(
+    "terminal_status",
+    [
+        AnalysisStatus.success,
+        AnalysisStatus.failed,
+    ],
+)
+async def test_final_failure_does_not_overwrite_terminal_analysis(
+    terminal_status,
+    analysis_consumer,
+    analysis_event,
+    mock_analysis_repo,
+):
+    analysis = mock_analysis_repo.get_analysis_by_id.return_value
+    analysis.status = terminal_status
+
+    error = LLMException(
+        message="Provider temporarily unavailable",
+        error_code="llm_provider_error",
+        retryable=True,
+    )
+
+    await analysis_consumer._on_final_failure(
+        analysis_event,
+        error,
+    )
+
+    mock_analysis_repo.update_analysis_fields.assert_not_awaited()
+
+
+async def test_final_failure_does_not_update_analysis_for_corrupted_event(
+    analysis_consumer,
+    mock_analysis_repo,
+):
+    analysis = mock_analysis_repo.get_analysis_by_id.return_value
+    analysis.status = AnalysisStatus.analyzing
+
+    event = AnalysisRequestedEvent(
+        analysis_id=ANALYSIS_ID,
+        document_id=999,
+        user_id=10,
+        request_id="1",
+    )
+
+    error = LLMException(
+        message="Provider temporarily unavailable",
+        error_code="llm_provider_error",
+        retryable=True,
+    )
+
+    await analysis_consumer._on_final_failure(
+        event,
+        error,
+    )
+
+    mock_analysis_repo.update_analysis_fields.assert_not_awaited()
+
