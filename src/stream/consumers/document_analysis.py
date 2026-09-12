@@ -103,6 +103,9 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
             )
             return
 
+        if analysis.status == AnalysisStatus.success or analysis.status == AnalysisStatus.failed:
+            return
+
         if not (analysis.document_id == event.document_id and analysis.request_id == event.request_id):
 
             logger.error(
