@@ -64,12 +64,12 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
 
         try:
             analysis_object_id = BeanieObjectId(event.analysis_id)
-        except Exception as error:
+        except Exception as err:
             raise FinalFailureError(
                 message="invalid analysis id",
                 error_code="invalid_analysis_id",
-                error_detail=str(error),
-                error_type=type(error).__name__,
+                error_detail=str(err),
+                error_type=type(err).__name__,
                 analysis_id=event.analysis_id,
                 document_id=event.document_id,
                 user_id=event.user_id,
@@ -78,12 +78,12 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
 
         try:
             analysis = await self.analysis_repo.get_analysis_by_id(analysis_object_id)
-        except Exception as error:
+        except Exception as err:
             raise FinalFailureError(
                 message="failed to obtain the analysis",
                 error_code="failed_to_obtain_analysis",
-                error_detail=str(error),
-                error_type=type(error).__name__,
+                error_detail=str(err),
+                error_type=type(err).__name__,
                 analysis_id=event.analysis_id,
                 document_id=event.document_id,
                 user_id=event.user_id,
@@ -132,7 +132,7 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
             raise FinalFailureError(
                 message="changing status after final failure failed",
                 error_code="analysis_status_change_failed",
-                error_detail=str(error),
+                error_detail=str(err),
                 error_type=type(err).__name__,
                 analysis_id=event.analysis_id,
                 document_id=event.document_id,
