@@ -88,8 +88,16 @@ class BaseConsumer[T: BaseModel](ABC):
                     max_retries=MAX_RETRIES,
                     **log_context,
                 )
-
-                await self._on_final_failure(event, e)
+                try:
+                    await self._on_final_failure(event, e)
+                except Exception as e:
+                    logger.error(
+                        getattr(e, "message", "final_failure_logic_error"),
+                        error_code=getattr(e, "error_code", "final_failure_logic_error"),
+                        error_detail=getattr(e, "message", str(e)),
+                        error_type=getattr(e, "error_type", type(e).__name__),
+                        **log_context if hasattr(e, "log_context") else {},
+                    )
                 return
 
             logger.warning(
