@@ -1,10 +1,10 @@
 from uuid import uuid4
 
-from beanie import PydanticObjectId
 import pytest
+from beanie import PydanticObjectId
 from httpx import AsyncClient
 
-from src.core.enums import MimeType, LLMProvider, AnalysisStatus, AnalysisFailureKind
+from src.core.enums import AnalysisFailureKind, AnalysisStatus, LLMProvider, MimeType
 from src.schemas.analyses import AnalysisResult
 
 
@@ -156,9 +156,7 @@ async def test_get_document_returns_all_analyses(
 
     assert "error_detail" not in second
 
-    mock_analysis_repo.get_analyses_by_document_id.assert_awaited_once_with(
-        document["id"]
-    )
+    mock_analysis_repo.get_analyses_by_document_id.assert_awaited_once_with(document["id"])
 
 
 @pytest.mark.asyncio

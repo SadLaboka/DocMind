@@ -389,4 +389,3 @@ async def test_final_failure_does_not_update_analysis_for_corrupted_event(
     )
 
     mock_analysis_repo.update_analysis_fields.assert_not_awaited()
-

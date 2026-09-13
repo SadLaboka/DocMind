@@ -60,16 +60,16 @@ class BaseConsumer[T: BaseModel](ABC):
                 **log_context,
             )
 
-        except Exception as e:
+        except Exception as err:
 
-            retryable = getattr(e, "retryable", True)
+            retryable = getattr(err, "retryable", True)
 
             if not retryable:
                 logger.error(
                     "consumer_deterministic_error",
-                    error_code=getattr(e, "error_code", "deterministic_error"),
-                    error_detail=getattr(e, "message", str(e)),
-                    error_type=type(e).__name__,
+                    error_code=getattr(err, "error_code", "deterministic_error"),
+                    error_detail=getattr(err, "message", str(err)),
+                    error_type=type(err).__name__,
                     queue_name=queue_name,
                     retry_count=retry_count,
                     **log_context,
@@ -80,16 +80,16 @@ class BaseConsumer[T: BaseModel](ABC):
             if retry_count >= MAX_RETRIES:
                 logger.error(
                     "consumer_max_retries_exceeded",
-                    error_code=getattr(e, "error_code", "max_retries_exceeded"),
-                    error_detail=getattr(e, "message", str(e)),
-                    error_type=type(e).__name__,
+                    error_code=getattr(err, "error_code", "max_retries_exceeded"),
+                    error_detail=getattr(err, "message", str(err)),
+                    error_type=type(err).__name__,
                     queue_name=queue_name,
                     retry_count=retry_count,
                     max_retries=MAX_RETRIES,
                     **log_context,
                 )
                 try:
-                    await self._on_final_failure(event, e)
+                    await self._on_final_failure(event, err)
                 except Exception as e:
                     logger.error(
                         getattr(e, "message", "final_failure_logic_error"),
@@ -102,9 +102,9 @@ class BaseConsumer[T: BaseModel](ABC):
 
             logger.warning(
                 "consumer_processing_error",
-                error_code=getattr(e, "error_code", "processing_error"),
-                error_detail=getattr(e, "message", str(e)),
-                error_type=type(e).__name__,
+                error_code=getattr(err, "error_code", "processing_error"),
+                error_detail=getattr(err, "message", str(err)),
+                error_type=type(err).__name__,
                 queue_name=queue_name,
                 retry_count=retry_count,
                 **log_context,
@@ -112,7 +112,7 @@ class BaseConsumer[T: BaseModel](ABC):
 
             raise
 
-    async def _on_final_failure(self, event: BaseModel, error: Exception) -> None:
+    async def _on_final_failure(self, event: BaseModel, error: Exception) -> None:  # noqa: B027
         pass
 
     @abstractmethod

@@ -29,6 +29,7 @@ class ConsumerError(Exception):
 
 class FinalFailureError(Exception):
     """Exception for final failure errors"""
+
     def __init__(self, message: str, retryable: bool = True, **kwargs) -> None:
         self.message = message
         self.retryable = retryable
@@ -59,7 +60,7 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
     def _get_queue_name(self) -> str:
         return settings.rabbit.analysis_routing_key
 
-    async def _on_final_failure(self, event: AnalysisRequestedEvent, error: Exception) -> None:
+    async def _on_final_failure(self, event: AnalysisRequestedEvent, error: Exception) -> None:  # type: ignore
         """Changes analysis status after final failure"""
 
         try:
@@ -74,7 +75,7 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
                 document_id=event.document_id,
                 user_id=event.user_id,
                 request_id=event.request_id,
-            )
+            ) from err
 
         try:
             analysis = await self.analysis_repo.get_analysis_by_id(analysis_object_id)
@@ -88,7 +89,7 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
                 document_id=event.document_id,
                 user_id=event.user_id,
                 request_id=event.request_id,
-            )
+            ) from err
 
         if not analysis:
 
@@ -138,7 +139,7 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
                 document_id=event.document_id,
                 user_id=event.user_id,
                 request_id=event.request_id,
-            )
+            ) from err
 
     async def handle(self, event: AnalysisRequestedEvent) -> None:  # type: ignore[override]
         """Main logic for analyzing extracted text"""
@@ -149,13 +150,13 @@ class DocumentAnalysisConsumer(BaseConsumer[AnalysisRequestedEvent]):
 
         try:
             analysis_object_id = BeanieObjectId(analysis_id)
-        except Exception:
+        except Exception as err:
             raise ConsumerError(
                 message="Invalid analysis id",
                 retryable=False,
                 error_code="invalid_analysis_id",
                 error_detail="Invalid analysis id",
-            )
+            ) from err
 
         analysis = await self.analysis_repo.get_analysis_by_id(analysis_object_id)
 

@@ -4,13 +4,12 @@ from io import BytesIO
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pydantic import Field
 import pytest
 import pytest_asyncio
 from fastapi import UploadFile
 from httpx import ASGITransport, AsyncClient
 from main import app
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     create_async_engine,

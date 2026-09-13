@@ -2,9 +2,9 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from src.schemas.analyses import AnalysisResponse
 from src.core.enums import MimeType
 from src.models.documents import DocumentStatus
+from src.schemas.analyses import AnalysisResponse
 
 
 class DocumentBase(BaseModel):

@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from beanie import PydanticObjectId
-from pydantic import BaseModel, Field, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from src.core.enums import AnalysisFailureKind, AnalysisStatus, LLMProvider
 
