@@ -1,6 +1,7 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field, ConfigDict
+from beanie import PydanticObjectId
+from pydantic import BaseModel, Field, ConfigDict, field_validator
 
 from src.core.enums import AnalysisFailureKind, AnalysisStatus, LLMProvider
 
@@ -15,7 +16,7 @@ class AnalysisResult(BaseModel):
 
 
 class AnalysisResponse(BaseModel):
-    id: int
+    id: str
     provider: LLMProvider
     prompt_version: str | None = None
     result: AnalysisResult | None = None
@@ -26,3 +27,14 @@ class AnalysisResponse(BaseModel):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+    @field_validator("id", mode="before")
+    @classmethod
+    def convert_id_to_str(cls, value: object) -> str:
+        if isinstance(value, str):
+            return value
+
+        if isinstance(value, PydanticObjectId):
+            return str(value)
+
+        raise ValueError("Invalid analysis id")
