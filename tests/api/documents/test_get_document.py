@@ -1,5 +1,6 @@
 from uuid import uuid4
 
+from beanie import PydanticObjectId
 import pytest
 from httpx import AsyncClient
 
@@ -88,11 +89,13 @@ async def test_get_document_returns_all_analyses(
         temp_filename=None,
     )
 
+    analysis_id = PydanticObjectId()
+
     successful_analysis = analysis_content_factory(
         document_id=document["id"],
         request_id="request-success",
     )
-    successful_analysis.id = "analysis-success"
+    successful_analysis.id = analysis_id
     successful_analysis.status = AnalysisStatus.success
     successful_analysis.provider = LLMProvider.deepseek
     successful_analysis.prompt_version = "v1.0.0"
@@ -133,7 +136,7 @@ async def test_get_document_returns_all_analyses(
     assert len(analyses) == 2
 
     first = analyses[0]
-    assert first["id"] == "analysis-success"
+    assert first["id"] == str(analysis_id)
     assert first["status"] == AnalysisStatus.success.value
     assert first["provider"] == LLMProvider.deepseek.value
     assert first["prompt_version"] == "v1.0.0"
