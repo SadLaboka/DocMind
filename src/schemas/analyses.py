@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 from src.core.enums import AnalysisFailureKind, AnalysisStatus, LLMProvider
 
@@ -19,8 +19,10 @@ class AnalysisResponse(BaseModel):
     provider: LLMProvider
     prompt_version: str | None = None
     result: AnalysisResult | None = None
-    analysis_status: AnalysisStatus
+    status: AnalysisStatus
     failure_kind: AnalysisFailureKind | None = None
     error_code: str | None = None
     created_at: datetime
     updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
