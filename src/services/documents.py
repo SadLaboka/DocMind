@@ -11,6 +11,7 @@ from src.repositories.documents import DocumentRepository
 from src.repositories.mongo_documents import MongoDocumentRepository
 from src.repositories.mongo_analyses import MongoAnalysisRepository
 from src.schemas.documents import DocumentListResponse, DocumentResponse
+from src.schemas.analyses import AnalysisResponse
 from src.schemas.users import User
 from src.services.base import BaseService
 
@@ -28,6 +29,7 @@ class DocumentService(BaseService[DocumentRepository]):
     ):
         super().__init__(repository)
         self.mongo_repository = mongo_repository
+        self.analysis_repository = analysis_repository
 
     async def get_document_by_id(self, document_id: int, user: User) -> DocumentResponse:
         """Gets document by document_id"""
@@ -61,8 +63,10 @@ class DocumentService(BaseService[DocumentRepository]):
             )
 
             response.document_text = doc_content.raw_text
-            # response.analysis = doc_content.analysis
-            # response.analysis_version = doc_content.analysis_version
+
+            analyses = await self.analysis_repository.get_analyses_by_document_id(document.id)
+
+            response.analyses = [AnalysisResponse.model_validate(a) for a in analyses]
 
         else:
             logger.info(
