@@ -4,6 +4,7 @@ from io import BytesIO
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pydantic import Field
 import pytest
 import pytest_asyncio
 from fastapi import UploadFile
@@ -186,6 +187,8 @@ class MockAnalysisContent(BaseModel):
     result: AnalysisResult | None = None
     error_code: str | None = None
     error_detail: str | None = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 @pytest.fixture
@@ -235,6 +238,7 @@ def mock_analysis_repo(mock_analysis_content):
     mock_repo = AsyncMock(spec=MongoAnalysisRepository)
 
     mock_repo.create_analysis.return_value = mock_analysis_content
+    mock_repo.get_analyses_by_document_id.return_value = []
     mock_repo.get_analysis_by_id.return_value = mock_analysis_content
     mock_repo.get_analysis_by_document_and_request.return_value = mock_analysis_content
     mock_repo.get_successful_analyses.return_value = []
