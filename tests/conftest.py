@@ -289,7 +289,6 @@ def document_factory():
         description: str | None = "unit test",
         mime_type: MimeType = MimeType.txt,
         file_size: int = 12,
-        provider: LLMProvider = LLMProvider.deepseek,
         document_status: DocumentStatus = DocumentStatus.created,
         temp_filename: str | None = "unit-upload.txt",
         file_hash: str | None = "a" * 64,
@@ -303,7 +302,6 @@ def document_factory():
             description=description,
             mime_type=mime_type,
             file_size=file_size,
-            provider=provider,
             document_status=document_status,
             temp_filename=temp_filename,
             file_hash=file_hash,
@@ -331,7 +329,6 @@ def mock_document_repository(document_factory) -> AsyncMock:
             description=data.description,
             mime_type=data.mime_type,
             file_size=data.file_size,
-            provider=data.provider,
             document_status=data.document_status,
             temp_filename=data.temp_filename,
             file_hash=data.file_hash,
@@ -445,7 +442,6 @@ async def create_document():
             mime_type=mime_type,
             file_size=file_size,
             temp_filename=temp_filename,
-            provider=provider,
             document_status=document_status,
             file_hash=file_hash,
             file_key=file_key,
@@ -467,7 +463,6 @@ async def create_document():
             "file_hash": document.file_hash,
             "created_at": document.created_at,
             "updated_at": document.updated_at,
-            "provider": document.provider,
         }
 
     return _create

@@ -12,9 +12,18 @@ from tests.conftest import FIXTURES_DIR
 
 
 @pytest.mark.asyncio
-async def test_upload_document_success_new_file(client: AsyncClient, create_token_pair, test_password, test_db_session):
+async def test_upload_document_success_new_file(
+    client: AsyncClient,
+    create_token_pair,
+    test_password,
+    test_db_session,
+):
     _, hashed_pw = test_password
-    tokens = await create_token_pair(login="uploader", email="up@test.com", password_hash=hashed_pw)
+    tokens = await create_token_pair(
+        login="uploader",
+        email="up@test.com",
+        password_hash=hashed_pw,
+    )
 
     test_file_path = FIXTURES_DIR / "documents" / "test.txt"
     test_file_bytes = test_file_path.read_bytes()
@@ -23,27 +32,42 @@ async def test_upload_document_success_new_file(client: AsyncClient, create_toke
         mock_to_thread.return_value = AsyncMock(id="fake-task-id")
 
         files = {"file": ("test.txt", test_file_bytes, "text/plain")}
+
         response = await client.post(
             "/documents/",
             files=files,
-            data={"description": "New unique file", "provider": "gemini"},
+            data={
+                "description": "New unique file",
+                "provider": "gemini",
+            },
             headers={"Authorization": f"Bearer {tokens['access_token']}"},
         )
 
     assert response.status_code == 201
+
     resp_data = response.json()
+
     assert resp_data["filename"] == "test.txt"
     assert resp_data["document_status"] == DocumentStatus.created.value
-    assert resp_data["provider"] == "gemini"
+    assert "provider" not in resp_data
+
     mock_to_thread.assert_called_once()
+    assert mock_to_thread.call_args.kwargs["provider"] == LLMProvider.gemini.value
 
 
 @pytest.mark.asyncio
 async def test_upload_document_success_new_file_without_provider(
-    client: AsyncClient, create_token_pair, test_password, test_db_session
+    client: AsyncClient,
+    create_token_pair,
+    test_password,
+    test_db_session,
 ):
     _, hashed_pw = test_password
-    tokens = await create_token_pair(login="uploader", email="up@test.com", password_hash=hashed_pw)
+    tokens = await create_token_pair(
+        login="uploader",
+        email="up@test.com",
+        password_hash=hashed_pw,
+    )
 
     test_file_path = FIXTURES_DIR / "documents" / "test.txt"
     test_file_bytes = test_file_path.read_bytes()
@@ -52,6 +76,7 @@ async def test_upload_document_success_new_file_without_provider(
         mock_to_thread.return_value = AsyncMock(id="fake-task-id")
 
         files = {"file": ("test.txt", test_file_bytes, "text/plain")}
+
         response = await client.post(
             "/documents/",
             files=files,
@@ -60,11 +85,15 @@ async def test_upload_document_success_new_file_without_provider(
         )
 
     assert response.status_code == 201
+
     resp_data = response.json()
+
     assert resp_data["filename"] == "test.txt"
     assert resp_data["document_status"] == DocumentStatus.created.value
-    assert resp_data["provider"] == "deepseek"
+    assert "provider" not in resp_data
+
     mock_to_thread.assert_called_once()
+    assert mock_to_thread.call_args.kwargs["provider"] == LLMProvider.deepseek.value
 
 
 @pytest.mark.asyncio
@@ -136,7 +165,6 @@ async def test_upload_document_extracting_only_path_different_providers(
         temp_filename=None,
         document_status=DocumentStatus.extracted,
         file_hash=file_hash,
-        provider=LLMProvider.deepseek,
         file_key="file_key",
     )
 
@@ -156,7 +184,8 @@ async def test_upload_document_extracting_only_path_different_providers(
 
     assert isinstance(resp_data["id"], int)
     assert resp_data["document_status"] == DocumentStatus.uploaded.value
-    assert resp_data["provider"] == LLMProvider.gemini.value
+    assert "provider" not in resp_data
+    assert mock_to_thread.call_args.kwargs["provider"] == LLMProvider.gemini.value
 
     mock_to_thread.assert_called_once()
 
