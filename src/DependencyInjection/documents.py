@@ -32,5 +32,6 @@ def get_upload_service(
 def get_document_service(
     repository: DocumentRepository = Depends(get_document_repository),
     mongo_repository: MongoDocumentRepository = Depends(get_mongo_document_repository),
+    analysis_repository: MongoAnalysisRepository = Depends(get_analysis_repository),
 ) -> DocumentService:
-    return DocumentService(repository, mongo_repository)
+    return DocumentService(repository, mongo_repository, analysis_repository)
