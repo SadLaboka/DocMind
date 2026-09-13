@@ -41,6 +41,15 @@ class MongoAnalysisRepository:
             .to_list()
         )
 
+    async def get_analyses_by_document_id(self, document_id: int) -> list[DocumentAnalysis]:
+        return await (
+            DocumentAnalysis.find_many(
+                DocumentAnalysis.document_id == document_id,
+            )
+            .sort("-updated_at")
+            .to_list()
+        )
+
     async def update_analysis_fields(
         self,
         document_id: int,
