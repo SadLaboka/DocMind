@@ -21,7 +21,7 @@ class DocumentResponse(DocumentBase):
     document_text: str | None = None
     created_at: datetime
     updated_at: datetime
-    analyses: list[AnalysisResponse]
+    analyses: list[AnalysisResponse] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
 
