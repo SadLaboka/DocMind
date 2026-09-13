@@ -229,7 +229,6 @@ class UploadService(BaseService[DocumentRepository]):
                 description=description,
                 file_size=file_size,
                 file_hash=file_hash,
-                provider=provider,
                 **db_kwargs[prepared_data.path],
             )
 
@@ -276,7 +275,6 @@ class UploadService(BaseService[DocumentRepository]):
         description: str | None,
         file_size: int,
         file_hash: str,
-        provider: LLMProvider,
         **db_kwargs,
     ) -> DocumentResponse:
 
@@ -292,7 +290,6 @@ class UploadService(BaseService[DocumentRepository]):
             description=description,
             file_size=file_size,
             file_hash=file_hash,
-            provider=provider,
             **db_kwargs,
         )
         start_time = time.perf_counter()
@@ -406,7 +403,7 @@ class UploadService(BaseService[DocumentRepository]):
                 user_id=document.user_id,
                 mime_type=document.mime_type.value,
                 request_id=request_id,
-                provider=document.provider.value,
+                provider=prepared_upload.provider.value,
             )
             logger.info("scan_task_dispatched_to_queue", document_id=document.id, celery_task_id=celery_task.id)
         else:
@@ -416,7 +413,7 @@ class UploadService(BaseService[DocumentRepository]):
                 user_id=document.user_id,
                 mime_type=document.mime_type.value,
                 request_id=request_id,
-                provider=document.provider.value,
+                provider=prepared_upload.provider.value,
             )
             logger.info("upload_task_dispatched_to_queue", document_id=document.id, celery_task_id=celery_task.id)
 
@@ -445,7 +442,7 @@ class UploadService(BaseService[DocumentRepository]):
             user_id=document.user_id,
             mime_type=document.mime_type.value,
             request_id=request_id,
-            provider=document.provider.value,
+            provider=prepared_upload.provider.value,
         )
         logger.info("extract_task_dispatched_to_queue", document_id=document.id, celery_task_id=celery_task.id)
 

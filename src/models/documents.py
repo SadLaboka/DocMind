@@ -21,9 +21,5 @@ class Document(Base):
         default=DocumentStatus.created,
     )
     error_trace: Mapped[str] = mapped_column(Text, nullable=True, default=None)
-    provider: Mapped[LLMProvider | None] = mapped_column(
-        Enum(LLMProvider, name="llm_provider", native_enum=False),
-        nullable=True,
-        default=None,
-    )
+
     file_key: Mapped[str | None] = mapped_column(String(500), nullable=True, default=None)
