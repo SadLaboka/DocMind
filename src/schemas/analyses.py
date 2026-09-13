@@ -15,7 +15,7 @@ class AnalysisResult(BaseModel):
 
 
 class AnalysisResponse(BaseModel):
-    document_id: int
+    id: int
     provider: LLMProvider
     prompt_version: str | None = None
     result: AnalysisResult | None = None

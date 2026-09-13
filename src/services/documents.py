@@ -64,16 +64,16 @@ class DocumentService(BaseService[DocumentRepository]):
 
             response.document_text = doc_content.raw_text
 
-            analyses = await self.analysis_repository.get_analyses_by_document_id(document.id)
-
-            response.analyses = [AnalysisResponse.model_validate(a) for a in analyses]
-
         else:
             logger.info(
                 "document_content_not_found",
                 document_id=document.id,
                 user_id=user.id,
             )
+
+        analyses = await self.analysis_repository.get_analyses_by_document_id(document.id)
+
+        response.analyses = [AnalysisResponse.model_validate(a) for a in analyses]
 
         return response
 
