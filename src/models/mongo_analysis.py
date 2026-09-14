@@ -1,4 +1,5 @@
 import pymongo
+from beanie import BeanieObjectId
 
 from src.core.enums import AnalysisFailureKind, AnalysisStatus, LLMProvider
 from src.models.mongo_base import BaseDocument
@@ -15,10 +16,12 @@ class DocumentAnalysis(BaseDocument):
     failure_kind: AnalysisFailureKind | None = None
     error_code: str | None = None
     error_detail: str | None = None
+    retry_of_analysis_id: BeanieObjectId | None = None
 
     class Settings:
         name = "document_analyses"
 
         indexes = [
             pymongo.IndexModel([("document_id", pymongo.ASCENDING), ("request_id", pymongo.ASCENDING)], unique=True),
+            pymongo.IndexModel(("retry_of_analysis_id", pymongo.DESCENDING), sparse=True, unique=True),
         ]
