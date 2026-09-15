@@ -23,5 +23,5 @@ class DocumentAnalysis(BaseDocument):
 
         indexes = [
             pymongo.IndexModel([("document_id", pymongo.ASCENDING), ("request_id", pymongo.ASCENDING)], unique=True),
-            pymongo.IndexModel(("retry_of_analysis_id", pymongo.DESCENDING), sparse=True, unique=True),
+            pymongo.IndexModel((("retry_of_analysis_id", pymongo.DESCENDING),), sparse=True, unique=True),
         ]
