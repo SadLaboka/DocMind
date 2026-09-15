@@ -1,6 +1,8 @@
 import datetime
+from typing import Any
 
 from beanie import BeanieObjectId
+from beanie.operators import In
 
 from src.core.enums import AnalysisStatus, LLMProvider
 from src.models.mongo_analysis import DocumentAnalysis
@@ -41,11 +43,19 @@ class MongoAnalysisRepository:
             .to_list()
         )
 
-    async def get_analyses_by_document_id(self, document_id: int) -> list[DocumentAnalysis]:
+    async def get_analyses_by_document_id(
+            self,
+            document_id: int,
+            statuses: list[AnalysisStatus] | None = None
+    ) -> list[DocumentAnalysis]:
+
+        filters: list[Any] = [DocumentAnalysis.document_id == document_id]
+
+        if statuses:
+            filters.append(In(DocumentAnalysis.status, statuses))
+
         return await (
-            DocumentAnalysis.find_many(
-                DocumentAnalysis.document_id == document_id,
-            )
+            DocumentAnalysis.find_many(*filters)
             .sort("-updated_at")
             .to_list()
         )
