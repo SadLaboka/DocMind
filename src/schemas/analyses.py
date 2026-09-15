@@ -25,10 +25,11 @@ class AnalysisResponse(BaseModel):
     error_code: str | None = None
     created_at: datetime
     updated_at: datetime
+    retry_of_analysis_id: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
-    @field_validator("id", mode="before")
+    @field_validator("id", "retry_of_analysis_id", mode="before")
     @classmethod
     def convert_id_to_str(cls, value: object) -> str:
         if isinstance(value, str):
