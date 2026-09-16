@@ -39,3 +39,7 @@ class AnalysisResponse(BaseModel):
             return str(value)
 
         raise ValueError("Invalid analysis id")
+
+
+class AnalysesListReponse(BaseModel):
+    analyses: list[AnalysisResponse]

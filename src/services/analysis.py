@@ -2,6 +2,7 @@ from pymongo.errors import DuplicateKeyError
 
 from src.core.enums import AnalysisFailureKind, AnalysisStatus, LLMProvider
 from src.models.mongo_analysis import DocumentAnalysis
+from src.schemas.analyses import AnalysesListReponse
 from src.repositories.mongo_analyses import MongoAnalysisRepository
 
 
@@ -39,6 +40,16 @@ class AnalysisService:
             raise AnalysisProviderError()
 
         return analysis
+
+    async def get_analyses_list(
+            self,
+            document_id: int,
+            analyses_statuses: list[AnalysisStatus] | None = None,
+    ) -> AnalysesListReponse:
+        analyses =  AnalysesListReponse.model_validate(
+            await self.repository.get_analyses_by_document_id(document_id, analyses_statuses)
+        )
+        return analyses
 
     async def mark_dispatch_failed(self, document_id: int, request_id: str, error_detail: Exception) -> None:
 
