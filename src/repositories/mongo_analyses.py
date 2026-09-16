@@ -16,11 +16,15 @@ class MongoAnalysisRepository:
         request_id: str,
         provider: LLMProvider,
         prompt_version: str | None = None,
+        retry_of_analysis_id: BeanieObjectId | None = None,
     ) -> DocumentAnalysis:
 
         analysis = DocumentAnalysis(
             document_id=document_id, request_id=request_id, provider=provider, prompt_version=prompt_version
         )
+
+        if retry_of_analysis_id is not None:
+            analysis.retry_id = retry_of_analysis_id
 
         await analysis.insert()
 
