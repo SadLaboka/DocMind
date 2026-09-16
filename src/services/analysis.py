@@ -24,6 +24,7 @@ class AnalysisService:
         request_id: str,
         provider: LLMProvider,
     ) -> DocumentAnalysis:
+        """Gets or creates an analysis for a given document, request and provider"""
 
         analysis = await self.repository.get_analysis_by_document_and_request(document_id, request_id)
 
@@ -46,12 +47,14 @@ class AnalysisService:
             document_id: int,
             analyses_statuses: list[AnalysisStatus] | None = None,
     ) -> AnalysesListReponse:
+        """Gets a list of analyses for a given document and statuses"""
         analyses =  AnalysesListReponse.model_validate(
             await self.repository.get_analyses_by_document_id(document_id, analyses_statuses)
         )
         return analyses
 
     async def mark_dispatch_failed(self, document_id: int, request_id: str, error_detail: Exception) -> None:
+        """Marks analysis dispatch as failed"""
 
         analysis = await self.repository.get_analysis_by_document_and_request(document_id, request_id)
 
