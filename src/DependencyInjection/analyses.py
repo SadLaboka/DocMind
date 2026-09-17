@@ -1,6 +1,6 @@
 from fastapi import Depends
 
-from services.analysis import AnalysisService
+from src.services.analysis import AnalysisService
 from src.repositories.mongo_analyses import MongoAnalysisRepository
 
 
