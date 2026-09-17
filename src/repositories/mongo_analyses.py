@@ -60,7 +60,7 @@ class MongoAnalysisRepository:
 
         return await (
             DocumentAnalysis.find_many(*filters)
-            .sort("-updated_at")
+            .sort("-created_at")
             .to_list()
         )
 
