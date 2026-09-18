@@ -58,14 +58,16 @@ class AnalysisService:
 
         skip = (page - 1) * limit
 
-        analyses =  AnalysesListReponse.model_validate(
-            await self.repository.get_analyses_by_document_id(
+        analyses_list = await self.repository.get_analyses_by_document_id(
                 document_id,
                 limit=limit,
                 skip=skip,
                 statuses=analyses_statuses,
-                providers=providers,
-            )
+                providers=providers
+        )
+
+        analyses =  AnalysesListReponse.model_validate(
+            {"analyses": analyses_list},
         )
 
         logger.info(
