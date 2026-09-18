@@ -46,6 +46,7 @@ class AnalysisService:
             self,
             document_id: int,
             analyses_statuses: list[AnalysisStatus] | None = None,
+            providers: list[LLMProvider] | None = None,
     ) -> AnalysesListReponse:
         """Gets a list of analyses for a given document and statuses"""
 
