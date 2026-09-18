@@ -1,9 +1,12 @@
+import structlog
 from pymongo.errors import DuplicateKeyError
 
 from src.core.enums import AnalysisFailureKind, AnalysisStatus, LLMProvider
 from src.models.mongo_analysis import DocumentAnalysis
 from src.schemas.analyses import AnalysesListReponse
 from src.repositories.mongo_analyses import MongoAnalysisRepository
+
+logger = structlog.get_logger(__name__)
 
 
 class AnalysisProviderError(Exception):
@@ -47,6 +50,7 @@ class AnalysisService:
             document_id: int,
             limit: int = 10,
             page: int = 1,
+            user_id: int | None = None,
             analyses_statuses: list[AnalysisStatus] | None = None,
             providers: list[LLMProvider] | None = None,
     ) -> AnalysesListReponse:
@@ -63,6 +67,17 @@ class AnalysisService:
                 providers=providers,
             )
         )
+
+        logger.info(
+            "analyses_list_retrieved",
+            user_id=user_id,
+            document_id=document_id,
+            statuses=analyses_statuses,
+            providers=providers,
+            page=page,
+            limit=limit,
+        )
+
         return analyses
 
     async def mark_dispatch_failed(self, document_id: int, request_id: str, error_detail: Exception) -> None:
