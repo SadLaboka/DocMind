@@ -29,7 +29,7 @@ class AnalysisResponse(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
-    @field_validator("id", "retry_of_analysis_id", mode="before")
+    @field_validator("id", mode="before")
     @classmethod
     def convert_id_to_str(cls, value: object) -> str:
         if isinstance(value, str):
@@ -39,6 +39,20 @@ class AnalysisResponse(BaseModel):
             return str(value)
 
         raise ValueError("Invalid analysis id")
+
+    @field_validator("retry_of_analysis_id", mode="before")
+    @classmethod
+    def convert_retry_of_analysis_id_to_str(cls, value: object) -> str | None:
+        if value is None:
+            return None
+
+        if isinstance(value, str):
+            return value
+
+        if isinstance(value, PydanticObjectId):
+            return str(value)
+
+        raise ValueError("Invalid retry_of_analysis_id")
 
 
 class AnalysesListResponse(BaseModel):
