@@ -6,7 +6,7 @@ from src.core.enums import AnalysisStatus, LLMProvider
 from src.DependencyInjection.analyses import get_analysis_service
 from src.DependencyInjection.auth import get_current_user
 from src.DependencyInjection.documents import get_document_service
-from src.schemas.analyses import AnalysesListReponse
+from src.schemas.analyses import AnalysesListResponse
 from src.schemas.users import User
 from src.services.analysis import AnalysisService
 from src.services.documents import DocumentService
@@ -19,7 +19,7 @@ http_bearer = HTTPBearer(auto_error=False)
     "/",
     summary="Get all analyses by document",
     status_code=status.HTTP_200_OK,
-    response_model=AnalysesListReponse,
+    response_model=AnalysesListResponse,
 )
 async def get_all_analyses(
     document_id: int,
@@ -30,7 +30,7 @@ async def get_all_analyses(
     current_user: User = Depends(get_current_user),
     analysis_service: AnalysisService = Depends(get_analysis_service),
     document_service: DocumentService = Depends(get_document_service),
-) -> AnalysesListReponse:
+) -> AnalysesListResponse:
     await document_service.get_document_by_id(document_id, current_user)
 
     return await analysis_service.get_analyses_list(

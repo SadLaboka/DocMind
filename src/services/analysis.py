@@ -3,7 +3,7 @@ from pymongo.errors import DuplicateKeyError
 
 from src.core.enums import AnalysisFailureKind, AnalysisStatus, LLMProvider
 from src.models.mongo_analysis import DocumentAnalysis
-from src.schemas.analyses import AnalysesListReponse
+from src.schemas.analyses import AnalysesListResponse
 from src.repositories.mongo_analyses import MongoAnalysisRepository
 
 logger = structlog.get_logger(__name__)
@@ -53,7 +53,7 @@ class AnalysisService:
             user_id: int | None = None,
             analyses_statuses: list[AnalysisStatus] | None = None,
             providers: list[LLMProvider] | None = None,
-    ) -> AnalysesListReponse:
+    ) -> AnalysesListResponse:
         """Gets a list of analyses for a given document and statuses"""
 
         skip = (page - 1) * limit
@@ -66,7 +66,7 @@ class AnalysisService:
                 providers=providers
         )
 
-        analyses =  AnalysesListReponse.model_validate(
+        analyses =  AnalysesListResponse.model_validate(
             {"analyses": analyses_list},
         )
 
