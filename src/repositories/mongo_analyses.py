@@ -50,6 +50,8 @@ class MongoAnalysisRepository:
     async def get_analyses_by_document_id(
             self,
             document_id: int,
+            limit: int = 10,
+            skip: int = 0,
             statuses: list[AnalysisStatus] | None = None,
             providers: list[LLMProvider] | None = None,
     ) -> list[DocumentAnalysis]:
@@ -63,8 +65,12 @@ class MongoAnalysisRepository:
             filters.append(In(DocumentAnalysis.provider, providers))
 
         return await (
-            DocumentAnalysis.find_many(*filters)
-            .sort("-created_at")
+            DocumentAnalysis.find_many(
+                *filters,
+                sort="-created_at",
+                limit=limit,
+                skip=skip,
+            )
             .to_list()
         )
 
