@@ -45,16 +45,22 @@ class AnalysisService:
     async def get_analyses_list(
             self,
             document_id: int,
+            limit: int = 10,
+            page: int = 1,
             analyses_statuses: list[AnalysisStatus] | None = None,
             providers: list[LLMProvider] | None = None,
     ) -> AnalysesListReponse:
         """Gets a list of analyses for a given document and statuses"""
 
+        skip = (page - 1) * limit
+
         analyses =  AnalysesListReponse.model_validate(
             await self.repository.get_analyses_by_document_id(
                 document_id,
+                limit=limit,
+                skip=skip,
                 statuses=analyses_statuses,
-                providers=providers
+                providers=providers,
             )
         )
         return analyses

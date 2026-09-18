@@ -23,12 +23,20 @@ http_bearer = HTTPBearer(auto_error=False)
 )
 async def get_all_analyses(
     document_id: int,
-    statuses: list[AnalysisStatus] = Query(default=[], description="statuses filter"),
-    providers: list[LLMProvider] = Query(default=[], description="providers filter"),
+    page: int = Query(0, ge=1, description="Page number"),
+    limit: int = Query(10, ge=1, le=20, description="Page size"),
+    statuses: list[AnalysisStatus] = Query(default=[], description="Statuses filter"),
+    providers: list[LLMProvider] = Query(default=[], description="Providers filter"),
     current_user: User = Depends(get_auth_service),
     analysis_service: AnalysisService = Depends(get_analysis_service),
     document_service: DocumentService = Depends(get_document_service),
 ) -> AnalysesListReponse:
     await document_service.get_document_by_id(document_id, current_user)
 
-    return await analysis_service.get_analyses_list(document_id, analyses_statuses=statuses, providers=providers)
+    return await analysis_service.get_analyses_list(
+        document_id,
+        limit=limit,
+        page=page,
+        analyses_statuses=statuses,
+        providers=providers
+    )
