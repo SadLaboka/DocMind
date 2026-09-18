@@ -11,7 +11,7 @@ from src.schemas.users import User
 from src.services.analysis import AnalysisService
 from src.services.documents import DocumentService
 
-router = APIRouter(prefix="/analysis{document_id}", tags=["analysis"])
+router = APIRouter(prefix="/analysis/{document_id}", tags=["analysis"])
 http_bearer = HTTPBearer(auto_error=False)
 
 
