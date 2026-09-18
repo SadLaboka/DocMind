@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, Query
 from fastapi.security import HTTPBearer
 from starlette import status
 
+from src.core.enums import AnalysisStatus
 from src.DependencyInjection.analyses import get_analysis_service
 from src.DependencyInjection.auth import get_auth_service
 from src.DependencyInjection.documents import get_document_service
@@ -22,7 +23,7 @@ http_bearer = HTTPBearer(auto_error=False)
 )
 async def get_all_analyses(
     document_id: int,
-    statuses: list[str] = Query(default=[], description="statuses filter"),
+    statuses: list[AnalysisStatus] = Query(default=[], description="statuses filter"),
     current_user: User = Depends(get_auth_service),
     analysis_service: AnalysisService = Depends(get_analysis_service),
     document_service: DocumentService = Depends(get_document_service),
