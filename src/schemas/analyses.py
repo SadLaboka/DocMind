@@ -41,5 +41,5 @@ class AnalysisResponse(BaseModel):
         raise ValueError("Invalid analysis id")
 
 
-class AnalysesListReponse(BaseModel):
+class AnalysesListResponse(BaseModel):
     analyses: list[AnalysisResponse]
