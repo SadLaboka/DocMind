@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query
 from fastapi.security import HTTPBearer
 from starlette import status
 
-from src.core.enums import AnalysisStatus
+from src.core.enums import AnalysisStatus, LLMProvider
 from src.DependencyInjection.analyses import get_analysis_service
 from src.DependencyInjection.auth import get_auth_service
 from src.DependencyInjection.documents import get_document_service
@@ -24,10 +24,11 @@ http_bearer = HTTPBearer(auto_error=False)
 async def get_all_analyses(
     document_id: int,
     statuses: list[AnalysisStatus] = Query(default=[], description="statuses filter"),
+    providers: list[LLMProvider] = Query(default=[], description="providers filter"),
     current_user: User = Depends(get_auth_service),
     analysis_service: AnalysisService = Depends(get_analysis_service),
     document_service: DocumentService = Depends(get_document_service),
 ) -> AnalysesListReponse:
     await document_service.get_document_by_id(document_id, current_user)
 
-    return await analysis_service.get_analyses_list(document_id, analyses_statuses=statuses)
+    return await analysis_service.get_analyses_list(document_id, analyses_statuses=statuses, providers=providers)
