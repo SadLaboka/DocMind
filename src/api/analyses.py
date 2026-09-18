@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from fastapi.security import HTTPBearer
 from starlette import status
 
@@ -22,10 +22,11 @@ http_bearer = HTTPBearer(auto_error=False)
 )
 async def get_all_analyses(
     document_id: int,
+    statuses: list[str] = Query(default=[], description="statuses filter"),
     current_user: User = Depends(get_auth_service),
     analysis_service: AnalysisService = Depends(get_analysis_service),
     document_service: DocumentService = Depends(get_document_service),
 ) -> AnalysesListReponse:
     await document_service.get_document_by_id(document_id, current_user)
 
-    return await analysis_service.get_analyses_list(document_id)
+    return await analysis_service.get_analyses_list(document_id, analyses_statuses=statuses)
