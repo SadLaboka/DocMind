@@ -51,7 +51,11 @@ class AnalysisService:
         """Gets a list of analyses for a given document and statuses"""
 
         analyses =  AnalysesListReponse.model_validate(
-            await self.repository.get_analyses_by_document_id(document_id, statuses=analyses_statuses)
+            await self.repository.get_analyses_by_document_id(
+                document_id,
+                statuses=analyses_statuses,
+                providers=providers
+            )
         )
         return analyses
 
