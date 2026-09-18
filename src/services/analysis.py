@@ -45,11 +45,16 @@ class AnalysisService:
     async def get_analyses_list(
             self,
             document_id: int,
-            analyses_statuses: list[AnalysisStatus] | None = None,
+            analyses_statuses: list[str] | None = None,
     ) -> AnalysesListReponse:
         """Gets a list of analyses for a given document and statuses"""
+        if analyses_statuses:
+            statuses = [AnalysisStatus(status) for status in analyses_statuses]
+        else:
+            statuses = []
+
         analyses =  AnalysesListReponse.model_validate(
-            await self.repository.get_analyses_by_document_id(document_id, analyses_statuses)
+            await self.repository.get_analyses_by_document_id(document_id, statuses)
         )
         return analyses
 
