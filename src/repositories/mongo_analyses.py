@@ -50,13 +50,17 @@ class MongoAnalysisRepository:
     async def get_analyses_by_document_id(
             self,
             document_id: int,
-            statuses: list[AnalysisStatus] | None = None
+            statuses: list[AnalysisStatus] | None = None,
+            providers: list[LLMProvider] | None = None,
     ) -> list[DocumentAnalysis]:
 
         filters: list[Any] = [DocumentAnalysis.document_id == document_id]
 
         if statuses:
             filters.append(In(DocumentAnalysis.status, statuses))
+
+        if providers:
+            filters.append(In(DocumentAnalysis.provider, providers))
 
         return await (
             DocumentAnalysis.find_many(*filters)
