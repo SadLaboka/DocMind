@@ -4,7 +4,7 @@ from starlette import status
 
 from src.core.enums import AnalysisStatus, LLMProvider
 from src.DependencyInjection.analyses import get_analysis_service
-from src.DependencyInjection.auth import get_auth_service
+from src.DependencyInjection.auth import get_current_user
 from src.DependencyInjection.documents import get_document_service
 from src.schemas.analyses import AnalysesListReponse
 from src.schemas.users import User
@@ -27,7 +27,7 @@ async def get_all_analyses(
     limit: int = Query(10, ge=1, le=20, description="Page size"),
     statuses: list[AnalysisStatus] = Query(default=[], description="Statuses filter"),
     providers: list[LLMProvider] = Query(default=[], description="Providers filter"),
-    current_user: User = Depends(get_auth_service),
+    current_user: User = Depends(get_current_user),
     analysis_service: AnalysisService = Depends(get_analysis_service),
     document_service: DocumentService = Depends(get_document_service),
 ) -> AnalysesListReponse:
@@ -37,6 +37,7 @@ async def get_all_analyses(
         document_id,
         limit=limit,
         page=page,
+        user_id=current_user.id,
         analyses_statuses=statuses,
         providers=providers
     )
