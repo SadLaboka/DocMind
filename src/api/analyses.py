@@ -31,7 +31,7 @@ async def get_all_analyses(
     analysis_service: AnalysisService = Depends(get_analysis_service),
     document_service: DocumentService = Depends(get_document_service),
 ) -> AnalysesListResponse:
-    await document_service.get_document_by_id(document_id, current_user)
+    await document_service.get_document(current_user, document_id)
 
     return await analysis_service.get_analyses_list(
         document_id,

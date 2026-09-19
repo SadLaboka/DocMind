@@ -34,7 +34,7 @@ class DocumentService(BaseService[DocumentRepository]):
     async def get_document_by_id(self, document_id: int, user: User) -> DocumentResponse:
         """Gets document by document_id"""
 
-        document = await self._get_document(user, document_id)
+        document = await self.get_document(user, document_id)
 
         logger.info(
             "document_retrieved",
@@ -109,7 +109,7 @@ class DocumentService(BaseService[DocumentRepository]):
             document_id=document_id,
         )
 
-        document = await self._get_document(user, document_id)
+        document = await self.get_document(user, document_id)
 
         if document.document_status != DocumentStatus.cancelled:
             temp_filename_to_delete = document.temp_filename
@@ -149,7 +149,7 @@ class DocumentService(BaseService[DocumentRepository]):
 
     async def get_download_url(self, document_id: int, user: User) -> str:
         """Generate presigned URL for document download"""
-        document = await self._get_document(user, document_id)
+        document = await self.get_document(user, document_id)
 
         if not document.file_key:
             raise ResourceNotFoundError(
@@ -221,7 +221,7 @@ class DocumentService(BaseService[DocumentRepository]):
 
         return presigned_url
 
-    async def _get_document(self, user: User, document_id: int) -> Document:
+    async def get_document(self, user: User, document_id: int) -> Document:
         """Gets a document from the database by id, checks the document's ownership and returns it"""
         if user.is_admin:
             document = await self.repository.get_document_by_id(document_id)
