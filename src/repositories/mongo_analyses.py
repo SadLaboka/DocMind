@@ -50,7 +50,7 @@ class MongoAnalysisRepository:
     async def get_analyses_by_document_id(
             self,
             document_id: int,
-            limit: int = 10,
+            limit: int | None = None,
             skip: int = 0,
             statuses: list[AnalysisStatus] | None = None,
             providers: list[LLMProvider] | None = None,
