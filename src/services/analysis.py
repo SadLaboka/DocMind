@@ -60,14 +60,23 @@ class AnalysisService:
 
         analyses_list = await self.repository.get_analyses_by_document_id(
                 document_id,
-                limit=limit,
+                limit=limit+1,
                 skip=skip,
                 statuses=analyses_statuses,
                 providers=providers
         )
 
+        if len(analyses_list) > limit:
+            has_next = True
+        else:
+            has_next = False
+
         analyses =  AnalysesListResponse.model_validate(
-            {"analyses": analyses_list},
+            {"analyses": analyses_list[:-1],
+             "limit": limit,
+             "page": page,
+             "has_next:": has_next
+             },
         )
 
         logger.info(
@@ -78,6 +87,7 @@ class AnalysisService:
             providers=providers,
             page=page,
             limit=limit,
+            has_next=has_next
         )
 
         return analyses

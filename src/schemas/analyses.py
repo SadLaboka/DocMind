@@ -57,3 +57,6 @@ class AnalysisResponse(BaseModel):
 
 class AnalysesListResponse(BaseModel):
     analyses: list[AnalysisResponse]
+    page: int | None = None
+    limit: int | None = None
+    has_next: bool | None = None
