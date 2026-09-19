@@ -23,7 +23,7 @@ http_bearer = HTTPBearer(auto_error=False)
 )
 async def get_all_analyses(
     document_id: int,
-    page: int = Query(0, ge=1, description="Page number"),
+    page: int = Query(1, ge=1, description="Page number"),
     limit: int = Query(10, ge=1, le=20, description="Page size"),
     statuses: list[AnalysisStatus] = Query(default=[], description="Statuses filter"),
     providers: list[LLMProvider] = Query(default=[], description="Providers filter"),
