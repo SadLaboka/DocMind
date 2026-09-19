@@ -3,7 +3,6 @@ from typing import Any
 
 from beanie import BeanieObjectId, SortDirection
 from beanie.operators import In
-from beanie
 
 from src.core.enums import AnalysisStatus, LLMProvider
 from src.models.mongo_analysis import DocumentAnalysis
