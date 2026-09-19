@@ -72,7 +72,7 @@ class AnalysisService:
             {"analyses": analyses_list[:limit] if has_next else analyses_list,
              "limit": limit,
              "page": page,
-             "has_next:": has_next
+             "has_next": has_next
              },
         )
 
