@@ -67,7 +67,7 @@ class MongoAnalysisRepository:
         return await (
             DocumentAnalysis.find_many(
                 *filters,
-                sort=[("created_at", SortDirection.DESCENDING), ("id", SortDirection.DESCENDING)],
+                sort=[("created_at", SortDirection.DESCENDING), ("_id", SortDirection.DESCENDING)],
                 limit=limit,
                 skip=skip,
             )
