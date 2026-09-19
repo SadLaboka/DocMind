@@ -1,8 +1,9 @@
 import datetime
 from typing import Any
 
-from beanie import BeanieObjectId
+from beanie import BeanieObjectId, SortDirection
 from beanie.operators import In
+from beanie
 
 from src.core.enums import AnalysisStatus, LLMProvider
 from src.models.mongo_analysis import DocumentAnalysis
@@ -67,7 +68,7 @@ class MongoAnalysisRepository:
         return await (
             DocumentAnalysis.find_many(
                 *filters,
-                sort="-created_at",
+                sort=[("created_at", SortDirection.DESCENDING), ("id", SortDirection.DESCENDING)],
                 limit=limit,
                 skip=skip,
             )
