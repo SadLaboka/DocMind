@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, Query
-from fastapi.security import HTTPBearer
 from starlette import status
 
 from src.core.enums import AnalysisStatus, LLMProvider
@@ -12,7 +11,6 @@ from src.services.analysis import AnalysisService
 from src.services.documents import DocumentService
 
 router = APIRouter(prefix="/documents/{document_id}/analyses", tags=["analysis"])
-http_bearer = HTTPBearer(auto_error=False)
 
 
 @router.get(
