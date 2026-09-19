@@ -66,13 +66,10 @@ class AnalysisService:
                 providers=providers
         )
 
-        if len(analyses_list) > limit:
-            has_next = True
-        else:
-            has_next = False
+        has_next = len(analyses_list) > limit
 
         analyses =  AnalysesListResponse.model_validate(
-            {"analyses": analyses_list[:-1],
+            {"analyses": analyses_list[:limit] if has_next else analyses_list,
              "limit": limit,
              "page": page,
              "has_next:": has_next
