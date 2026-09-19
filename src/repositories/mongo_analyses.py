@@ -24,7 +24,7 @@ class MongoAnalysisRepository:
         )
 
         if retry_of_analysis_id is not None:
-            analysis.retry_id = retry_of_analysis_id
+            analysis.retry_of_analysis_id = retry_of_analysis_id
 
         await analysis.insert()
 
