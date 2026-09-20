@@ -48,12 +48,12 @@ class MongoAnalysisRepository:
         )
 
     async def get_analyses_by_document_id(
-            self,
-            document_id: int,
-            limit: int | None = None,
-            skip: int = 0,
-            statuses: list[AnalysisStatus] | None = None,
-            providers: list[LLMProvider] | None = None,
+        self,
+        document_id: int,
+        limit: int | None = None,
+        skip: int = 0,
+        statuses: list[AnalysisStatus] | None = None,
+        providers: list[LLMProvider] | None = None,
     ) -> list[DocumentAnalysis]:
 
         filters: list[Any] = [DocumentAnalysis.document_id == document_id]
@@ -64,15 +64,12 @@ class MongoAnalysisRepository:
         if providers:
             filters.append(In(DocumentAnalysis.provider, providers))
 
-        return await (
-            DocumentAnalysis.find_many(
-                *filters,
-                sort=[("created_at", SortDirection.DESCENDING), ("_id", SortDirection.DESCENDING)],
-                limit=limit,
-                skip=skip,
-            )
-            .to_list()
-        )
+        return await DocumentAnalysis.find_many(
+            *filters,
+            sort=[("created_at", SortDirection.DESCENDING), ("_id", SortDirection.DESCENDING)],
+            limit=limit,
+            skip=skip,
+        ).to_list()
 
     async def update_analysis_fields(
         self,

@@ -1,5 +1,6 @@
-import pytest
 from unittest.mock import AsyncMock
+
+import pytest
 
 from src.core.enums import AnalysisStatus, LLMProvider
 from src.services.analysis import AnalysisService

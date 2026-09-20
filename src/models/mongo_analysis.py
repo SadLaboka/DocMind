@@ -26,6 +26,6 @@ class DocumentAnalysis(BaseDocument):
             pymongo.IndexModel(
                 (("retry_of_analysis_id", pymongo.DESCENDING),),
                 unique=True,
-                partialFilterExpression={"retry_of_analysis_id": {"$type": "ObjectId"}}
+                partialFilterExpression={"retry_of_analysis_id": {"$type": "ObjectId"}},
             ),
         ]

@@ -3,8 +3,8 @@ from pymongo.errors import DuplicateKeyError
 
 from src.core.enums import AnalysisFailureKind, AnalysisStatus, LLMProvider
 from src.models.mongo_analysis import DocumentAnalysis
-from src.schemas.analyses import AnalysesListResponse
 from src.repositories.mongo_analyses import MongoAnalysisRepository
+from src.schemas.analyses import AnalysesListResponse
 
 logger = structlog.get_logger(__name__)
 
@@ -46,34 +46,26 @@ class AnalysisService:
         return analysis
 
     async def get_analyses_list(
-            self,
-            document_id: int,
-            limit: int = 10,
-            page: int = 1,
-            user_id: int | None = None,
-            analyses_statuses: list[AnalysisStatus] | None = None,
-            providers: list[LLMProvider] | None = None,
+        self,
+        document_id: int,
+        limit: int = 10,
+        page: int = 1,
+        user_id: int | None = None,
+        analyses_statuses: list[AnalysisStatus] | None = None,
+        providers: list[LLMProvider] | None = None,
     ) -> AnalysesListResponse:
         """Gets a list of analyses for a given document and statuses"""
 
         skip = (page - 1) * limit
 
         analyses_list = await self.repository.get_analyses_by_document_id(
-                document_id,
-                limit=limit+1,
-                skip=skip,
-                statuses=analyses_statuses,
-                providers=providers
+            document_id, limit=limit + 1, skip=skip, statuses=analyses_statuses, providers=providers
         )
 
         has_next = len(analyses_list) > limit
 
-        analyses =  AnalysesListResponse.model_validate(
-            {"analyses": analyses_list[:limit],
-             "limit": limit,
-             "page": page,
-             "has_next": has_next
-             },
+        analyses = AnalysesListResponse.model_validate(
+            {"analyses": analyses_list[:limit], "limit": limit, "page": page, "has_next": has_next},
         )
 
         logger.info(
@@ -84,7 +76,7 @@ class AnalysisService:
             providers=providers,
             page=page,
             limit=limit,
-            has_next=has_next
+            has_next=has_next,
         )
 
         return analyses

@@ -3,8 +3,8 @@ from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from src.api.analyses import router as analyses_router
 from src.api.admin import router as admin_router
+from src.api.analyses import router as analyses_router
 from src.api.auth import router as auth_router
 from src.api.documents import router as documents_router
 from src.api.users import router as users_router

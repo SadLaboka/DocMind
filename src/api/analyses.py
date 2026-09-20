@@ -32,10 +32,5 @@ async def get_all_analyses(
     await document_service.get_document(current_user, document_id)
 
     return await analysis_service.get_analyses_list(
-        document_id,
-        limit=limit,
-        page=page,
-        user_id=current_user.id,
-        analyses_statuses=statuses,
-        providers=providers
+        document_id, limit=limit, page=page, user_id=current_user.id, analyses_statuses=statuses, providers=providers
     )
