@@ -33,6 +33,15 @@ class MongoAnalysisRepository:
     async def get_analysis_by_id(self, analysis_id: BeanieObjectId) -> DocumentAnalysis | None:
         return await DocumentAnalysis.get(analysis_id)
 
+    async def get_analysis_by_id_and_document_id(
+            self,
+            analysis_id: BeanieObjectId,
+            document_id: int,
+    ) -> DocumentAnalysis | None:
+        return await DocumentAnalysis.find_one(
+            DocumentAnalysis.id == analysis_id, DocumentAnalysis.document_id == document_id
+        )
+
     async def get_analysis_by_document_and_request(self, document_id: int, request_id: str) -> DocumentAnalysis | None:
         return await DocumentAnalysis.find_one(
             DocumentAnalysis.document_id == document_id, DocumentAnalysis.request_id == request_id
