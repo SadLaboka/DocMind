@@ -2,6 +2,7 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_session
+from src.DependencyInjection.analyses import get_analysis_repository
 from src.repositories.documents import DocumentRepository
 from src.repositories.mongo_analyses import MongoAnalysisRepository
 from src.repositories.mongo_documents import MongoDocumentRepository
@@ -15,10 +16,6 @@ def get_document_repository(session: AsyncSession = Depends(get_session)) -> Doc
 
 def get_mongo_document_repository() -> MongoDocumentRepository:
     return MongoDocumentRepository()
-
-
-def get_analysis_repository() -> MongoAnalysisRepository:
-    return MongoAnalysisRepository()
 
 
 def get_upload_service(
