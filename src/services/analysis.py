@@ -1,10 +1,12 @@
 import structlog
+from beanie import BeanieObjectId
 from pymongo.errors import DuplicateKeyError
 
 from src.core.enums import AnalysisFailureKind, AnalysisStatus, LLMProvider
+from src.core.exceptions import ResourceNotFoundError
 from src.models.mongo_analysis import DocumentAnalysis
 from src.repositories.mongo_analyses import MongoAnalysisRepository
-from src.schemas.analyses import AnalysesListResponse
+from src.schemas.analyses import AnalysesListResponse, AnalysisResponse
 
 logger = structlog.get_logger(__name__)
 
@@ -80,6 +82,44 @@ class AnalysisService:
         )
 
         return analyses
+
+    async def get_analysis(
+            self,
+            analysis_id: str,
+            document_id: int,
+            user_id: int | None = None,
+    ) -> AnalysisResponse:
+        """Gets an analysis for a given id and document id"""
+        try:
+            analysis_object_id = BeanieObjectId(analysis_id)
+        except Exception as err:
+            raise ResourceNotFoundError(
+                error_code="Malformed_analysis_id",
+                message="Analysis id is not valid",
+                log_context={
+                    "user_id": user_id,
+                    "event_name": "get_analysis_failed",
+                    "reason": "malformed_analysis_id",
+                    "document_id": document_id,
+                    "error_detail": getattr(err, "message", str(err)),
+                },
+            ) from err
+
+        analysis = await self.repository.get_analysis_by_id_and_document_id(analysis_object_id, document_id)
+
+        if not analysis:
+            raise ResourceNotFoundError(
+                error_code="Analysis_not_found",
+                message="Analysis not found",
+                log_context={
+                    "user_id": user_id,
+                    "event_name": "get_analysis_failed",
+                    "reason": "analysis_not_found",
+                    "document_id": document_id,
+                }
+            )
+
+        return AnalysisResponse.model_validate(analysis)
 
     async def mark_dispatch_failed(self, document_id: int, request_id: str, error_detail: Exception) -> None:
         """Marks analysis dispatch as failed"""
