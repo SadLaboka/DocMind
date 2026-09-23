@@ -113,6 +113,7 @@ class AnalysisService:
                 message="Analysis not found",
                 log_context={
                     "user_id": user_id,
+                    "analysis_id": analysis_id,
                     "event_name": "get_analysis_failed",
                     "reason": "analysis_not_found",
                     "document_id": document_id,
