@@ -94,8 +94,8 @@ class AnalysisService:
             analysis_object_id = BeanieObjectId(analysis_id)
         except Exception as err:
             raise ResourceNotFoundError(
-                error_code="Malformed_analysis_id",
-                message="Analysis id is not valid",
+                error_code="analysis_not_found",
+                message="Analysis not found",
                 log_context={
                     "user_id": user_id,
                     "event_name": "get_analysis_failed",
@@ -109,7 +109,7 @@ class AnalysisService:
 
         if not analysis:
             raise ResourceNotFoundError(
-                error_code="Analysis_not_found",
+                error_code="analysis_not_found",
                 message="Analysis not found",
                 log_context={
                     "user_id": user_id,
