@@ -239,6 +239,7 @@ def mock_analysis_repo(mock_analysis_content):
     mock_repo.create_analysis.return_value = mock_analysis_content
     mock_repo.get_analyses_by_document_id.return_value = []
     mock_repo.get_analysis_by_id.return_value = mock_analysis_content
+    mock_repo.get_analysis_by_id_and_document_id.return_value = mock_analysis_content
     mock_repo.get_analysis_by_document_and_request.return_value = mock_analysis_content
     mock_repo.get_successful_analyses.return_value = []
     mock_repo.update_analysis_fields.return_value = mock_analysis_content
