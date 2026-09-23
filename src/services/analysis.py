@@ -1,6 +1,7 @@
 import structlog
 from beanie import BeanieObjectId
 from pymongo.errors import DuplicateKeyError
+from bson.errors import InvalidId
 
 from src.core.enums import AnalysisFailureKind, AnalysisStatus, LLMProvider
 from src.core.exceptions import ResourceNotFoundError
@@ -92,7 +93,7 @@ class AnalysisService:
         """Gets an analysis for a given id and document id"""
         try:
             analysis_object_id = BeanieObjectId(analysis_id)
-        except Exception as err:
+        except InvalidId as err:
             raise ResourceNotFoundError(
                 error_code="analysis_not_found",
                 message="Analysis not found",
