@@ -101,6 +101,7 @@ class AnalysisService:
                     "user_id": user_id,
                     "event_name": "get_analysis_failed",
                     "reason": "malformed_analysis_id",
+                    "analysis_id": analysis_id,
                     "document_id": document_id,
                     "error_detail": getattr(err, "message", str(err)),
                 },
