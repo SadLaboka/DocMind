@@ -1,7 +1,7 @@
 import structlog
 from beanie import BeanieObjectId
-from pymongo.errors import DuplicateKeyError
 from bson.errors import InvalidId
+from pymongo.errors import DuplicateKeyError
 
 from src.core.enums import AnalysisFailureKind, AnalysisStatus, LLMProvider
 from src.core.exceptions import ResourceNotFoundError
@@ -85,10 +85,10 @@ class AnalysisService:
         return analyses
 
     async def get_analysis(
-            self,
-            analysis_id: str,
-            document_id: int,
-            user_id: int | None = None,
+        self,
+        analysis_id: str,
+        document_id: int,
+        user_id: int | None = None,
     ) -> AnalysisResponse:
         """Gets an analysis for a given id and document id"""
         try:
@@ -119,7 +119,7 @@ class AnalysisService:
                     "event_name": "get_analysis_failed",
                     "reason": "analysis_not_found",
                     "document_id": document_id,
-                }
+                },
             )
 
         return AnalysisResponse.model_validate(analysis)

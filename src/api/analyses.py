@@ -43,12 +43,14 @@ async def get_all_analyses(
     response_model=AnalysisResponse,
 )
 async def get_analysis(
-        analysis_id: str,
-        document_id: int,
-        current_user: User = Depends(get_current_user),
-        analysis_service: AnalysisService = Depends(get_analysis_service),
-        document_service: DocumentService = Depends(get_document_service),
+    analysis_id: str,
+    document_id: int,
+    current_user: User = Depends(get_current_user),
+    analysis_service: AnalysisService = Depends(get_analysis_service),
+    document_service: DocumentService = Depends(get_document_service),
 ) -> AnalysisResponse:
     await document_service.get_document(current_user, document_id)
 
-    return await analysis_service.get_analysis(analysis_id=analysis_id, document_id=document_id, user_id=current_user.id)
+    return await analysis_service.get_analysis(
+        analysis_id=analysis_id, document_id=document_id, user_id=current_user.id
+    )

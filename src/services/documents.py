@@ -4,7 +4,7 @@ import structlog
 
 from src.core.config import settings
 from src.core.enums import DocumentStatus
-from src.core.exceptions import ResourceNotFoundError, ConflictError
+from src.core.exceptions import ConflictError, ResourceNotFoundError
 from src.models.documents import Document
 from src.models.mongo_documents import MongoDocument
 from src.repositories.documents import DocumentRepository
@@ -249,13 +249,13 @@ class DocumentService(BaseService[DocumentRepository]):
 
         return await self.mongo_repository.get_content(document_id)
 
-    async def is_ready_for_analysis(self, user_id: int, document_data: DocumentResponse) -> True:
+    async def is_ready_for_analysis(self, user_id: int, document_data: DocumentResponse) -> None:
         """Checks if the document is ready for analysis"""
 
         if not (
-                document_data.status == DocumentStatus.extracted
-                or document_data.document_text is not None
-                or document_data.document_text != ""
+            document_data.status == DocumentStatus.extracted
+            or document_data.document_text is not None
+            or document_data.document_text != ""
         ):
             raise ConflictError(
                 error_code="document_not_ready",
@@ -266,5 +266,5 @@ class DocumentService(BaseService[DocumentRepository]):
                     "document_id": document_data.id,
                     "document_status": document_data.status.value,
                     "document_text": document_data.document_text,
-                }
+                },
             )

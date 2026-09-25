@@ -34,9 +34,9 @@ class MongoAnalysisRepository:
         return await DocumentAnalysis.get(analysis_id)
 
     async def get_analysis_by_id_and_document_id(
-            self,
-            analysis_id: BeanieObjectId,
-            document_id: int,
+        self,
+        analysis_id: BeanieObjectId,
+        document_id: int,
     ) -> DocumentAnalysis | None:
         return await DocumentAnalysis.find_one(
             DocumentAnalysis.id == analysis_id, DocumentAnalysis.document_id == document_id

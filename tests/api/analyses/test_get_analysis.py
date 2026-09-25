@@ -5,7 +5,6 @@ from httpx import AsyncClient
 
 from src.core.enums import MimeType
 
-
 ANALYSIS_ID = "507f1f77bcf86cd799439011"
 
 
