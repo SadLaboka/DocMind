@@ -60,3 +60,7 @@ class AnalysesListResponse(BaseModel):
     page: int
     limit: int
     has_next: bool
+
+
+class AnalysisCreateRequest(BaseModel):
+    provider: LLMProvider | None = None

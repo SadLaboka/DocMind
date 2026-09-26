@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Depends, Query, Form, Request
+from fastapi import APIRouter, Depends, Query, Request
 from starlette import status
 
 from src.core.enums import AnalysisStatus, LLMProvider
 from src.DependencyInjection.analyses import get_analysis_service
 from src.DependencyInjection.auth import get_current_user
 from src.DependencyInjection.documents import get_document_service
-from src.schemas.analyses import AnalysesListResponse, AnalysisResponse
+from src.schemas.analyses import AnalysesListResponse, AnalysisResponse, AnalysisCreateRequest
 from src.schemas.users import User
 from src.services.analysis import AnalysisService
 from src.services.documents import DocumentService
@@ -65,8 +65,8 @@ async def get_analysis(
 async def create_analysis(
         document_id: int,
         request: Request,
+        body: AnalysisCreateRequest,
         current_user: User = Depends(get_current_user),
-        provider: LLMProvider | None = Form(None),
         document_service: DocumentService = Depends(get_document_service),
         analysis_service: AnalysisService = Depends(get_analysis_service),
 ) -> AnalysisResponse:
@@ -75,5 +75,5 @@ async def create_analysis(
         user_id=current_user.id,
         document_id=document_id,
         request_id=request.state.request_id,
-        provider=provider
+        provider=body.provider,
     )
