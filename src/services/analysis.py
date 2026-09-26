@@ -142,7 +142,7 @@ class AnalysisService:
         try:
 
             logger.info(
-                "try to create an analysis",
+                "analysis_createion_started",
                 user_id=user_id,
                 document_id=document_id,
                 request_id=request_id,
@@ -164,10 +164,18 @@ class AnalysisService:
                 },
             ) from err
 
+        logger.info(
+            "analysis_created",
+            user_id=user_id,
+            document_id=document_id,
+            request_id=request_id,
+            provider=provider.value,
+        )
+
         try:
 
             logger.info(
-                "try to dispatch an analysis",
+                "analysis_dispatch_started",
                 user_id=user_id,
                 document_id=document_id,
                 request_id=request_id,
@@ -184,8 +192,8 @@ class AnalysisService:
 
         except Exception as err:
 
-            logger.info(
-                "analysis dispatch_failed",
+            logger.warning(
+                "analysis_dispatch_failed",
                 user_id=user_id,
                 document_id=document_id,
                 request_id=request_id,
