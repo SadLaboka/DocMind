@@ -6,7 +6,7 @@ from pymongo.errors import DuplicateKeyError
 
 from src.core.config import settings
 from src.core.enums import AnalysisFailureKind, AnalysisStatus, LLMProvider
-from src.core.exceptions import ResourceNotFoundError, ConflictError, ServiceUnavailableError, AppBaseError
+from src.core.exceptions import ResourceNotFoundError, ServiceUnavailableError
 from src.events.publisher import publish_document_analysis_requested
 from src.models.mongo_analysis import DocumentAnalysis
 from src.repositories.mongo_analyses import MongoAnalysisRepository
@@ -139,30 +139,7 @@ class AnalysisService:
         if not provider:
             provider = LLMProvider(settings.llm.default_provider)
 
-        try:
-
-            logger.info(
-                "analysis_createion_started",
-                user_id=user_id,
-                document_id=document_id,
-                request_id=request_id,
-                provider=provider.value,
-            )
-
-            analysis = await self.repository.create_analysis(document_id, request_id, provider)
-        except Exception as err:
-            raise AppBaseError(
-                error_code="analysis_already_exists",
-                message="Analysis with this params already exists",
-                log_context={
-                    "event_name": "analysis_already_exists",
-                    "user_id": user_id,
-                    "document_id": document_id,
-                    "provider": provider.value,
-                    "error_detail": getattr(err, "message", str(err)),
-                    "error_type": type(err).__name__,
-                },
-            ) from err
+        analysis = await self.repository.create_analysis(document_id, request_id, provider)
 
         logger.info(
             "analysis_created",
