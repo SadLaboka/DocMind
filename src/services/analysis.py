@@ -192,6 +192,7 @@ class AnalysisService:
                 log_context={
                     "event_name": "analysis_dispatch_failed",
                     "user_id": user_id,
+                    "provider": provider.value,
                     "document_id": document_id,
                     "error_type": type(err).__name__,
                 }
