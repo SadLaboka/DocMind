@@ -1,10 +1,13 @@
+import asyncio
 import structlog
 from beanie import BeanieObjectId
 from bson.errors import InvalidId
 from pymongo.errors import DuplicateKeyError
 
+from src.core.config import settings
 from src.core.enums import AnalysisFailureKind, AnalysisStatus, LLMProvider
-from src.core.exceptions import ResourceNotFoundError
+from src.core.exceptions import ResourceNotFoundError, ConflictError
+from src.events.publisher import publish_document_analysis_requested
 from src.models.mongo_analysis import DocumentAnalysis
 from src.repositories.mongo_analyses import MongoAnalysisRepository
 from src.schemas.analyses import AnalysesListResponse, AnalysisResponse
@@ -123,6 +126,72 @@ class AnalysisService:
             )
 
         return AnalysisResponse.model_validate(analysis)
+
+    async def create_and_dispatch_analysis(
+            self,
+            user_id: int,
+            document_id: int,
+            request_id: str,
+            provider: LLMProvider | None = None,
+    ) -> None:
+        """Creates and dispatches an analysis for a given document, request and provider"""
+
+        if not provider:
+            provider = LLMProvider(settings.llm.default_provider)
+
+        try:
+
+            logger.info(
+                "try to create an analysis",
+                user_id=user_id,
+                document_id=document_id,
+                request_id=request_id,
+                provider=provider.value,
+            )
+
+            analysis = await self.repository.create_analysis(document_id, request_id, provider)
+        except DuplicateKeyError:
+            raise ConflictError(
+                error_code="analysis_already_exists",
+                message="Analysis with this params already exists",
+                log_context={
+                    "event_name": "analysis_already_exists",
+                    "user_id": user_id,
+                    "document_id": document_id,
+                    "provider": provider.value,
+                },
+            )
+
+        try:
+
+            logger.info(
+                "try to dispatch an analysis",
+                user_id=user_id,
+                document_id=document_id,
+                request_id=request_id,
+                provider=provider.value,
+            )
+
+            await asyncio.to_thread(
+                publish_document_analysis_requested,
+                analysis_id=str(analysis.id),
+                document_id=document_id,
+                user_id=user_id,
+                request_id=request_id,
+            )
+
+        except Exception as err:
+
+            logger.info(
+                "analysis dispatch_failed",
+                user_id=user_id,
+                document_id=document_id,
+                request_id=request_id,
+                provider=provider.value,
+            )
+
+            await self.mark_dispatch_failed(document_id=document_id, request_id=request_id, error_detail=err)
+            raise err
 
     async def mark_dispatch_failed(self, document_id: int, request_id: str, error_detail: Exception) -> None:
         """Marks analysis dispatch as failed"""
