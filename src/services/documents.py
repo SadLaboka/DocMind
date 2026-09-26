@@ -253,7 +253,7 @@ class DocumentService(BaseService[DocumentRepository]):
 
         if document.document_status != DocumentStatus.extracted:
             raise ConflictError(
-                error_code="document_not_ready",
+                error_code="document_not_ready_for_analysis",
                 message="Document not ready for analysis",
                 log_context={
                     "event_name": "document_not_ready",
@@ -267,7 +267,7 @@ class DocumentService(BaseService[DocumentRepository]):
 
         if not document_content or document_content.raw_text is None or document_content.raw_text == "":
             raise ConflictError(
-                error_code="document_not_ready",
+                error_code="document_not_ready_for_analysis",
                 message="Document not ready for analysis",
                 log_context={
                     "event_name": "document_not_ready",
