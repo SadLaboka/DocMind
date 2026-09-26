@@ -193,7 +193,6 @@ class AnalysisService:
                     "user_id": user_id,
                     "document_id": document_id,
                     "error_type": type(err).__name__,
-                    "error_detail": getattr(err, "message", str(err)),
                 }
             ) from err
 
