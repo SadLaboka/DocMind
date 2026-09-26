@@ -190,6 +190,7 @@ class AnalysisService:
                 error_code="analysis_dispatch_failed",
                 message="Analysis dispatch failed",
                 log_context={
+                    "event_name": "analysis_dispatch_failed",
                     "user_id": user_id,
                     "document_id": document_id,
                     "error_type": type(err).__name__,
