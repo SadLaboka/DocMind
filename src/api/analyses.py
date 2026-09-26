@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Form, Request
 from starlette import status
 
 from src.core.enums import AnalysisStatus, LLMProvider
@@ -53,4 +53,27 @@ async def get_analysis(
 
     return await analysis_service.get_analysis(
         analysis_id=analysis_id, document_id=document_id, user_id=current_user.id
+    )
+
+
+@router.post(
+    "/",
+    summary="Create a new analysis",
+    status_code=status.HTTP_201_CREATED,
+    response_model=AnalysisResponse,
+)
+async def create_analysis(
+        document_id: int,
+        request: Request,
+        current_user: User = Depends(get_current_user),
+        provider: LLMProvider | None = Form(None),
+        document_service: DocumentService = Depends(get_document_service),
+        analysis_service: AnalysisService = Depends(get_analysis_service),
+) -> AnalysisResponse:
+    await document_service.ensure_ready_for_analysis(user=current_user, document_id=document_id)
+    return await analysis_service.create_and_dispatch_analysis(
+        user_id=current_user.id,
+        document_id=document_id,
+        request_id=request.state.request_id,
+        provider=provider
     )
