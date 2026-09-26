@@ -7,6 +7,7 @@ from starlette.status import (
     HTTP_404_NOT_FOUND,
     HTTP_409_CONFLICT,
     HTTP_500_INTERNAL_SERVER_ERROR,
+    HTTP_503_SERVICE_UNAVAILABLE,
 )
 
 
@@ -21,6 +22,12 @@ class AppBaseError(Exception):
         self.message = message or type(self).message
         self.log_context = log_context or {}
         super().__init__(self.message)
+
+
+class ServiceUnavailableError(AppBaseError):
+    status_code = HTTP_503_SERVICE_UNAVAILABLE
+    error_code = "service_unavailable"
+    message = "Service unavailable"
 
 
 class AuthenticationError(AppBaseError):
