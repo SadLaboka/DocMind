@@ -133,7 +133,7 @@ class AnalysisService:
             document_id: int,
             request_id: str,
             provider: LLMProvider | None = None,
-    ) -> None:
+    ) -> AnalysisResponse:
         """Creates and dispatches an analysis for a given document, request and provider"""
 
         if not provider:
@@ -192,6 +192,8 @@ class AnalysisService:
 
             await self.mark_dispatch_failed(document_id=document_id, request_id=request_id, error_detail=err)
             raise err
+
+        return AnalysisResponse.model_validate(analysis)
 
     async def mark_dispatch_failed(self, document_id: int, request_id: str, error_detail: Exception) -> None:
         """Marks analysis dispatch as failed"""
