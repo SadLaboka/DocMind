@@ -189,8 +189,16 @@ class AnalysisService:
                 request_id=request_id,
                 provider=provider.value,
             )
-
-            await self.mark_dispatch_failed(document_id=document_id, request_id=request_id, error_detail=err)
+            try:
+                await self.mark_dispatch_failed(document_id=document_id, request_id=request_id, error_detail=err)
+            except Exception as e:
+                logger.warning(
+                    "failed_mark_dispatch_failed",
+                    request_id=request_id,
+                    document_id=document_id,
+                    user_id=user_id,
+                    error_type=type(e).__name__,
+                )
             raise err
 
         return AnalysisResponse.model_validate(analysis)
