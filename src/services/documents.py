@@ -244,23 +244,28 @@ class DocumentService(BaseService[DocumentRepository]):
 
     async def _get_document_content(self, document_id: int) -> MongoDocument | None:
         """Gets a document content from mongo database"""
-        if self.mongo_repository is None:
-            return None
-
         return await self.mongo_repository.get_content(document_id)
 
-    async def is_ready_for_analysis(self, user: User, document_id: int) -> None:
+    async def ensure_ready_for_analysis(self, user: User, document_id: int) -> None:
         """Checks if the document is ready for analysis"""
 
         document = await self.get_document(user, document_id)
 
+        if document.document_status != DocumentStatus.extracted:
+            raise ConflictError(
+                error_code="document_not_ready",
+                message="Document not ready for analysis",
+                log_context={
+                    "event_name": "document_not_ready",
+                    "user_id": user.id,
+                    "document_id": document.id,
+                    "document_status": document.document_status.value,
+                },
+            )
+
         document_content = await self._get_document_content(document.id)
 
-        if not document_content or not (
-            document.document_status == DocumentStatus.extracted
-            and document_content.raw_text is not None
-            and document_content.raw_text != ""
-        ):
+        if not document_content or document_content.raw_text is None or document_content.raw_text == "":
             raise ConflictError(
                 error_code="document_not_ready",
                 message="Document not ready for analysis",
