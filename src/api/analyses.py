@@ -65,7 +65,7 @@ async def get_analysis(
 async def create_analysis(
         document_id: int,
         request: Request,
-        body: AnalysisCreateRequest,
+        body: AnalysisCreateRequest | None = None,
         current_user: User = Depends(get_current_user),
         document_service: DocumentService = Depends(get_document_service),
         analysis_service: AnalysisService = Depends(get_analysis_service),
@@ -75,5 +75,5 @@ async def create_analysis(
         user_id=current_user.id,
         document_id=document_id,
         request_id=request.state.request_id,
-        provider=body.provider,
+        provider=body.provider if body else None,
     )
