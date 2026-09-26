@@ -176,14 +176,6 @@ class AnalysisService:
             )
 
         except Exception as err:
-
-            logger.warning(
-                "analysis_dispatch_failed",
-                user_id=user_id,
-                document_id=document_id,
-                request_id=request_id,
-                provider=provider.value,
-            )
             try:
                 await self.mark_dispatch_failed(document_id=document_id, request_id=request_id, error_detail=err)
             except Exception as e:
