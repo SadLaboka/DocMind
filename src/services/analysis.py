@@ -6,7 +6,7 @@ from pymongo.errors import DuplicateKeyError
 
 from src.core.config import settings
 from src.core.enums import AnalysisFailureKind, AnalysisStatus, LLMProvider
-from src.core.exceptions import ResourceNotFoundError, ConflictError
+from src.core.exceptions import ResourceNotFoundError, ConflictError, ServiceUnavailableError
 from src.events.publisher import publish_document_analysis_requested
 from src.models.mongo_analysis import DocumentAnalysis
 from src.repositories.mongo_analyses import MongoAnalysisRepository
@@ -199,7 +199,16 @@ class AnalysisService:
                     user_id=user_id,
                     error_type=type(e).__name__,
                 )
-            raise err
+            raise ServiceUnavailableError(
+                error_code="analysis_dispatch_failed",
+                message="Analysis dispatch failed",
+                log_context={
+                    "user_id": user_id,
+                    "document_id": document_id,
+                    "error_type": type(err).__name__,
+                    "error_detail": getattr(err, "message", str(err)),
+                }
+            ) from err
 
         return AnalysisResponse.model_validate(analysis)
 
