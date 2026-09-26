@@ -139,6 +139,14 @@ class AnalysisService:
         if not provider:
             provider = LLMProvider(settings.llm.default_provider)
 
+        logger.info(
+            "analysis_creation_started",
+            user_id=user_id,
+            document_id=document_id,
+            request_id=request_id,
+            provider=provider.value,
+        )
+
         analysis = await self.repository.create_analysis(document_id, request_id, provider)
 
         logger.info(
