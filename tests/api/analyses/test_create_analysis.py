@@ -261,7 +261,7 @@ async def test_create_analysis_rejects_invalid_provider(
     _, hashed_password = test_password
 
     tokens = await create_token_pair(
-        login="create_analysis_validation",
+        login="create_analysis_vld",
         email="create_analysis_validation@test.com",
         password_hash=hashed_password,
     )
@@ -291,7 +291,7 @@ async def test_create_analysis_returns_503_when_dispatch_fails(
     _, hashed_password = test_password
 
     tokens = await create_token_pair(
-        login="create_analysis_dispatch_failure",
+        login="create_anls_dsptch_fail",
         email="create_analysis_dispatch_failure@test.com",
         password_hash=hashed_password,
     )
