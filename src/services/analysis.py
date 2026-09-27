@@ -104,7 +104,7 @@ class AnalysisService:
             analysis_id: str,
             document_id: int,
             user_id: int | None = None,
-    ) -> DocumentAnalysis | None:
+    ) -> DocumentAnalysis:
         """Gets an analysis for a given id and document id"""
         try:
             analysis_object_id = BeanieObjectId(analysis_id)
@@ -164,21 +164,57 @@ class AnalysisService:
             "analysis_created",
             user_id=user_id,
             document_id=document_id,
+            analysis_id=str(analysis.id),
             provider=provider.value,
         )
 
+        await self._dispatch_analysis(
+            analysis_id=analysis.id,
+            document_id=document_id,
+            request_id=request_id,
+            user_id=user_id,
+            provider=provider,
+        )
+
+        return AnalysisResponse.model_validate(analysis)
+
+    async def mark_dispatch_failed(self, document_id: int, request_id: str, error_detail: Exception) -> None:
+        """Marks analysis dispatch as failed"""
+
+        analysis = await self.repository.get_analysis_by_document_and_request(document_id, request_id)
+
+        if analysis and analysis.status == AnalysisStatus.queued:
+            await self.repository.update_analysis_fields(
+                document_id=document_id,
+                request_id=request_id,
+                status=AnalysisStatus.failed,
+                failure_kind=AnalysisFailureKind.transient,
+                error_code="analysis_dispatch_failed",
+                error_detail=str(error_detail),
+            )
+
+    async def _dispatch_analysis(
+            self,
+            analysis_id: BeanieObjectId,
+            document_id: int,
+            request_id: str,
+            user_id: int,
+            provider: LLMProvider
+    ) -> None:
+        """Dispatch analysis to queue"""
         try:
 
             logger.info(
                 "analysis_dispatch_started",
                 user_id=user_id,
                 document_id=document_id,
+                analysis_id=str(analysis_id),
                 provider=provider.value,
             )
 
             await asyncio.to_thread(
                 publish_document_analysis_requested,
-                analysis_id=str(analysis.id),
+                analysis_id=str(analysis_id),
                 document_id=document_id,
                 user_id=user_id,
                 request_id=request_id,
@@ -205,20 +241,3 @@ class AnalysisService:
                     "error_type": type(err).__name__,
                 },
             ) from err
-
-        return AnalysisResponse.model_validate(analysis)
-
-    async def mark_dispatch_failed(self, document_id: int, request_id: str, error_detail: Exception) -> None:
-        """Marks analysis dispatch as failed"""
-
-        analysis = await self.repository.get_analysis_by_document_and_request(document_id, request_id)
-
-        if analysis and analysis.status == AnalysisStatus.queued:
-            await self.repository.update_analysis_fields(
-                document_id=document_id,
-                request_id=request_id,
-                status=AnalysisStatus.failed,
-                failure_kind=AnalysisFailureKind.transient,
-                error_code="analysis_dispatch_failed",
-                error_detail=str(error_detail),
-            )
