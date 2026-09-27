@@ -159,6 +159,8 @@ class AnalysisService:
                     "user_id": user_id,
                     "analysis_id": analysis_id,
                     "document_id": document_id,
+                    "analysis_status": analysis.status.value,
+                    "analysis_failure_kind": analysis.failure_kind.value,
                 }
             )
 
@@ -209,7 +211,7 @@ class AnalysisService:
                     }
                 )
 
-            raise err
+            raise
 
         await self._dispatch_analysis(
             analysis_id=retried_analysis.id,
