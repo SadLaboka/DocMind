@@ -94,6 +94,17 @@ class AnalysisService:
         document_id: int,
         user_id: int | None = None,
     ) -> AnalysisResponse:
+        """Returns analysis response instance for a given id and document id"""
+        analysis = await self._get_analysis_or_raise(analysis_id, document_id, user_id)
+
+        return AnalysisResponse.model_validate(analysis)
+
+    async def _get_analysis_or_raise(
+            self,
+            analysis_id: str,
+            document_id: int,
+            user_id: int | None = None,
+    ) -> DocumentAnalysis | None:
         """Gets an analysis for a given id and document id"""
         try:
             analysis_object_id = BeanieObjectId(analysis_id)
@@ -126,7 +137,7 @@ class AnalysisService:
                 },
             )
 
-        return AnalysisResponse.model_validate(analysis)
+        return analysis
 
     async def create_and_dispatch_analysis(
         self,
