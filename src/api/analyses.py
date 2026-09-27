@@ -93,7 +93,7 @@ async def retry_analysis(
         document_service: DocumentService = Depends(get_document_service),
         analysis_service: AnalysisService = Depends(get_analysis_service),
 ) -> AnalysisResponse:
-    await document_service.get_document(current_user, document_id)
+    await document_service.ensure_ready_for_analysis(current_user, document_id)
     return await analysis_service.retry_analysis(
         analysis_id=analysis_id,
         document_id=document_id,
