@@ -7,7 +7,7 @@ from pymongo.errors import DuplicateKeyError
 
 from src.core.config import settings
 from src.core.enums import AnalysisFailureKind, AnalysisStatus, LLMProvider
-from src.core.exceptions import ResourceNotFoundError, ServiceUnavailableError, ConflictError
+from src.core.exceptions import ConflictError, ResourceNotFoundError, ServiceUnavailableError
 from src.events.publisher import publish_document_analysis_requested
 from src.models.mongo_analysis import DocumentAnalysis
 from src.repositories.mongo_analyses import MongoAnalysisRepository
@@ -100,10 +100,10 @@ class AnalysisService:
         return AnalysisResponse.model_validate(analysis)
 
     async def _get_analysis_or_raise(
-            self,
-            analysis_id: str,
-            document_id: int,
-            user_id: int | None = None,
+        self,
+        analysis_id: str,
+        document_id: int,
+        user_id: int | None = None,
     ) -> DocumentAnalysis:
         """Gets an analysis for a given id and document id"""
         try:
@@ -140,11 +140,7 @@ class AnalysisService:
         return analysis
 
     async def retry_analysis(
-            self,
-            analysis_id: str,
-            document_id: int,
-            request_id: str,
-            user_id: int
+        self, analysis_id: str, document_id: int, request_id: str, user_id: int
     ) -> AnalysisResponse:
         """Retries failed analysis for a given analysis id"""
 
@@ -161,7 +157,7 @@ class AnalysisService:
                     "document_id": document_id,
                     "analysis_status": analysis.status.value,
                     "analysis_failure_kind": analysis.failure_kind.value if analysis.failure_kind else None,
-                }
+                },
             )
 
         child_analysis = await self.repository.get_analysis_by_retry_of_analysis_id(analysis.id)
@@ -176,7 +172,7 @@ class AnalysisService:
                     "document_id": document_id,
                     "analysis_id": analysis_id,
                     "retried_analysis_id": str(child_analysis.id),
-                }
+                },
             )
 
         try:
@@ -208,8 +204,8 @@ class AnalysisService:
                         "document_id": document_id,
                         "analysis_id": analysis_id,
                         "retried_analysis_id": str(child_analysis.id),
-                    }
-                )
+                    },
+                ) from err
 
             raise
 
@@ -222,7 +218,6 @@ class AnalysisService:
         )
 
         return AnalysisResponse.model_validate(retried_analysis)
-
 
     async def create_and_dispatch_analysis(
         self,
@@ -279,12 +274,7 @@ class AnalysisService:
             )
 
     async def _dispatch_analysis(
-            self,
-            analysis_id: BeanieObjectId,
-            document_id: int,
-            request_id: str,
-            user_id: int,
-            provider: LLMProvider
+        self, analysis_id: BeanieObjectId, document_id: int, request_id: str, user_id: int, provider: LLMProvider
     ) -> None:
         """Dispatch analysis to queue"""
         try:

@@ -86,12 +86,12 @@ async def create_analysis(
     response_model=AnalysisResponse,
 )
 async def retry_analysis(
-        document_id: int,
-        analysis_id: str,
-        request: Request,
-        current_user: User = Depends(get_current_user),
-        document_service: DocumentService = Depends(get_document_service),
-        analysis_service: AnalysisService = Depends(get_analysis_service),
+    document_id: int,
+    analysis_id: str,
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    document_service: DocumentService = Depends(get_document_service),
+    analysis_service: AnalysisService = Depends(get_analysis_service),
 ) -> AnalysisResponse:
     await document_service.ensure_ready_for_analysis(current_user, document_id)
     return await analysis_service.retry_analysis(
