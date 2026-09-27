@@ -77,3 +77,26 @@ async def create_analysis(
         request_id=request.state.request_id,
         provider=body.provider if body else None,
     )
+
+
+@router.post(
+    "/{analysis_id}/retry",
+    summary="Retry failed analysis",
+    status_code=status.HTTP_201_CREATED,
+    response_model=AnalysisResponse,
+)
+async def retry_analysis(
+        document_id: int,
+        analysis_id: str,
+        request: Request,
+        current_user: User = Depends(get_current_user),
+        document_service: DocumentService = Depends(get_document_service),
+        analysis_service: AnalysisService = Depends(get_analysis_service),
+) -> AnalysisResponse:
+    await document_service.get_document(current_user, document_id)
+    return await analysis_service.retry_analysis(
+        analysis_id=analysis_id,
+        document_id=document_id,
+        request_id=request.state.request_id,
+        user_id=current_user.id,
+    )
