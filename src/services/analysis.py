@@ -160,7 +160,7 @@ class AnalysisService:
                     "analysis_id": analysis_id,
                     "document_id": document_id,
                     "analysis_status": analysis.status.value,
-                    "analysis_failure_kind": analysis.failure_kind.value,
+                    "analysis_failure_kind": analysis.failure_kind.value if analysis.failure_kind else None,
                 }
             )
 
