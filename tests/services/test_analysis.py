@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from beanie import BeanieObjectId
 
-from src.core.enums import AnalysisStatus, LLMProvider, AnalysisFailureKind
+from src.core.enums import AnalysisFailureKind, AnalysisStatus, LLMProvider
 from src.core.exceptions import ResourceNotFoundError, ServiceUnavailableError
 from src.events.publisher import publish_document_analysis_requested
 from src.services.analysis import AnalysisService
@@ -168,6 +168,7 @@ async def test_get_analysis_not_found(
         BeanieObjectId(ANALYSIS_ID),
         42,
     )
+
 
 @pytest.mark.asyncio
 async def test_create_and_dispatch_analysis_success(

@@ -5,7 +5,7 @@ from src.core.enums import AnalysisStatus, LLMProvider
 from src.DependencyInjection.analyses import get_analysis_service
 from src.DependencyInjection.auth import get_current_user
 from src.DependencyInjection.documents import get_document_service
-from src.schemas.analyses import AnalysesListResponse, AnalysisResponse, AnalysisCreateRequest
+from src.schemas.analyses import AnalysesListResponse, AnalysisCreateRequest, AnalysisResponse
 from src.schemas.users import User
 from src.services.analysis import AnalysisService
 from src.services.documents import DocumentService
@@ -63,12 +63,12 @@ async def get_analysis(
     response_model=AnalysisResponse,
 )
 async def create_analysis(
-        document_id: int,
-        request: Request,
-        body: AnalysisCreateRequest | None = None,
-        current_user: User = Depends(get_current_user),
-        document_service: DocumentService = Depends(get_document_service),
-        analysis_service: AnalysisService = Depends(get_analysis_service),
+    document_id: int,
+    request: Request,
+    body: AnalysisCreateRequest | None = None,
+    current_user: User = Depends(get_current_user),
+    document_service: DocumentService = Depends(get_document_service),
+    analysis_service: AnalysisService = Depends(get_analysis_service),
 ) -> AnalysisResponse:
     await document_service.ensure_ready_for_analysis(user=current_user, document_id=document_id)
     return await analysis_service.create_and_dispatch_analysis(

@@ -1,4 +1,5 @@
 import asyncio
+
 import structlog
 from beanie import BeanieObjectId
 from bson.errors import InvalidId
@@ -128,11 +129,11 @@ class AnalysisService:
         return AnalysisResponse.model_validate(analysis)
 
     async def create_and_dispatch_analysis(
-            self,
-            user_id: int,
-            document_id: int,
-            request_id: str,
-            provider: LLMProvider | None = None,
+        self,
+        user_id: int,
+        document_id: int,
+        request_id: str,
+        provider: LLMProvider | None = None,
     ) -> AnalysisResponse:
         """Creates and dispatches an analysis for a given document, request and provider"""
 
@@ -191,7 +192,7 @@ class AnalysisService:
                     "provider": provider.value,
                     "document_id": document_id,
                     "error_type": type(err).__name__,
-                }
+                },
             ) from err
 
         return AnalysisResponse.model_validate(analysis)
