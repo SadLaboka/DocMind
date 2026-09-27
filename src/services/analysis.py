@@ -7,7 +7,7 @@ from pymongo.errors import DuplicateKeyError
 
 from src.core.config import settings
 from src.core.enums import AnalysisFailureKind, AnalysisStatus, LLMProvider
-from src.core.exceptions import ResourceNotFoundError, ServiceUnavailableError
+from src.core.exceptions import ResourceNotFoundError, ServiceUnavailableError, ConflictError
 from src.events.publisher import publish_document_analysis_requested
 from src.models.mongo_analysis import DocumentAnalysis
 from src.repositories.mongo_analyses import MongoAnalysisRepository
@@ -138,6 +138,89 @@ class AnalysisService:
             )
 
         return analysis
+
+    async def retry_analysis(
+            self,
+            analysis_id: str,
+            document_id: int,
+            request_id: str,
+            user_id: int
+    ) -> AnalysisResponse:
+        """Retries failed analysis for a given analysis id"""
+
+        analysis = await self._get_analysis_or_raise(analysis_id, document_id, user_id)
+
+        if analysis.status != AnalysisStatus.failed or analysis.failure_kind != AnalysisFailureKind.transient:
+            raise ConflictError(
+                error_code="analysis_not_retryable",
+                message="Analysis not retryable",
+                log_context={
+                    "event_name": "retry_analysis_failed",
+                    "user_id": user_id,
+                    "analysis_id": analysis_id,
+                    "document_id": document_id,
+                }
+            )
+
+        child_analysis = await self.repository.get_analysis_by_retry_of_analysis_id(analysis.id)
+
+        if child_analysis:
+            raise ConflictError(
+                error_code="analysis_already_retried",
+                message="Analysis already retried",
+                log_context={
+                    "event_name": "retry_analysis_failed",
+                    "user_id": user_id,
+                    "document_id": document_id,
+                    "analysis_id": analysis_id,
+                    "retried_analysis_id": str(child_analysis.id),
+                }
+            )
+
+        try:
+
+            logger.info(
+                "create_retried_analysis",
+                user_id=user_id,
+                document_id=document_id,
+                parent_analysis_id=analysis.id,
+                provider=analysis.provider.value,
+            )
+
+            retried_analysis = await self.repository.create_analysis(
+                document_id=document_id,
+                request_id=request_id,
+                provider=analysis.provider,
+                retry_of_analysis_id=analysis.id,
+            )
+        except DuplicateKeyError as err:
+            child_analysis = await self.repository.get_analysis_by_retry_of_analysis_id(analysis.id)
+
+            if child_analysis:
+                raise ConflictError(
+                    error_code="analysis_already_retried",
+                    message="Analysis already retried",
+                    log_context={
+                        "event_name": "retry_analysis_failed",
+                        "user_id": user_id,
+                        "document_id": document_id,
+                        "analysis_id": analysis_id,
+                        "retried_analysis_id": str(child_analysis.id),
+                    }
+                )
+
+            raise err
+
+        await self._dispatch_analysis(
+            analysis_id=retried_analysis.id,
+            document_id=retried_analysis.document_id,
+            provider=retried_analysis.provider,
+            request_id=retried_analysis.request_id,
+            user_id=user_id,
+        )
+
+        return AnalysisResponse.model_validate(retried_analysis)
+
 
     async def create_and_dispatch_analysis(
         self,
