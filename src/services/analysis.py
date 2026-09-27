@@ -143,7 +143,6 @@ class AnalysisService:
             "analysis_creation_started",
             user_id=user_id,
             document_id=document_id,
-            request_id=request_id,
             provider=provider.value,
         )
 
@@ -153,7 +152,6 @@ class AnalysisService:
             "analysis_created",
             user_id=user_id,
             document_id=document_id,
-            request_id=request_id,
             provider=provider.value,
         )
 
@@ -163,7 +161,6 @@ class AnalysisService:
                 "analysis_dispatch_started",
                 user_id=user_id,
                 document_id=document_id,
-                request_id=request_id,
                 provider=provider.value,
             )
 
@@ -181,7 +178,6 @@ class AnalysisService:
             except Exception as e:
                 logger.warning(
                     "failed_mark_dispatch_failed",
-                    request_id=request_id,
                     document_id=document_id,
                     user_id=user_id,
                     error_type=type(e).__name__,
