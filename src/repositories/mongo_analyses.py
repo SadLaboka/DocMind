@@ -42,6 +42,12 @@ class MongoAnalysisRepository:
             DocumentAnalysis.id == analysis_id, DocumentAnalysis.document_id == document_id
         )
 
+    async def get_analysis_by_retry_of_analysis_id(
+            self,
+            retry_of_analysis_id: BeanieObjectId,
+    ) -> DocumentAnalysis | None:
+        return await DocumentAnalysis.find_one(DocumentAnalysis.retry_of_analysis_id == retry_of_analysis_id)
+
     async def get_analysis_by_document_and_request(self, document_id: int, request_id: str) -> DocumentAnalysis | None:
         return await DocumentAnalysis.find_one(
             DocumentAnalysis.document_id == document_id, DocumentAnalysis.request_id == request_id
