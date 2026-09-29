@@ -7,7 +7,6 @@ from httpx import AsyncClient
 from src.core.enums import AnalysisFailureKind, AnalysisStatus, DocumentStatus, LLMProvider, MimeType
 from src.events.publisher import publish_document_analysis_requested
 
-
 SOURCE_ANALYSIS_ID = "507f1f77bcf86cd799439011"
 RETRY_ANALYSIS_ID = "507f1f77bcf86cd799439012"
 

@@ -1,11 +1,11 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from pymongo.errors import DuplicateKeyError
 from beanie import BeanieObjectId
+from pymongo.errors import DuplicateKeyError
 
 from src.core.enums import AnalysisFailureKind, AnalysisStatus, LLMProvider
-from src.core.exceptions import ResourceNotFoundError, ServiceUnavailableError, ConflictError
+from src.core.exceptions import ConflictError, ResourceNotFoundError, ServiceUnavailableError
 from src.events.publisher import publish_document_analysis_requested
 from src.services.analysis import AnalysisService
 
