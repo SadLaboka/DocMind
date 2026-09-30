@@ -86,6 +86,13 @@ class MongoAnalysisRepository:
             skip=skip,
         ).to_list()
 
+    async def remove_analysis_by_id(self, analysis_id: BeanieObjectId) -> DocumentAnalysis | None:
+        analysis = await self.get_analysis_by_id(analysis_id)
+        if analysis:
+            await analysis.delete()
+            return analysis
+        return None
+
     async def update_analysis_fields(
         self,
         document_id: int,
