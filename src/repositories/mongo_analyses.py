@@ -93,6 +93,18 @@ class MongoAnalysisRepository:
             return analysis
         return None
 
+    async def remove_finished_analysis_by_id(self, analysis_id: BeanieObjectId) -> DocumentAnalysis | None:
+        statuses = [AnalysisStatus.success, AnalysisStatus.failed]
+        analysis = await DocumentAnalysis.find_one(
+            DocumentAnalysis.id == analysis_id,
+            In(DocumentAnalysis.status, statuses)
+        )
+
+        if analysis:
+            await analysis.delete()
+            return analysis
+        return None
+
     async def update_analysis_fields(
         self,
         document_id: int,
