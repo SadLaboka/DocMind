@@ -316,9 +316,9 @@ class AnalysisService:
                 }
             )
 
-        removed_analysis = await self.repository.remove_analysis_by_id(analysis.id)
+        is_removed = await self.repository.remove_analysis_by_id(analysis.id)
 
-        if not removed_analysis:
+        if not is_removed:
             raise ResourceNotFoundError(
                 error_code="analysis_not_found",
                 message="Analysis not found",
@@ -338,7 +338,7 @@ class AnalysisService:
             user_id=user_id,
         )
 
-        return AnalysisResponse.model_validate(removed_analysis)
+        return AnalysisResponse.model_validate(analysis)
 
     async def _check_analysis_child_exists(self, analysis_id: BeanieObjectId) -> bool:
         """Checks if analysis has a retry"""
