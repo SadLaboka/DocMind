@@ -273,6 +273,87 @@ class AnalysisService:
                 error_detail=str(error_detail),
             )
 
+    async def remove_analysis(
+            self,
+            document_id: int,
+            request_id: str,
+            user_id: int,
+            analysis_id: BeanieObjectId
+    ) -> AnalysisResponse:
+        """Removes an analysis from the database by its analysis id"""
+
+        logger.info(
+            "analysis_remove_started",
+            document_id=document_id,
+            analysis_id=str(analysis_id),
+            user_id=user_id,
+        )
+
+        analysis = await self.repository.get_analysis_by_id_and_document_id(analysis_id, document_id)
+
+        if not analysis:
+            raise ResourceNotFoundError(
+                error_code="analysis_not_found",
+                message="Analysis not found",
+                log_context={
+                    "event_name": "analysis_not_found",
+                    "document_id": document_id,
+                    "analysis_id": str(analysis_id),
+                    "user_id": user_id,
+                }
+            )
+
+        if not await self._check_analysis_child_exists(analysis_id):
+            raise ConflictError(
+                error_code="analysis_has_retry",
+                message="Analysis has retry",
+                log_context={
+                    "event_name": "analysis_has_retry",
+                    "document_id": document_id,
+                    "analysis_id": str(analysis_id),
+                    "user_id": user_id,
+                }
+            )
+
+        if analysis.status not in (AnalysisStatus.failed, AnalysisStatus.success):
+            raise ConflictError(
+                error_code="analysis_in_progress",
+                message="Analysis still in progress",
+                log_context={
+                    "event_name": "analysis_in_progress",
+                    "document_id": document_id,
+                    "analysis_id": str(analysis_id),
+                    "user_id": user_id,
+                }
+            )
+
+        removed_analysis = await self.repository.remove_analysis_by_id(analysis_id)
+
+        if not removed_analysis:
+            raise ConflictError(
+                error_code="analysis_already_removed",
+                message="Analysis already removed",
+                log_context={
+                    "event_name": "analysis_already_removed",
+                    "document_id": document_id,
+                    "analysis_id": str(analysis_id),
+                    "user_id": user_id,
+                }
+            )
+
+        logger.info(
+            "analysis_removed",
+            document_id=document_id,
+            analysis_id=str(analysis_id),
+            user_id=user_id,
+        )
+
+        return AnalysisResponse.model_validate(removed_analysis)
+
+    async def _check_analysis_child_exists(self, analysis_id: BeanieObjectId) -> bool:
+        """Checks if analysis has a retry"""
+        return bool(await self.repository.get_analysis_by_id(analysis_id))
+
     async def _dispatch_analysis(
         self, analysis_id: BeanieObjectId, document_id: int, request_id: str, user_id: int, provider: LLMProvider
     ) -> None:
