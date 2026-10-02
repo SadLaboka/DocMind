@@ -93,9 +93,6 @@ class MongoAnalysisRepository:
             return analysis
         return None
 
-    async def get_analysis_child(self, retry_of_analysis_id: BeanieObjectId) -> DocumentAnalysis | None:
-        return await DocumentAnalysis.find_one(DocumentAnalysis.retry_of_analysis_id == retry_of_analysis_id)
-
     async def update_analysis_fields(
         self,
         document_id: int,
