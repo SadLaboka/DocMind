@@ -291,7 +291,7 @@ class AnalysisService:
 
         analysis = await self._get_analysis_or_raise(analysis_id, document_id, user_id)
 
-        if not await self._check_analysis_child_exists(analysis.id):
+        if await self._check_analysis_child_exists(analysis.id):
             raise ConflictError(
                 error_code="analysis_has_retry",
                 message="Analysis has retry",
@@ -343,7 +343,7 @@ class AnalysisService:
 
     async def _check_analysis_child_exists(self, analysis_id: BeanieObjectId) -> bool:
         """Checks if analysis has a retry"""
-        return bool(await self.repository.get_analysis_by_id(analysis_id))
+        return bool(await self.repository.get_analysis_by_retry_of_analysis_id(analysis_id))
 
     async def _dispatch_analysis(
         self, analysis_id: BeanieObjectId, document_id: int, request_id: str, user_id: int, provider: LLMProvider
