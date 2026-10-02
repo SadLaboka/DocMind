@@ -319,15 +319,15 @@ class AnalysisService:
         removed_analysis = await self.repository.remove_analysis_by_id(analysis.id)
 
         if not removed_analysis:
-            raise ConflictError(
-                error_code="analysis_already_removed",
-                message="Analysis already removed",
+            raise ResourceNotFoundError(
+                error_code="analysis_not_found",
+                message="Analysis not found",
                 log_context={
-                    "event_name": "analysis_already_removed",
-                    "reason": "analysis_already_removed",
-                    "document_id": document_id,
-                    "analysis_id": analysis_id,
                     "user_id": user_id,
+                    "analysis_id": analysis_id,
+                    "event_name": "get_analysis_failed",
+                    "reason": "analysis_not_found",
+                    "document_id": document_id,
                 }
             )
 
