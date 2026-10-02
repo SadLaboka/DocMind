@@ -278,7 +278,7 @@ class AnalysisService:
             document_id: int,
             request_id: str,
             user_id: int,
-            analysis_id: BeanieObjectId
+            analysis_id: str
     ) -> AnalysisResponse:
         """Removes an analysis from the database by its analysis id"""
 
@@ -289,28 +289,17 @@ class AnalysisService:
             user_id=user_id,
         )
 
-        analysis = await self.repository.get_analysis_by_id_and_document_id(analysis_id, document_id)
+        analysis = await self._get_analysis_or_raise(analysis_id, document_id, user_id)
 
-        if not analysis:
-            raise ResourceNotFoundError(
-                error_code="analysis_not_found",
-                message="Analysis not found",
-                log_context={
-                    "event_name": "analysis_not_found",
-                    "document_id": document_id,
-                    "analysis_id": str(analysis_id),
-                    "user_id": user_id,
-                }
-            )
-
-        if not await self._check_analysis_child_exists(analysis_id):
+        if not await self._check_analysis_child_exists(analysis.id):
             raise ConflictError(
                 error_code="analysis_has_retry",
                 message="Analysis has retry",
                 log_context={
                     "event_name": "analysis_has_retry",
+                    "reason": "analysis_has_child",
                     "document_id": document_id,
-                    "analysis_id": str(analysis_id),
+                    "analysis_id": analysis_id,
                     "user_id": user_id,
                 }
             )
@@ -321,13 +310,14 @@ class AnalysisService:
                 message="Analysis still in progress",
                 log_context={
                     "event_name": "analysis_in_progress",
+                    "reason": "analysis_status_not_failed_or_success",
                     "document_id": document_id,
-                    "analysis_id": str(analysis_id),
+                    "analysis_id": analysis_id,
                     "user_id": user_id,
                 }
             )
 
-        removed_analysis = await self.repository.remove_analysis_by_id(analysis_id)
+        removed_analysis = await self.repository.remove_analysis_by_id(analysis.id)
 
         if not removed_analysis:
             raise ConflictError(
@@ -335,8 +325,9 @@ class AnalysisService:
                 message="Analysis already removed",
                 log_context={
                     "event_name": "analysis_already_removed",
+                    "reason": "analysis_already_removed",
                     "document_id": document_id,
-                    "analysis_id": str(analysis_id),
+                    "analysis_id": analysis_id,
                     "user_id": user_id,
                 }
             )
@@ -344,7 +335,7 @@ class AnalysisService:
         logger.info(
             "analysis_removed",
             document_id=document_id,
-            analysis_id=str(analysis_id),
+            analysis_id=analysis_id,
             user_id=user_id,
         )
 
