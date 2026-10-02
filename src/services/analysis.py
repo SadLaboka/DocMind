@@ -276,7 +276,6 @@ class AnalysisService:
     async def remove_analysis(
             self,
             document_id: int,
-            request_id: str,
             user_id: int,
             analysis_id: str
     ) -> AnalysisResponse:
