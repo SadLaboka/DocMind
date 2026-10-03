@@ -239,6 +239,7 @@ def mock_analysis_repo(mock_analysis_content):
 
     mock_repo.create_analysis.return_value = mock_analysis_content
     mock_repo.get_analyses_by_document_id.return_value = []
+    mock_repo.remove_analysis_by_id.return_value = True
     mock_repo.get_analysis_by_retry_of_analysis_id.return_value = None
     mock_repo.get_analysis_by_id.return_value = mock_analysis_content
     mock_repo.get_analysis_by_id_and_document_id.return_value = mock_analysis_content
