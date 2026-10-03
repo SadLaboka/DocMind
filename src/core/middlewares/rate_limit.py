@@ -101,7 +101,7 @@ class RateLimitMiddleware:
 
         method = scope.get("method")
 
-        if method == "POST" or "DELETE":
+        if method in ("POST", "DELETE"):
             values = post_map.get(path)
             return values or global_values
         elif method == "GET":
@@ -166,7 +166,7 @@ class RateLimitMiddleware:
                 if len(parts) == 4:
                     return "/documents/{id}/analyses"
                 else:
-                    return f"/documents/{{id}}/analyses/{'/'.join(parts[5:])}"
+                    return f"/documents/{{id}}/analyses/{{analysis_id}}/{'/'.join(parts[5:])}"
             elif parts[2].isdigit():
                 return f"/documents/{{id}}/{'/'.join(parts[3:])}"
 
