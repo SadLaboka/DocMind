@@ -650,3 +650,178 @@ async def test_retry_analysis_unrelated_duplicate_error_propagates(
     assert exc_info.value is duplicate_error
     assert mock_analysis_repo.get_analysis_by_retry_of_analysis_id.await_count == 2
     mock_to_thread.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "analysis_status",
+    [
+        AnalysisStatus.success,
+        AnalysisStatus.failed,
+    ],
+)
+async def test_remove_analysis_success(
+    mock_analysis_repo: AsyncMock,
+    analysis_content_factory,
+    analysis_status: AnalysisStatus,
+) -> None:
+    analysis_id = BeanieObjectId(ANALYSIS_ID)
+
+    analysis = analysis_content_factory(
+        document_id=42,
+        request_id="request-1",
+    ).model_copy(
+        update={
+            "id": analysis_id,
+            "status": analysis_status,
+        }
+    )
+
+    mock_analysis_repo.get_analysis_by_id_and_document_id.return_value = analysis
+    mock_analysis_repo.get_analysis_by_retry_of_analysis_id.return_value = None
+    mock_analysis_repo.remove_analysis_by_id.return_value = True
+
+    service = AnalysisService(mock_analysis_repo)
+
+    result = await service.remove_analysis(
+        document_id=42,
+        user_id=7,
+        analysis_id=ANALYSIS_ID,
+    )
+
+    assert result.id == str(analysis_id)
+    assert result.status == analysis_status
+
+    mock_analysis_repo.get_analysis_by_id_and_document_id.assert_awaited_once_with(
+        analysis_id,
+        42,
+    )
+    mock_analysis_repo.get_analysis_by_retry_of_analysis_id.assert_awaited_once_with(
+        analysis_id,
+    )
+    mock_analysis_repo.remove_analysis_by_id.assert_awaited_once_with(
+        analysis_id,
+    )
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "analysis_status",
+    [
+        AnalysisStatus.queued,
+        AnalysisStatus.analyzing,
+    ],
+)
+async def test_remove_analysis_rejects_in_progress_analysis(
+    mock_analysis_repo: AsyncMock,
+    analysis_content_factory,
+    analysis_status: AnalysisStatus,
+) -> None:
+    analysis_id = BeanieObjectId(ANALYSIS_ID)
+
+    analysis = analysis_content_factory(
+        document_id=42,
+        request_id="request-1",
+    ).model_copy(
+        update={
+            "id": analysis_id,
+            "status": analysis_status,
+        }
+    )
+
+    mock_analysis_repo.get_analysis_by_id_and_document_id.return_value = analysis
+    mock_analysis_repo.get_analysis_by_retry_of_analysis_id.return_value = None
+
+    service = AnalysisService(mock_analysis_repo)
+
+    with pytest.raises(ConflictError) as exc_info:
+        await service.remove_analysis(
+            document_id=42,
+            user_id=7,
+            analysis_id=ANALYSIS_ID,
+        )
+
+    assert exc_info.value.error_code == "analysis_in_progress"
+
+    mock_analysis_repo.remove_analysis_by_id.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_remove_analysis_rejects_analysis_with_retry(
+    mock_analysis_repo: AsyncMock,
+    analysis_content_factory,
+) -> None:
+    analysis_id = BeanieObjectId(ANALYSIS_ID)
+    child_id = BeanieObjectId(RETRY_ANALYSIS_ID)
+
+    analysis = analysis_content_factory(
+        document_id=42,
+        request_id="request-1",
+    ).model_copy(
+        update={
+            "id": analysis_id,
+            "status": AnalysisStatus.failed,
+        }
+    )
+    child_analysis = analysis_content_factory(
+        document_id=42,
+        request_id="retry-request",
+    ).model_copy(
+        update={
+            "id": child_id,
+            "retry_of_analysis_id": analysis_id,
+        }
+    )
+
+    mock_analysis_repo.get_analysis_by_id_and_document_id.return_value = analysis
+    mock_analysis_repo.get_analysis_by_retry_of_analysis_id.return_value = child_analysis
+
+    service = AnalysisService(mock_analysis_repo)
+
+    with pytest.raises(ConflictError) as exc_info:
+        await service.remove_analysis(
+            document_id=42,
+            user_id=7,
+            analysis_id=ANALYSIS_ID,
+        )
+
+    assert exc_info.value.error_code == "analysis_has_retry"
+
+    mock_analysis_repo.remove_analysis_by_id.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_remove_analysis_returns_not_found_when_delete_loses_race(
+    mock_analysis_repo: AsyncMock,
+    analysis_content_factory,
+) -> None:
+    analysis_id = BeanieObjectId(ANALYSIS_ID)
+
+    analysis = analysis_content_factory(
+        document_id=42,
+        request_id="request-1",
+    ).model_copy(
+        update={
+            "id": analysis_id,
+            "status": AnalysisStatus.success,
+        }
+    )
+
+    mock_analysis_repo.get_analysis_by_id_and_document_id.return_value = analysis
+    mock_analysis_repo.get_analysis_by_retry_of_analysis_id.return_value = None
+    mock_analysis_repo.remove_analysis_by_id.return_value = False
+
+    service = AnalysisService(mock_analysis_repo)
+
+    with pytest.raises(ResourceNotFoundError) as exc_info:
+        await service.remove_analysis(
+            document_id=42,
+            user_id=7,
+            analysis_id=ANALYSIS_ID,
+        )
+
+    assert exc_info.value.error_code == "analysis_not_found"
+
+    mock_analysis_repo.remove_analysis_by_id.assert_awaited_once_with(
+        analysis_id,
+    )
