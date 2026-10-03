@@ -177,6 +177,8 @@ class RateLimitMiddleware:
             elif parts[2].isdigit() and parts[3] == "analyses":
                 if len(parts) == 4:
                     return "/documents/{id}/analyses"
+                elif len(parts) == 5:
+                    return "/documents/{id}/analyses/{analysis_id}"
                 else:
                     return f"/documents/{{id}}/analyses/{{analysis_id}}/{'/'.join(parts[5:])}"
             elif parts[2].isdigit():
