@@ -6,7 +6,6 @@ from httpx import AsyncClient
 
 from src.core.enums import AnalysisStatus, DocumentStatus, LLMProvider, MimeType
 
-
 ANALYSIS_ID = "507f1f77bcf86cd799439011"
 
 

@@ -109,11 +109,11 @@ async def retry_analysis(
     response_model=AnalysisResponse,
 )
 async def remove_analysis(
-        document_id: int,
-        analysis_id: str,
-        current_user: User = Depends(get_current_user),
-        document_service: DocumentService = Depends(get_document_service),
-        analysis_service: AnalysisService = Depends(get_analysis_service),
+    document_id: int,
+    analysis_id: str,
+    current_user: User = Depends(get_current_user),
+    document_service: DocumentService = Depends(get_document_service),
+    analysis_service: AnalysisService = Depends(get_analysis_service),
 ) -> AnalysisResponse:
     await document_service.get_document(current_user, document_id)
 

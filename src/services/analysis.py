@@ -273,12 +273,7 @@ class AnalysisService:
                 error_detail=str(error_detail),
             )
 
-    async def remove_analysis(
-            self,
-            document_id: int,
-            user_id: int,
-            analysis_id: str
-    ) -> AnalysisResponse:
+    async def remove_analysis(self, document_id: int, user_id: int, analysis_id: str) -> AnalysisResponse:
         """Removes an analysis from the database by its analysis id"""
 
         logger.info(
@@ -300,7 +295,7 @@ class AnalysisService:
                     "document_id": document_id,
                     "analysis_id": analysis_id,
                     "user_id": user_id,
-                }
+                },
             )
 
         if analysis.status not in (AnalysisStatus.failed, AnalysisStatus.success):
@@ -313,7 +308,7 @@ class AnalysisService:
                     "document_id": document_id,
                     "analysis_id": analysis_id,
                     "user_id": user_id,
-                }
+                },
             )
 
         is_removed = await self.repository.remove_analysis_by_id(analysis.id)
@@ -328,7 +323,7 @@ class AnalysisService:
                     "event_name": "get_analysis_failed",
                     "reason": "analysis_not_found",
                     "document_id": document_id,
-                }
+                },
             )
 
         logger.info(
