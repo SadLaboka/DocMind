@@ -75,11 +75,19 @@ class RateLimitMiddleware:
             "/auth/login": (settings.rate_limit.login_limit, settings.rate_limit.login_window),
             "/users/register": (settings.rate_limit.register_limit, settings.rate_limit.register_window),
             "/documents": (settings.rate_limit.documents_post_limit, settings.rate_limit.documents_post_window),
+            "/documents/{id}/analyses": (
+                settings.rate_limit.analyses_post_limit,
+                settings.rate_limit.analyses_post_window
+            ),
         }
 
         get_map = {
             "/documents": (settings.rate_limit.documents_get_limit, settings.rate_limit.documents_get_window),
             "/documents/{id}": (settings.rate_limit.documents_get_limit, settings.rate_limit.documents_get_window),
+            "/documents/{id}/analyses": (
+                settings.rate_limit.analyses_get_limit,
+                settings.rate_limit.analyses_get_window
+            ),
         }
 
         global_values = settings.rate_limit.global_limit, settings.rate_limit.global_window
@@ -93,7 +101,7 @@ class RateLimitMiddleware:
 
         method = scope.get("method")
 
-        if method == "POST":
+        if method == "POST" or "DELETE":
             values = post_map.get(path)
             return values or global_values
         elif method == "GET":
@@ -154,7 +162,12 @@ class RateLimitMiddleware:
         if len(parts) >= 3 and parts[1] == "documents":
             if parts[2].isdigit() and len(parts) == 3:
                 return "/documents/{id}"
+            elif parts[2].isdigit() and parts[3] == "analyses":
+                if len(parts) == 4:
+                    return "/documents/{id}/analyses"
+                else:
+                    return f"/documents/{{id}}/analyses/{'/'.join(parts[5:])}"
             elif parts[2].isdigit():
-                return f"/documents/{id}/{'/'.join(parts[3:])}"
+                return f"/documents/{{id}}/{'/'.join(parts[3:])}"
 
         return path

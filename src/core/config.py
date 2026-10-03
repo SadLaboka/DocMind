@@ -141,6 +141,12 @@ class RateLimitSettings(SettingsBase):
     documents_get_limit: int = 20
     documents_get_window: int = 60
 
+    analyses_get_limit: int = 20
+    analyses_get_window: int = 60
+
+    analyses_post_limit: int = 10
+    analyses_post_window: int = 60
+
 
 class StorageSettingsLocal(SettingsBase):
     model_config = SettingsConfigDict(env_file=ENV_FILE, env_prefix="LOCAL_STORAGE_", extra="ignore")
