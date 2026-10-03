@@ -79,6 +79,14 @@ class RateLimitMiddleware:
                 settings.rate_limit.analyses_post_limit,
                 settings.rate_limit.analyses_post_window
             ),
+            "/documents/{id}/analyses/{analysis_id}": (
+                settings.rate_limit.analyses_post_limit,
+                settings.rate_limit.analyses_post_window
+            ),
+            "/documents/{id}/analyses/{analysis_id}/retry": (
+                settings.rate_limit.analyses_post_limit,
+                settings.rate_limit.analyses_post_window
+            )
         }
 
         get_map = {
@@ -88,6 +96,10 @@ class RateLimitMiddleware:
                 settings.rate_limit.analyses_get_limit,
                 settings.rate_limit.analyses_get_window
             ),
+            "/documents/{id}/analyses/{analysis_id}": (
+                settings.rate_limit.analyses_get_limit,
+                settings.rate_limit.analyses_get_window
+            )
         }
 
         global_values = settings.rate_limit.global_limit, settings.rate_limit.global_window
