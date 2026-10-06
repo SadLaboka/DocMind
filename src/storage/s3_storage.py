@@ -1,5 +1,6 @@
 import contextlib
 import mimetypes
+import uuid
 from pathlib import Path
 from typing import NoReturn
 from urllib import parse
@@ -92,9 +93,12 @@ class S3Storage:
         if not file_path.parent.exists():
             raise FileNotFoundError(f"Directory not found: {file_path.parent}")
 
+        staging_path = file_path / uuid.uuid4().hex
+
         async with self._get_client() as client:
             try:
-                await client.download_file(Bucket=self._bucket, Key=key, Filename=file_path)
+                await client.download_file(Bucket=self._bucket, Key=key, Filename=staging_path)
+                staging_path.rename(file_path)
                 return True
             except ClientError as e:
                 self._handle_boto_error(e, "download_file", key)
@@ -110,8 +114,8 @@ class S3Storage:
                     }
                 )
             finally:
-                if file_path.exists():
-                    file_path.unlink()
+                if staging_path.exists():
+                    staging_path.unlink()
 
     async def file_exists(self, key: str) -> bool:
         """Check if file exists in S3 via HEAD request"""
