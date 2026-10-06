@@ -119,9 +119,13 @@ class S3Storage:
                 try:
                     if staging_path.exists():
                         staging_path.unlink()
-                except OSError as e:
+                except OSError as err:
                     logger.warning(
-                        f"Failed to delete file: {key}, staging path: {staging_path}"
+                        "Failed to delete temp-file",
+                        operation="download_file",
+                        file_path=str(staging_path),
+                        key=key,
+                        error_type=type(err).__name__,
                     )
 
 
