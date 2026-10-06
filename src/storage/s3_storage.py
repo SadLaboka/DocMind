@@ -4,6 +4,7 @@ import uuid
 from pathlib import Path
 from typing import NoReturn
 from urllib import parse
+from structlog import get_logger
 
 import aioboto3
 from botocore.exceptions import BotoCoreError, ClientError
@@ -16,6 +17,8 @@ from src.storage.exceptions import (
     S3UploadError,
     StorageError,
 )
+
+logger = get_logger(__name__)
 
 
 class S3Storage:
@@ -93,12 +96,12 @@ class S3Storage:
         if not file_path.parent.exists():
             raise FileNotFoundError(f"Directory not found: {file_path.parent}")
 
-        staging_path = file_path / uuid.uuid4().hex
+        staging_path = file_path.with_name(file_path.name + uuid.uuid4().hex)
 
         async with self._get_client() as client:
             try:
                 await client.download_file(Bucket=self._bucket, Key=key, Filename=staging_path)
-                staging_path.rename(file_path)
+                staging_path.replace(file_path)
                 return True
             except ClientError as e:
                 self._handle_boto_error(e, "download_file", key)
@@ -113,8 +116,14 @@ class S3Storage:
                     }
                 )
             finally:
-                if staging_path.exists():
-                    staging_path.unlink()
+                try:
+                    if staging_path.exists():
+                        staging_path.unlink()
+                except OSError as e:
+                    logger.warning(
+                        f"Failed to delete file: {key}, staging path: {staging_path}"
+                    )
+
 
     async def file_exists(self, key: str) -> bool:
         """Check if file exists in S3 via HEAD request"""
