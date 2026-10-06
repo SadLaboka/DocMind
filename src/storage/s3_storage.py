@@ -6,7 +6,6 @@ from urllib import parse
 
 import aioboto3
 from botocore.exceptions import BotoCoreError, ClientError
-from uuid import uuid4
 
 from src.core.config import settings
 from src.storage.exceptions import (
@@ -98,8 +97,18 @@ class S3Storage:
                 await client.download_file(Bucket=self._bucket, Key=key, Filename=file_path)
                 return True
             except ClientError as e:
-
                 self._handle_boto_error(e, "download_file", key)
+            except BotoCoreError as e:
+                raise  S3ConnectionError(
+                    message=f"Failed to download file: {key}",
+                    error_code="503",
+                    original_error=e,
+                    operation="download_file",
+                    log_context={
+                        "key": key,
+                        "bucket": self._bucket,
+                    }
+                )
             finally:
                 if file_path.exists():
                     file_path.unlink()
@@ -159,11 +168,10 @@ class S3Storage:
         error_message = error.response["Error"]["Message"]
 
         log_context = {
-            "operation": operation,
             "key": key,
             "bucket": self._bucket,
-            "aws_error_code": error_code,
-            "aws_error_message": error_message,
+            "s3_error_code": error_code,
+            "s3_error_message": error_message,
         }
 
         if error_code in ("404", "NoSuchKey", "NoSuchBucket"):
@@ -175,13 +183,20 @@ class S3Storage:
             ) from error
 
         if error_code in ("403", "AccessDenied"):
-            raise S3UploadError(
-                message=f"Access denied: {key}",
-                retryable=False,
-                log_context=log_context,
-                key=key,
-                original_error=error,
-            ) from error
+            if operation == "download_file":
+                raise StorageError(
+                    message=f"Download operation failed: {error_message}",
+                    log_context=log_context,
+                    original_error=error,
+                ) from error
+            else:
+                raise S3UploadError(
+                    message=f"Access denied: {key}",
+                    retryable=False,
+                    log_context=log_context,
+                    key=key,
+                    original_error=error,
+                ) from error
 
         if error_code in ("500", "503", "SlowDown", "InternalError", "ServiceUnavailable"):
             raise S3ConnectionError(
