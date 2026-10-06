@@ -88,23 +88,21 @@ class S3Storage:
             except ClientError as e:
                 self._handle_boto_error(e, "delete_file", key)
 
-    async def download_file(self, key: str, file_path: Path) -> Path:
+    async def download_file(self, key: str, file_path: Path) -> bool | None:
         """Download file from S3 to file_path directory, return True if downloaded"""
-        if not file_path.exists():
-            raise FileNotFoundError(f"Directory not found: {file_path}")
-
-        temp_filename = uuid4().hex
-
-        temp_file_path = file_path.joinpath(temp_filename)
+        if not file_path.parent.exists():
+            raise FileNotFoundError(f"Directory not found: {file_path.parent}")
 
         async with self._get_client() as client:
             try:
-                await client.download_file(Bucket=self._bucket, Key=key, Filename=temp_file_path)
-                return temp_file_path
+                await client.download_file(Bucket=self._bucket, Key=key, Filename=file_path)
+                return True
             except ClientError as e:
-                if temp_file_path.exists():
-                    temp_file_path.unlink()
+
                 self._handle_boto_error(e, "download_file", key)
+            finally:
+                if file_path.exists():
+                    file_path.unlink()
 
     async def file_exists(self, key: str) -> bool:
         """Check if file exists in S3 via HEAD request"""
