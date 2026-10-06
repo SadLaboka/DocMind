@@ -88,7 +88,7 @@ class S3Storage:
             except ClientError as e:
                 self._handle_boto_error(e, "delete_file", key)
 
-    async def download_file(self, key: str, file_path: Path) -> bool | None:
+    async def download_file(self, key: str, file_path: Path) -> bool:
         """Download file from S3 to file_path directory, return True if downloaded"""
         if not file_path.parent.exists():
             raise FileNotFoundError(f"Directory not found: {file_path.parent}")
@@ -105,7 +105,6 @@ class S3Storage:
             except BotoCoreError as e:
                 raise  S3ConnectionError(
                     message=f"Failed to download file: {key}",
-                    error_code="503",
                     original_error=e,
                     operation="download_file",
                     log_context={
