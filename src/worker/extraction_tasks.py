@@ -86,14 +86,17 @@ class DocumentExtractionTask(BaseTask):
                 if not await self._is_temp_document_exists():
 
                     if not document.file_key:
-                        self.logger.error(
-                            "document_has_not_file_key",
-                            user_id=self.user_id,
-                            document_id=self.document_id,
-                            temp_path=self.temp_path,
-                            mime_type=self.mime_type,
+                        raise ExtractionError(
+                            error_code="file_and_key_is_missing",
+                            log_context={
+                                "event_name": "file_and_key_is_missing",
+                                "reason": "local_file_and_s3_key_is_missing",
+                                "user_id": self.user_id,
+                                "document_id": self.document_id,
+                                "file_path": self.temp_path,
+                                "mime_type": self.mime_type,
+                            }
                         )
-                        return
 
                     storage = get_storage()
                     self.logger.info(
