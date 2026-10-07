@@ -16,6 +16,7 @@ from src.services.extractors import TextExtractor
 from src.storage.s3_storage import get_storage
 from src.worker.base_task import BaseTask
 from src.worker.celery_app import app as celery_app
+from storage.exceptions import S3FileNotFoundError, StorageError
 
 
 class DocumentExtractionTask(BaseTask):
@@ -106,8 +107,46 @@ class DocumentExtractionTask(BaseTask):
                         temp_path=self.temp_path,
                         mime_type=self.mime_type,
                     )
-
-                    await storage.download_file(document.file_key, self.temp_path)
+                    try:
+                        await storage.download_file(document.file_key, self.temp_path)
+                    except S3FileNotFoundError as err:
+                        if not err.retryable:
+                            self.logger.error(
+                                "download_file_non_retryable_error",
+                                error_code=err.error_code,
+                                error_detail=err.message,
+                                document_id=self.document_id,
+                                user_id=self.user_id,
+                                file_key=document.file_key,
+                            )
+                            await repo.update_document_fields(
+                                document_id=self.document_id,
+                                document_status=DocumentStatus.failed,
+                                temp_filename=None,
+                                error_trace=f"Document file is missing. S3 download Error: {err.message}",
+                            )
+                            self._cleanup_file()
+                            return
+                        raise
+                    except StorageError as err:
+                        if not err.retryable:
+                            self.logger.error(
+                                "download_file_storage_non_retryable_error",
+                                error_code=err.error_code,
+                                error_detail=err.message,
+                                document_id=self.document_id,
+                                user_id=self.user_id,
+                                file_key=document.file_key,
+                            )
+                            await repo.update_document_fields(
+                                document_id=self.document_id,
+                                document_status=DocumentStatus.failed,
+                                temp_filename=None,
+                                error_trace=f"S3 Storage Error: {err.message}",
+                            )
+                            self._cleanup_file()
+                            return
+                        raise
 
                 await repo.update_document_fields(self.document_id, document_status=DocumentStatus.extracting)
 
