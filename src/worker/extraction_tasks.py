@@ -13,6 +13,7 @@ from src.repositories.mongo_analyses import MongoAnalysisRepository
 from src.repositories.mongo_documents import MongoDocumentRepository
 from src.services.analysis import AnalysisService
 from src.services.extractors import TextExtractor
+from src.storage.s3_storage import get_storage
 from src.worker.base_task import BaseTask
 from src.worker.celery_app import app as celery_app
 
@@ -53,9 +54,9 @@ class DocumentExtractionTask(BaseTask):
         async with celery_session_factory() as session:
             repo = DocumentRepository(session)
 
-            document_status = await self._get_current_document_status(repo)
+            document = await repo.get_document_by_id(self.document_id)
 
-            if not document_status:
+            if not document:
 
                 self._cleanup_file()
 
@@ -66,6 +67,8 @@ class DocumentExtractionTask(BaseTask):
                 )
 
                 return
+
+            document_status = document.document_status
 
             if document_status == DocumentStatus.cancelled:
                 self._cleanup_file()
@@ -80,8 +83,28 @@ class DocumentExtractionTask(BaseTask):
 
             if document_status != DocumentStatus.extracted:
 
-                if not await self._is_path_exists(repo):
-                    return
+                if not await self._is_temp_document_exists():
+
+                    if not document.file_key:
+                        self.logger.error(
+                            "document_has_not_file_key",
+                            user_id=self.user_id,
+                            document_id=self.document_id,
+                            temp_path=self.temp_path,
+                            mime_type=self.mime_type,
+                        )
+                        return
+
+                    storage = get_storage()
+                    self.logger.info(
+                        "start_downloading_document_from_s3",
+                        user_id=self.user_id,
+                        document_id=self.document_id,
+                        temp_path=self.temp_path,
+                        mime_type=self.mime_type,
+                    )
+
+                    await storage.download_file(document.file_key, self.temp_path)
 
                 await repo.update_document_fields(self.document_id, document_status=DocumentStatus.extracting)
 
@@ -188,6 +211,20 @@ class DocumentExtractionTask(BaseTask):
                 exc_info=True,
             )
             raise
+
+    async def _is_temp_document_exists(self) -> bool:
+        """Checks whether path exists"""
+        if not self.temp_path.exists():
+            self.logger.warning(
+                "Document file not found",
+                error_code="processed_file_not_found",
+                file_path=self.temp_path,
+                user_id=self.user_id,
+                document_id=self.document_id,
+            )
+
+            return False
+        return True
 
     async def _dispatch_analysis(self) -> None:
         """Creates analysis and dispatches it to processing queue"""
