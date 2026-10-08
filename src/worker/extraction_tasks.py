@@ -71,18 +71,7 @@ class DocumentExtractionTask(BaseTask):
 
             document_status = document.document_status
 
-            if document_status == DocumentStatus.cancelled:
-                self._cleanup_file()
-
-                self.logger.info(
-                    "document_status_is_cancelled",
-                    user_id=self.user_id,
-                    document_id=self.document_id,
-                )
-
-                return
-
-            if document_status != DocumentStatus.extracted:
+            if document_status in (DocumentStatus.uploaded, DocumentStatus.extracting):
 
                 if not await self._is_temp_document_exists():
 
@@ -92,6 +81,27 @@ class DocumentExtractionTask(BaseTask):
                 await repo.update_document_fields(self.document_id, document_status=DocumentStatus.extracting)
 
                 await self._process_extraction(repo, mime_enum, document.file_key)
+                return
+            elif document_status in (DocumentStatus.cancelled, DocumentStatus.failed, DocumentStatus.infected):
+
+                self.logger.warning(
+                    "terminal_document_status. Extraction cancelled",
+                    user_id=self.user_id,
+                    document_id=self.document_id,
+                    mime_type=self.mime_type,
+                    document_status=document_status.value,
+                )
+
+                self._cleanup_file()
+                return
+            elif document_status in (DocumentStatus.created, DocumentStatus.scanning, DocumentStatus.uploading):
+                self.logger.warning(
+                    "wrong_document_status_for_extraction",
+                    user_id=self.user_id,
+                    document_id=self.document_id,
+                    mime_type=self.mime_type,
+                    document_status=document_status.value,
+                )
                 return
 
             self._cleanup_file()
