@@ -108,7 +108,7 @@ class DocumentExtractionTask(BaseTask):
 
             await self._dispatch_analysis()
 
-    async def _restore_file_from_storage(self, repo: DocumentRepository, file_key: str | None) -> bool | None:
+    async def _restore_file_from_storage(self, repo: DocumentRepository, file_key: str | None) -> bool:
 
         if not file_key:
             raise ExtractionError(
@@ -151,7 +151,7 @@ class DocumentExtractionTask(BaseTask):
                     error_trace=f"Document file is missing. S3 download Error: {err.message}",
                 )
                 self._cleanup_file()
-                return
+                return False
             raise
         except StorageError as err:
             if not err.retryable:
@@ -170,7 +170,7 @@ class DocumentExtractionTask(BaseTask):
                     error_trace=f"S3 Storage Error: {err.message}",
                 )
                 self._cleanup_file()
-                return
+                return False
             raise
 
     def _validate_mime_type(self) -> MimeType:
@@ -239,7 +239,10 @@ class DocumentExtractionTask(BaseTask):
             await self._dispatch_analysis()
 
         except ExtractionError as err:
-            if err.error_code == "file_not_found" and await self._restore_file_from_storage(repo, file_key):
+            if err.error_code == "file_not_found":
+
+                if not await self._restore_file_from_storage(repo, file_key):
+                    return
 
                 await self._extract_text(repo, mongo_repo, mime_enum)
 
