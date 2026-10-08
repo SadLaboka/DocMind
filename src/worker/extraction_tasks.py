@@ -86,7 +86,8 @@ class DocumentExtractionTask(BaseTask):
 
                 if not await self._is_temp_document_exists():
 
-                    await self._restore_file_from_storage(repo, document.file_key)
+                    if not await self._restore_file_from_storage(repo, document.file_key):
+                        return
 
                 await repo.update_document_fields(self.document_id, document_status=DocumentStatus.extracting)
 
@@ -97,7 +98,7 @@ class DocumentExtractionTask(BaseTask):
 
             await self._dispatch_analysis()
 
-    async def _restore_file_from_storage(self, repo: DocumentRepository, file_key: str | None) -> None:
+    async def _restore_file_from_storage(self, repo: DocumentRepository, file_key: str | None) -> bool | None:
 
         if not file_key:
             raise ExtractionError(
@@ -122,6 +123,7 @@ class DocumentExtractionTask(BaseTask):
         )
         try:
             await storage.download_file(file_key, self.temp_path)
+            return True
         except S3FileNotFoundError as err:
             if not err.retryable:
                 self.logger.error(
@@ -227,45 +229,29 @@ class DocumentExtractionTask(BaseTask):
             await self._dispatch_analysis()
 
         except ExtractionError as err:
-            if err.error_code == "file_not_found":
-                try:
-                    await self._restore_file_from_storage(repo, file_key)
+            if err.error_code == "file_not_found" and await self._restore_file_from_storage(repo, file_key):
 
-                    await self._extract_text(repo, mongo_repo, mime_enum)
+                await self._extract_text(repo, mongo_repo, mime_enum)
 
-                    self._cleanup_file()
+                self._cleanup_file()
 
-                    await self._dispatch_analysis()
+                await self._dispatch_analysis()
 
-                except Exception:
-                    await repo.update_document_fields(
-                        document_id=self.document_id,
-                        document_status=DocumentStatus.cancelled,
-                        error_trace=str(err.log_context),
-                        temp_filename=None,
-                    )
-                    self.logger.error(
-                        "document_deleted_during_processing",
-                        document_id=self.document_id,
-                        user_id=self.user_id,
-                        error_code=err.error_code,
-                        error_detail=str(err.log_context),
-                    )
-                else:
-                    await repo.update_document_fields(
-                        document_id=self.document_id,
-                        document_status=DocumentStatus.failed,
-                        error_trace=str(err.log_context),
-                        temp_filename=None,
-                    )
-                    self.logger.error(
-                        "text_extraction_failed",
-                        document_id=self.document_id,
-                        user_id=self.user_id,
-                        error_code=err.error_code,
-                        error_detail=str(err.log_context),
-                    )
-                    self._cleanup_file()
+            else:
+                await repo.update_document_fields(
+                    document_id=self.document_id,
+                    document_status=DocumentStatus.failed,
+                    error_trace=str(err.log_context),
+                    temp_filename=None,
+                )
+                self.logger.error(
+                    "text_extraction_failed",
+                    document_id=self.document_id,
+                    user_id=self.user_id,
+                    error_code=err.error_code,
+                    error_detail=str(err.log_context),
+                )
+                self._cleanup_file()
 
         except Exception as err:
             self.logger.error(
