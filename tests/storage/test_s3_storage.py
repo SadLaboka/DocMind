@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
-from unittest.mock import patch
+from unittest.mock import patch, AsyncMock
+from pathlib import Path
 
 import pytest
 from botocore.exceptions import BotoCoreError, ClientError
@@ -350,3 +351,192 @@ def test_get_storage_singleton():
         storage1 = get_storage()
         storage2 = get_storage()
         assert storage1 is storage2
+
+
+# ==================== download_file ====================
+
+
+@pytest.mark.asyncio
+async def test_download_file_success_publishes_complete_file(
+    s3_storage,
+    tmp_path,
+    mock_s3_client,
+):
+    destination = tmp_path / "restored.txt"
+    expected_content = b"downloaded content"
+
+    async def download_file(**kwargs):
+        staging_path = Path(kwargs["Filename"])
+        staging_path.write_bytes(expected_content)
+
+    mock_s3_client.download_file = AsyncMock(side_effect=download_file)
+    s3_storage._get_client = _mock_get_client(mock_s3_client)
+
+    result = await s3_storage.download_file(
+        "documents/test.txt",
+        destination,
+    )
+
+    assert result is True
+    assert destination.read_bytes() == expected_content
+
+    mock_s3_client.download_file.assert_awaited_once()
+
+    download_kwargs = mock_s3_client.download_file.await_args.kwargs
+
+    assert download_kwargs["Bucket"] == "test-bucket"
+    assert download_kwargs["Key"] == "documents/test.txt"
+
+    staging_path = Path(download_kwargs["Filename"])
+
+    assert staging_path != destination
+    assert staging_path.parent == destination.parent
+    assert not staging_path.exists()
+
+
+@pytest.mark.asyncio
+async def test_download_file_404_raises_file_not_found_and_does_not_publish_destination(
+    s3_storage,
+    tmp_path,
+    mock_s3_client,
+):
+    destination = tmp_path / "restored.txt"
+
+    mock_s3_client.download_file = AsyncMock(
+        side_effect=_make_client_error(
+            "404",
+            "Object not found",
+        )
+    )
+    s3_storage._get_client = _mock_get_client(mock_s3_client)
+
+    with pytest.raises(S3FileNotFoundError) as exc_info:
+        await s3_storage.download_file(
+            "documents/missing.txt",
+            destination,
+        )
+
+    assert exc_info.value.retryable is False
+    assert exc_info.value.key == "documents/missing.txt"
+    assert exc_info.value.operation == "download_file"
+    assert not destination.exists()
+
+
+@pytest.mark.asyncio
+async def test_download_file_500_removes_partial_staging_file(
+    s3_storage,
+    tmp_path,
+    mock_s3_client,
+):
+    destination = tmp_path / "restored.txt"
+    primary_error = _make_client_error(
+        "500",
+        "Internal server error",
+    )
+
+    async def download_file(**kwargs):
+        staging_path = Path(kwargs["Filename"])
+        staging_path.write_bytes(b"partial content")
+        raise primary_error
+
+    mock_s3_client.download_file = AsyncMock(side_effect=download_file)
+    s3_storage._get_client = _mock_get_client(mock_s3_client)
+
+    with pytest.raises(S3ConnectionError) as exc_info:
+        await s3_storage.download_file(
+            "documents/test.txt",
+            destination,
+        )
+
+    assert exc_info.value.retryable is True
+    assert exc_info.value.original_error is primary_error
+
+    assert not destination.exists()
+    assert list(tmp_path.iterdir()) == []
+
+
+@pytest.mark.asyncio
+async def test_download_file_403_is_non_retryable_storage_error(
+    s3_storage,
+    tmp_path,
+    mock_s3_client,
+):
+    destination = tmp_path / "restored.txt"
+
+    mock_s3_client.download_file = AsyncMock(
+        side_effect=_make_client_error(
+            "403",
+            "Access denied",
+        )
+    )
+    s3_storage._get_client = _mock_get_client(mock_s3_client)
+
+    with pytest.raises(StorageError) as exc_info:
+        await s3_storage.download_file(
+            "documents/test.txt",
+            destination,
+        )
+
+    assert type(exc_info.value) is StorageError
+    assert exc_info.value.retryable is False
+    assert not destination.exists()
+
+
+@pytest.mark.asyncio
+async def test_download_file_boto_core_error_becomes_connection_error(
+    s3_storage,
+    tmp_path,
+    mock_s3_client,
+):
+    destination = tmp_path / "restored.txt"
+    primary_error = BotoCoreError()
+
+    mock_s3_client.download_file = AsyncMock(
+        side_effect=primary_error,
+    )
+    s3_storage._get_client = _mock_get_client(mock_s3_client)
+
+    with pytest.raises(S3ConnectionError) as exc_info:
+        await s3_storage.download_file(
+            "documents/test.txt",
+            destination,
+        )
+
+    assert exc_info.value.retryable is True
+    assert exc_info.value.original_error is primary_error
+    assert exc_info.value.operation == "download_file"
+    assert not destination.exists()
+
+
+@pytest.mark.asyncio
+async def test_download_file_cleanup_error_does_not_mask_primary_error(
+    s3_storage,
+    tmp_path,
+    mock_s3_client,
+):
+    destination = tmp_path / "restored.txt"
+    primary_error = BotoCoreError()
+
+    async def download_file(**kwargs):
+        staging_path = Path(kwargs["Filename"])
+        staging_path.write_bytes(b"partial content")
+        raise primary_error
+
+    mock_s3_client.download_file = AsyncMock(side_effect=download_file)
+    s3_storage._get_client = _mock_get_client(mock_s3_client)
+
+    with (
+        patch.object(
+            Path,
+            "unlink",
+            side_effect=OSError("Cannot remove staging file"),
+        ),
+        pytest.raises(S3ConnectionError) as exc_info,
+    ):
+        await s3_storage.download_file(
+            "documents/test.txt",
+            destination,
+        )
+
+    assert exc_info.value.original_error is primary_error
+    assert not destination.exists()
