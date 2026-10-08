@@ -7,6 +7,9 @@ from src.core.exceptions import ExtractionError
 from src.worker.extraction_tasks import DocumentExtractionTask
 
 
+FILE_KEY = "documents/test.txt"
+
+
 class MockException(Exception):
     pass
 
@@ -23,11 +26,15 @@ def mock_mongo_repo():
 
 @pytest.fixture
 def mock_analysis_repo_worker():
-    with patch("src.worker.extraction_tasks.MongoAnalysisRepository") as mock_repo_class:
+    with patch(
+        "src.worker.extraction_tasks.MongoAnalysisRepository",
+    ) as mock_repo_class:
         mock_instance = AsyncMock()
 
         mock_instance.get_analysis_by_document_and_request.return_value = None
-        mock_instance.create_analysis.return_value = MagicMock(id="mock-analysis-id")
+        mock_instance.create_analysis.return_value = MagicMock(
+            id="mock-analysis-id",
+        )
 
         mock_repo_class.return_value = mock_instance
         yield mock_instance
@@ -35,9 +42,13 @@ def mock_analysis_repo_worker():
 
 @pytest.fixture
 def mock_analysis_service_worker():
-    with patch("src.worker.extraction_tasks.AnalysisService") as mock_service_class:
+    with patch(
+        "src.worker.extraction_tasks.AnalysisService",
+    ) as mock_service_class:
         mock_service = AsyncMock()
-        mock_service.get_or_create_analysis.return_value = MagicMock(id="mock-analysis-id")
+        mock_service.get_or_create_analysis.return_value = MagicMock(
+            id="mock-analysis-id",
+        )
 
         mock_service_class.return_value = mock_service
         yield mock_service
@@ -60,6 +71,16 @@ def mock_publisher():
         yield mock_publish
 
 
+@pytest.fixture
+def extraction_document(mock_worker_repo):
+    document = MagicMock(
+        document_status=DocumentStatus.uploaded,
+        file_key=FILE_KEY,
+    )
+    mock_worker_repo.get_document_by_id.return_value = document
+    return document
+
+
 @pytest.mark.asyncio
 async def test_execute_success(
     mock_celery_session,
@@ -70,6 +91,7 @@ async def test_execute_success(
     mock_init_mongo,
     mock_publisher,
     mock_path_operations,
+    extraction_document,
 ) -> None:
     _, mock_unlink = mock_path_operations
 
@@ -141,7 +163,7 @@ async def test_execute_document_already_cancelled(
     mock_extract.assert_not_called()
     mock_unlink.assert_called_with(missing_ok=True)
     mock_worker_repo.update_document_fields.assert_not_awaited()
-    mock_mongo_repo.create_content.assert_not_awaited()
+    mock_mongo_repo.upsert_raw_text.assert_not_awaited()
 
 
 @pytest.mark.asyncio
@@ -152,6 +174,7 @@ async def test_process_extraction_hard_fail(
     mock_analysis_repo_worker,
     mock_init_mongo,
     mock_path_operations,
+    extraction_document,
 ) -> None:
     _, mock_unlink = mock_path_operations
 
@@ -182,7 +205,7 @@ async def test_process_extraction_hard_fail(
         temp_filename=None,
     )
 
-    mock_mongo_repo.create_content.assert_not_awaited()
+    mock_mongo_repo.upsert_raw_text.assert_not_awaited()
     mock_unlink.assert_called_with(missing_ok=True)
 
 
@@ -194,6 +217,7 @@ async def test_process_extraction_soft_fail(
     mock_analysis_repo_worker,
     mock_init_mongo,
     mock_path_operations,
+    extraction_document,
 ) -> None:
     _, mock_unlink = mock_path_operations
 
@@ -213,12 +237,18 @@ async def test_process_extraction_soft_fail(
         with pytest.raises(RuntimeError, match="Connection lost"):
             await task.execute()
 
-    update_calls = [awaited_call.kwargs for awaited_call in mock_worker_repo.update_document_fields.await_args_list]
+    update_calls = [
+        awaited_call.kwargs
+        for awaited_call in mock_worker_repo.update_document_fields.await_args_list
+    ]
 
-    assert not any(update_call.get("document_status") == DocumentStatus.failed for update_call in update_calls)
+    assert not any(
+        update_call.get("document_status") == DocumentStatus.failed
+        for update_call in update_calls
+    )
 
     mock_unlink.assert_not_called()
-    mock_mongo_repo.create_content.assert_not_awaited()
+    mock_mongo_repo.upsert_raw_text.assert_not_awaited()
 
 
 @pytest.mark.asyncio
@@ -232,12 +262,17 @@ async def test_update_status_after_failure(
 
     await DocumentExtractionTask._update_status_after_failure(
         document_id=1,
-        exc=MockException("Task failed after 3 retries: Connection lost"),
+        exc=MockException(
+            "Task failed after 3 retries: Connection lost",
+        ),
     )
 
     mock_worker_repo.update_document_fields.assert_awaited_once_with(
         document_id=1,
         document_status=DocumentStatus.failed,
         temp_filename=None,
-        error_trace=("Task failed after all retries: Task failed after 3 retries: Connection lost"),
+        error_trace=(
+            "Task failed after all retries: "
+            "Task failed after 3 retries: Connection lost"
+        ),
     )
