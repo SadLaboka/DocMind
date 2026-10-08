@@ -4,14 +4,13 @@ import pytest
 
 from src.core.enums import DocumentStatus
 from src.core.exceptions import ExtractionError
-from src.worker.extraction_tasks import DocumentExtractionTask
 from src.storage.exceptions import (
     S3ConnectionError,
     S3FileNotFoundError,
     StorageError,
 )
 from src.storage.s3_storage import S3Storage
-
+from src.worker.extraction_tasks import DocumentExtractionTask
 
 FILE_KEY = "documents/test.txt"
 
@@ -257,15 +256,9 @@ async def test_process_extraction_soft_fail(
         with pytest.raises(RuntimeError, match="Connection lost"):
             await task.execute()
 
-    update_calls = [
-        awaited_call.kwargs
-        for awaited_call in mock_worker_repo.update_document_fields.await_args_list
-    ]
+    update_calls = [awaited_call.kwargs for awaited_call in mock_worker_repo.update_document_fields.await_args_list]
 
-    assert not any(
-        update_call.get("document_status") == DocumentStatus.failed
-        for update_call in update_calls
-    )
+    assert not any(update_call.get("document_status") == DocumentStatus.failed for update_call in update_calls)
 
     mock_unlink.assert_not_called()
     mock_mongo_repo.upsert_raw_text.assert_not_awaited()
@@ -291,10 +284,7 @@ async def test_update_status_after_failure(
         document_id=1,
         document_status=DocumentStatus.failed,
         temp_filename=None,
-        error_trace=(
-            "Task failed after all retries: "
-            "Task failed after 3 retries: Connection lost"
-        ),
+        error_trace=("Task failed after all retries: " "Task failed after 3 retries: Connection lost"),
     )
 
 
@@ -313,9 +303,6 @@ async def test_execute_missing_local_file_restores_from_s3_and_extracts(
 ) -> None:
     mock_exists, mock_unlink = mock_path_operations
 
-    # Первый exists() — локального файла нет.
-    # Второй — после успешного restore файл считается восстановленным
-    # и cleanup должен его удалить.
     mock_exists.side_effect = [False, True]
 
     with patch(
@@ -555,10 +542,7 @@ async def test_execute_s3_file_not_found_marks_document_failed(
         document_id=1,
         document_status=DocumentStatus.failed,
         temp_filename=None,
-        error_trace=(
-            "Document file is missing. "
-            "S3 download Error: Object is missing"
-        ),
+        error_trace=("Document file is missing. " "S3 download Error: Object is missing"),
     )
 
     mock_extract.assert_not_called()

@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
-from unittest.mock import patch, AsyncMock
 from pathlib import Path
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from botocore.exceptions import BotoCoreError, ClientError

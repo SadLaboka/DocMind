@@ -13,10 +13,10 @@ from src.repositories.mongo_analyses import MongoAnalysisRepository
 from src.repositories.mongo_documents import MongoDocumentRepository
 from src.services.analysis import AnalysisService
 from src.services.extractors import TextExtractor
+from src.storage.exceptions import S3FileNotFoundError, StorageError
 from src.storage.s3_storage import get_storage
 from src.worker.base_task import BaseTask
 from src.worker.celery_app import app as celery_app
-from src.storage.exceptions import S3FileNotFoundError, StorageError
 
 
 class DocumentExtractionTask(BaseTask):
@@ -73,10 +73,10 @@ class DocumentExtractionTask(BaseTask):
 
             if document_status in (DocumentStatus.uploaded, DocumentStatus.extracting):
 
-                if not await self._is_temp_document_exists():
-
-                    if not await self._restore_file_from_storage(repo, document.file_key):
-                        return
+                if not await self._is_temp_document_exists() and not await self._restore_file_from_storage(
+                    repo, document.file_key
+                ):
+                    return
 
                 await repo.update_document_fields(self.document_id, document_status=DocumentStatus.extracting)
 
@@ -120,7 +120,7 @@ class DocumentExtractionTask(BaseTask):
                     "document_id": self.document_id,
                     "file_path": self.temp_path,
                     "mime_type": self.mime_type,
-                }
+                },
             )
 
         storage = get_storage()
@@ -196,10 +196,7 @@ class DocumentExtractionTask(BaseTask):
             raise ValueError(f"Unsupported mime type: {self.mime_type}") from None
 
     async def _extract_text(
-            self,
-            repo: DocumentRepository,
-            mongo_repo: MongoDocumentRepository,
-            mime_enum: MimeType
+        self, repo: DocumentRepository, mongo_repo: MongoDocumentRepository, mime_enum: MimeType
     ) -> None:
         """Extract text from document and save raw text"""
         start_time = time.perf_counter()

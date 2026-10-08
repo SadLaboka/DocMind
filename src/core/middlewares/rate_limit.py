@@ -77,16 +77,16 @@ class RateLimitMiddleware:
             "/documents": (settings.rate_limit.documents_post_limit, settings.rate_limit.documents_post_window),
             "/documents/{id}/analyses": (
                 settings.rate_limit.analyses_post_limit,
-                settings.rate_limit.analyses_post_window
+                settings.rate_limit.analyses_post_window,
             ),
             "/documents/{id}/analyses/{analysis_id}": (
                 settings.rate_limit.analyses_post_limit,
-                settings.rate_limit.analyses_post_window
+                settings.rate_limit.analyses_post_window,
             ),
             "/documents/{id}/analyses/{analysis_id}/retry": (
                 settings.rate_limit.analyses_post_limit,
-                settings.rate_limit.analyses_post_window
-            )
+                settings.rate_limit.analyses_post_window,
+            ),
         }
 
         get_map = {
@@ -94,12 +94,12 @@ class RateLimitMiddleware:
             "/documents/{id}": (settings.rate_limit.documents_get_limit, settings.rate_limit.documents_get_window),
             "/documents/{id}/analyses": (
                 settings.rate_limit.analyses_get_limit,
-                settings.rate_limit.analyses_get_window
+                settings.rate_limit.analyses_get_window,
             ),
             "/documents/{id}/analyses/{analysis_id}": (
                 settings.rate_limit.analyses_get_limit,
-                settings.rate_limit.analyses_get_window
-            )
+                settings.rate_limit.analyses_get_window,
+            ),
         }
 
         global_values = settings.rate_limit.global_limit, settings.rate_limit.global_window

@@ -4,10 +4,10 @@ import uuid
 from pathlib import Path
 from typing import NoReturn
 from urllib import parse
-from structlog import get_logger
 
 import aioboto3
 from botocore.exceptions import BotoCoreError, ClientError
+from structlog import get_logger
 
 from src.core.config import settings
 from src.storage.exceptions import (
@@ -106,15 +106,15 @@ class S3Storage:
             except ClientError as e:
                 self._handle_boto_error(e, "download_file", key)
             except BotoCoreError as e:
-                raise  S3ConnectionError(
+                raise S3ConnectionError(
                     message=f"Failed to download file: {key}",
                     original_error=e,
                     operation="download_file",
                     log_context={
                         "key": key,
                         "bucket": self._bucket,
-                    }
-                )
+                    },
+                ) from e
             finally:
                 try:
                     if staging_path.exists():
@@ -127,7 +127,6 @@ class S3Storage:
                         key=key,
                         error_type=type(err).__name__,
                     )
-
 
     async def file_exists(self, key: str) -> bool:
         """Check if file exists in S3 via HEAD request"""
