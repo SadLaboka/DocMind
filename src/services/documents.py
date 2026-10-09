@@ -120,8 +120,16 @@ class DocumentService(BaseService[DocumentRepository]):
             if temp_filename_to_delete:
                 path = Path(settings.base_dir).parent / "temp" / temp_filename_to_delete
 
-                if path.exists():
+                try:
                     path.unlink(missing_ok=True)
+                except OSError as err:
+                    logger.warning(
+                        "temp_file_removing_failed",
+                        path=str(path),
+                        document_id=document_id,
+                        user_id=user.id,
+                        err=str(err),
+                    )
 
             if not updated_document:
                 raise ResourceNotFoundError(
