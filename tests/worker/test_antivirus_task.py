@@ -259,6 +259,7 @@ async def test_execute_missing_file_marks_document_cancelled(
     mock_worker_repo.update_document_fields.assert_awaited_once_with(
         antivirus_task.document_id,
         document_status=DocumentStatus.cancelled,
+        temp_filename=None,
     )
 
     mock_antivirus_scanner.scan_file.assert_not_called()
