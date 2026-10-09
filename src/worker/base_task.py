@@ -31,37 +31,39 @@ class BaseTask:
         temp_path = Path(kwargs.get("temp_path"))
         task_logger = structlog.get_logger(cls.__name__)
         user_id = kwargs.get("user_id")
-        if document_id:
+        if not document_id:
+            return
+
+        task_logger.error(
+            "task_final_failure",
+            document_id=document_id,
+            task_id=task_id,
+            user_id=user_id,
+            error_detail=str(exc),
+        )
+        try:
+            asyncio.run(cls._handle_final_failure(document_id, request_id, exc))
+        except Exception as err:
             task_logger.error(
-                "task_final_failure",
+                "update_status_after_failure_failed",
                 document_id=document_id,
                 task_id=task_id,
                 user_id=user_id,
-                error_detail=str(exc),
+                error_detail=str(err),
             )
-            try:
-                asyncio.run(cls._handle_final_failure(document_id, request_id, exc))
-            except Exception as err:
-                task_logger.error(
-                    "update_status_after_failure_failed",
-                    document_id=document_id,
-                    task_id=task_id,
-                    user_id=user_id,
-                    error_detail=str(err),
-                )
 
-            try:
-                if temp_path.exists():
-                    temp_path.unlink(missing_ok=True)
+        try:
+            if temp_path.exists():
+                temp_path.unlink(missing_ok=True)
 
-                    task_logger.info("temp_file_successfully_removed")
+                task_logger.info("temp_file_successfully_removed")
 
-            except OSError as err:
-                task_logger.warning(
-                    "temp_file_removing_failed",
-                    path=str(temp_path),
-                    err=str(err),
-                )
+        except OSError as err:
+            task_logger.warning(
+                "temp_file_removing_failed",
+                path=str(temp_path),
+                err=str(err),
+            )
 
     @classmethod
     async def _handle_final_failure(cls, document_id: int, request_id: str, exc: Exception) -> None:
@@ -108,7 +110,12 @@ class BaseTask:
     async def _is_path_exists(self, repo: DocumentRepository) -> bool:
         """Checks whether path exists"""
         if not self.temp_path.exists():
-            await repo.update_document_fields(self.document_id, document_status=DocumentStatus.cancelled)
+            await repo.update_document_fields(
+                self.document_id,
+                document_status=DocumentStatus.cancelled,
+                temp_filename=None,
+            )
+
             self.logger.error(
                 "Document not found",
                 error_code="processed_file_not_found",
