@@ -1,6 +1,7 @@
 from pathlib import Path
 from uuid import uuid4
 
+from unittest.mock import patch
 import pytest
 from httpx import AsyncClient
 
@@ -169,3 +170,60 @@ async def test_cancel_document_not_found(client: AsyncClient, create_token_pair,
 
     assert response.status_code == 404
     assert response.json()["code"] == "document_not_found"
+
+
+@pytest.mark.asyncio
+async def test_cancel_document_cleanup_error_does_not_fail_cancellation(
+    client: AsyncClient,
+    create_token_pair,
+    create_document,
+    test_password,
+    test_db_session,
+):
+    _, hashed_pw = test_password
+
+    tokens = await create_token_pair(
+        login="cleanup_owner",
+        email="cleanup_owner@test.com",
+        password_hash=hashed_pw,
+    )
+
+    temp_filename = uuid4().hex
+    document = await create_document(
+        session=test_db_session,
+        user_id=tokens["user_id"],
+        filename="cleanup_failure.pdf",
+        description="Cleanup failure",
+        mime_type=MimeType.pdf,
+        file_size=1024,
+        temp_filename=temp_filename,
+    )
+
+    temp_dir = Path(settings.base_dir).parent / "temp"
+    temp_dir.mkdir(parents=True, exist_ok=True)
+
+    temp_file = temp_dir / temp_filename
+    temp_file.touch()
+
+    try:
+        with patch.object(
+            Path,
+            "unlink",
+            side_effect=PermissionError("Cannot remove temp file"),
+        ):
+            response = await client.delete(
+                f"/documents/{document['id']}",
+                headers={
+                    "Authorization": f"Bearer {tokens['access_token']}",
+                },
+            )
+
+        assert response.status_code == 200
+        assert (
+            response.json()["document_status"]
+            == DocumentStatus.cancelled.value
+        )
+        assert temp_file.exists()
+
+    finally:
+        temp_file.unlink(missing_ok=True)
