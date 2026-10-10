@@ -52,18 +52,7 @@ class BaseTask:
                 error_detail=str(err),
             )
 
-        try:
-            if temp_path.exists():
-                temp_path.unlink(missing_ok=True)
-
-                task_logger.info("temp_file_successfully_removed")
-
-        except OSError as err:
-            task_logger.warning(
-                "temp_file_removing_failed",
-                path=str(temp_path),
-                err=str(err),
-            )
+        cls._cleanup_path(temp_path)
 
     @classmethod
     async def _handle_final_failure(cls, document_id: int, request_id: str, exc: Exception) -> None:
@@ -127,14 +116,18 @@ class BaseTask:
             return False
         return True
 
-    def _cleanup_file(self) -> None:
+    @classmethod
+    def _cleanup_path(cls, path: Path) -> None:
         """Safely cleanup file"""
         try:
-            if self.temp_path.exists():
-                self.temp_path.unlink(missing_ok=True)
+            path.unlink(missing_ok=True)
         except OSError as err:
-            self.logger.warning(
+            structlog.get_logger(cls.__name__).warning(
                 "temp_file_removing_failed",
-                path=str(self.temp_path),
+                path=str(path),
                 err=str(err),
             )
+
+    def _cleanup_file(self) -> None:
+        """Safely cleanup file the instance is working with """
+        type(self)._cleanup_path(self.temp_path)
