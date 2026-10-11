@@ -17,8 +17,6 @@
 
 DocMind separates a **Document** (user-owned metadata and extracted content) from a **DocumentAnalysis** (an independent LLM run). The initial deployment targets **one Docker Compose host**: the API and Celery workers share a temporary volume, while S3-compatible object storage preserves uploaded files.
 
-The project emphasizes clear responsibility boundaries, recoverable processing, and pragmatic reliability without requiring a distributed multi-host deployment.
-
 ## Table of Contents
 
 - [Features](#features)
@@ -450,9 +448,6 @@ make migrate-down
 - [x] RabbitMQ retry/dead-letter configuration, structlog, and a coverage workflow
 
 ### Planned / follow-up
-- [ ] Additional worker/API regression and integration tests
-- [ ] Update component and sequence diagrams to match the current analysis lifecycle
-- [ ] Align `.env.example` with application configuration and Compose networking
 - [ ] **WebSockets** for near-real-time Document and Analysis updates
 - [ ] Email notifications and Telegram bot
 - [ ] Prometheus, Grafana, and Loki observability
