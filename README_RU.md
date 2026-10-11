@@ -444,9 +444,7 @@ make migrate-down
 - [x] Версионирование промптов и админский API
 - [x] Настраиваемый ClamAV и S3/MinIO с presigned URL
 - [x] Извлечение из локального файла с восстановлением из S3 при его отсутствии
-- [x] Удаление временных файлов на реализованных конечных маршрутах (дополнительные тесты отложены)
 - [x] JWT RS256, blacklist токенов, Redis и rate limiting
-- [x] Настройки RabbitMQ retry/dead-letter, structlog и workflow покрытия тестами
 
 ### Запланировано / требуется довести
 - [ ] **WebSockets** для обновления состояний Document и Analysis
