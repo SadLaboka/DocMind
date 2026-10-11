@@ -13,11 +13,11 @@
 
 ## Overview
 
-**DocMind** is an asynchronous document analysis system using Large Language Models (LLM).
-The project is built on a microservices architecture: REST API accepts files, background workers extract text from them, and a separate consumer sends it for analysis to neural networks.
+**DocMind** is an asynchronous system for processing documents and analyzing their content with Large Language Models (LLMs). A FastAPI application handles uploads and user requests, Celery workers scan, store, and extract files, and a separate FastStream consumer performs LLM analysis.
 
-The system is designed for high fault tolerance, scalability, and strict separation of responsibilities between components.
+DocMind separates a **Document** (user-owned metadata and extracted content) from a **DocumentAnalysis** (an independent LLM run). The initial deployment targets **one Docker Compose host**: the API and Celery workers share a temporary volume, while S3-compatible object storage preserves uploaded files.
 
+The project emphasizes clear responsibility boundaries, recoverable processing, and pragmatic reliability without requiring a distributed multi-host deployment.
 
 ## Table of Contents
 
@@ -38,16 +38,17 @@ The system is designed for high fault tolerance, scalability, and strict separat
 <a id="features"></a>
 ## Features
 
-- **Asynchronous pipeline processing**: Upload, text extraction, and analysis occur in separate processes without blocking the main API.
-- **Antivirus scanning**: All uploaded files are scanned by ClamAV before text extraction. Infected files are rejected with status `infected`. Configurable fallback behavior when ClamAV is unavailable.
-- **S3-compatible storage**: Files are stored in S3-compatible storage (MinIO for local development, Selectel Cloud for production) with presigned URLs for secure downloads.
-- **Multiple format support**: Text extraction from `.txt`, `.docx`, `.xlsx`, and `.pdf` (including tables in documents).
-- **Document deduplication**: The system calculates the SHA-256 hash of the file. If such a file has already been processed, re-analysis is not launched — the result is taken from the database.
-- **LLM integration (Factory Pattern)**: Support for Kimi, Grok, GPT, Qwen, Mistral, Gemini, and DeepSeek. The provider is selected dynamically, and raw responses are mapped to a strict Pydantic schema.
-- **Reliable task queue**: Using RabbitMQ with Dead Letter Queues (DLQ) configuration for automatic retry and handling of failed analysis tasks.
-- **Caching and Rate Limiting**: API protection from overloads and optimization of database queries using Redis (user status cache, prompts, token blacklist).
-- **Security**: JWT authentication (RS256) with token revocation mechanism (blacklist) and password hashing via Argon2.
-- **Prompt versioning**: Ability to upload new prompt versions for LLM via admin panel with automatic caching of the active version.
+- **Asynchronous pipeline**: FastAPI, Celery, and FastStream handle upload, antivirus scanning, object storage, text extraction, and LLM analysis in separate processes.
+- **Configurable ClamAV scanning**: New file content is scanned before S3 upload when enabled. Infected files are marked `infected`; behavior on antivirus unavailability is configurable. Reused content is not scanned again.
+- **S3-compatible storage**: MinIO for local development and configurable S3-compatible backends for deployment; presigned download URLs.
+- **Text extraction**: `.txt`, `.docx`, `.xlsx`, and `.pdf` (including supported table extraction).
+- **Content-based SHA-256 deduplication**: Every upload creates a new Document for the current user. Already stored binaries and available extracted text can be reused without repeating ClamAV or extraction; **every new Document gets a new LLM analysis**. An existing analysis result is never reused solely because the file hash matches.
+- **Independent analysis history**: Multiple analyses per Document, provider selection, prompt version tracking, analysis filtering/pagination, and manual retry of eligible transient failures.
+- **Seven LLM providers (Factory Pattern)**: GPT, Gemini, DeepSeek, Kimi, Qwen, Grok, and Mistral; responses are validated with Pydantic.
+- **Retries and dead-letter configuration**: RabbitMQ routes analysis events; predefined transient failures can be retried. At-least-once message delivery is accounted for, but duplicate execution is not eliminated in every race.
+- **Redis caching and rate limiting**: Prompt/user-status caches, token blacklist, and endpoint-specific request limits.
+- **Security**: JWT RS256 authentication, token revocation, Argon2 password hashing, and document ownership checks.
+- **Versioned prompts**: Admin-managed prompt versions and caching of the active prompt.
 
 <a id="tech-stack"></a>
 ## Tech Stack
@@ -61,16 +62,16 @@ The system is designed for high fault tolerance, scalability, and strict separat
 - **structlog** — structured JSON logging
 
 ### Databases & Caching
-<img src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/postgresql/default.svg" alt="PostgreSQL" width="32" height="32"/> **PostgreSQL** (SQLAlchemy + asyncpg) — user and document metadata
+<img src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/postgresql/default.svg" alt="PostgreSQL" width="32" height="32"/> **PostgreSQL** (SQLAlchemy + asyncpg) — users, user-owned Documents, and processing metadata
 
-<img src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/mongodb/default.svg" alt="MongoDB" width="32" height="32"/> **MongoDB** (Beanie) — storage of prompts, raw text, and analysis results
+<img src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/mongodb/default.svg" alt="MongoDB" width="32" height="32"/> **MongoDB** (Beanie) — raw text, versioned prompts, and independent DocumentAnalysis records
 
 <img src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/redis/default.svg" alt="Redis" width="32" height="32"/> **Redis** — prompt caching, user statuses, rate limiting, token blacklist
 
 ### Message Brokers & Async Tasks
 <img src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/rabbitmq/default.svg" alt="RabbitMQ" width="32" height="32"/> **RabbitMQ** (Kombu / aio-pika) — message broker
 
-<img src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/celery/default.svg" alt="Celery" width="32" height="32"/> **Celery** — workers for heavy text extraction from files
+<img src="https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/celery/default.svg" alt="Celery" width="32" height="32"/> **Celery** — workers for antivirus scanning, S3 upload, and text extraction
 
 - **FastStream** — consumers for asynchronous text analysis via LLM
 
@@ -84,12 +85,12 @@ The system is designed for high fault tolerance, scalability, and strict separat
 - **Gemini** (via google-genai)
 
 ### Infrastructure & DevOps
-- **Docker & Docker Compose** — orchestration of all services
+- **Docker & Docker Compose** — single-host service deployment
 - **ClamAV** — antivirus scanning of uploaded files
-- **MinIO / S3** — object storage for uploaded documents (local: MinIO, production: AWS S3 / Selectel Cloud)
+- **MinIO / S3** — durable binary storage (MinIO locally; configurable S3-compatible service for deployment)
 - **Poetry** — dependency management
 - **Alembic** — PostgreSQL migrations
-- **GitHub Actions** — CI/CD, Codecov, SonarCloud
+- **GitHub Actions** — automated coverage workflow with Codecov; deployment CI/CD is planned
 - **pytest** — coverage for API, services, and workers
 
 <a id="architecture"></a>
@@ -103,152 +104,123 @@ The system is designed for high fault tolerance, scalability, and strict separat
 
 ![Document Lifecycle](docs/images/sequence.svg)
 
+> [!NOTE]
+> These diagrams still depict an earlier document/analysis lifecycle. The diagram sources and SVGs will be updated separately.
+
 <a id="data-flow"></a>
 ## Data Flow
 
-### Document Processing Pipeline
+### Upload and processing paths
 
-1. **Upload & Validation** (FastAPI)
-   - User uploads file via `POST /documents`
-   - FastAPI validates file size (max 50MB), MIME type, and filename
-   - File is saved to temporary storage with SHA-256 hash calculation
-   - Deduplication check: if file with same hash exists, skip extraction
+1. **Validation and temporary storage (FastAPI).** `POST /documents/` validates filename, MIME type, and size (up to 50 MB), writes the upload to a temporary file, and calculates its SHA-256 hash. A new user-owned `Document` is created even when identical content exists elsewhere.
+2. **Deduplication decision.** Processing follows one of three paths:
+   - `FULL_PIPELINE`: no reusable file content is available; run ClamAV (if enabled), upload to S3/MinIO, extract text, and request a fresh LLM analysis.
+   - `EXTRACTION_ONLY`: reuse a stored binary when no reusable raw text is available; extract it, then request a fresh analysis. Extraction can restore the missing local copy from S3.
+   - `ANALYSIS_ONLY`: reuse the stored binary and extracted text for the new Document, skip ClamAV and extraction, then request a **new** analysis. If raw-text copying fails, the system can fall back to extraction.
+3. **Scanning and object storage (Celery).** On the full path, a clean file is uploaded to S3-compatible storage and its `file_key` is recorded in PostgreSQL. The object key has the shape `documents/{temporary_filename}`. The Document progresses through `created`, `scanning` (when enabled), `uploading`, and `uploaded`.
+4. **Text extraction (Celery).** Workers extract TXT/DOCX/XLSX/PDF content and store raw text in MongoDB. They first use the local temporary copy; if it is missing, they attempt an S3 download using the saved `file_key`. On success the Document becomes `extracted` and the temporary file is cleaned up.
+5. **Analysis request.** A separate `DocumentAnalysis` is created with status `queued`. The publisher sends an `AnalysisRequestedEvent` containing `analysis_id`, `document_id`, `user_id`, and `request_id` through RabbitMQ.
+6. **LLM analysis (FastStream).** The consumer validates the event and existing analysis, loads raw text and the active prompt, selects the configured provider, validates the LLM response, and updates the **Analysis** to `success` or `failed`. It does **not** change the Document's `extracted` status.
+7. **Reading results (FastAPI).** REST endpoints return document metadata, optional extracted text, and related analyses. Separate endpoints support paginated analysis history, new analyses, eligible manual retries, and presigned download links.
 
-2. **Metadata Storage** (PostgreSQL)
-   - Document metadata saved: filename, size, MIME type, hash, status
-   - Status: `created` → `scanning`/`extracting`
+### Document and analysis lifecycle
 
-3. **Task Queue** (RabbitMQ)
-   - FastAPI publishes extraction task to RabbitMQ
-   - Task contains: document_id, temp_path, mime_type, user_id, request_id
+| Entity | Purpose | Main statuses |
+|--------|---------|---------------|
+| `Document` (PostgreSQL) | User-owned file metadata and preparation state | `created`, `scanning`, `uploading`, `uploaded`, `extracting`, `extracted`, plus `infected`, `failed`, `cancelled` |
+| `DocumentAnalysis` (MongoDB) | A specific LLM execution, its provider, prompt version, result, and retry lineage | `queued`, `analyzing`, `success`, `failed` |
 
-4. **Antivirus Scan** (Celery Worker + ClamAV)
-   - Worker consumes scan task from queue
-   - File is streamed to ClamAV for scanning
-   - If clean: update status to `uploading`, publish upload task
-   - If infected: update status to `infected`, delete file
-   - If ClamAV unavailable: configurable fallback (skip or fail)
+`extracted` means the Document is ready for analysis; it does **not** mean an LLM run succeeded. A failed analysis does not undo successful text extraction. A manual retry of a failed analysis is allowed only when `failure_kind=transient`; it creates a new Analysis linked through `retry_of_analysis_id`, rather than resetting the old one. New analyses may use a different provider or the currently active prompt version.
 
-5. **S3 Upload** (Celery Worker)
-   - Worker consumes upload task from queue
-   - File is uploaded to S3-compatible storage (MinIO locally, AWS S3 / Selectel in production)
-   - Generates unique S3 key: `documents/{document_id}/{uuid}`
-   - Saves `file_key` to PostgreSQL
-   - Updates document status: `extracting`
-   - Publishes extract task
-
-6. **Text Extraction** (Celery Worker)
-   - Worker consumes task from queue
-   - Extracts text based on MIME type (TXT, DOCX, XLSX, PDF)
-   - Saves raw text to MongoDB
-   - Updates document status: `extracted`
-   - Publishes event: `documents.text.extracted`
-
-7. **LLM Analysis** (FastStream Consumer)
-   - Consumer receives event from queue
-   - Retrieves raw text from MongoDB
-   - Fetches active prompt from Redis cache (or MongoDB)
-   - Sends text + prompt to LLM (Kimi/Grok/GPT/Qwen/Mistral/Gemini/DeepSeek)
-   - Parses JSON response, validates structure
-   - Saves analysis result to MongoDB
-   - Updates document status: `success`
-
-8. **Result Retrieval** (FastAPI)
-   - User polls `GET /documents/{id}` to check status
-   - Response includes: metadata, raw text, analysis result, version
-   - User can request presigned URL via `GET /documents/{id}/download` to download original file
-
-### Key Architectural Decisions
+### Key architectural decisions
 
 **Why PostgreSQL + MongoDB + Redis?**
-- **PostgreSQL**: Relational data with strict schema (users, documents metadata, transactions)
-- **MongoDB**: Unstructured content (raw text, LLM analysis results, prompts) — flexible schema, large documents
-- **Redis**: High-performance caching (prompts, user status), rate limiting, token blacklist
+- **PostgreSQL** holds relational user and Document metadata, including processing state and S3 keys.
+- **MongoDB** stores extracted text, prompts, and separate LLM analysis histories.
+- **Redis** supports caching, rate limiting, and token revocation.
 
 **Why Celery + FastStream?**
-- **Celery**: Heavy I/O-bound tasks (text extraction from files) — proven, reliable, supports retries
-- **FastStream**: Modern async consumers for LLM analysis — native async/await, better integration with async codebase
+- **Celery** handles file processing (antivirus, S3 upload, extraction) and retries for selected temporary failures.
+- **FastStream** handles asynchronous LLM work and RabbitMQ event delivery, independently of file preparation.
 
-**Why S3-compatible storage?**
-- **Stateless architecture**: Workers can scale horizontally without needing to synchronize local files
-- **Reliability**: Files are not lost when containers restart
-- **Security**: Presigned URLs with limited lifetime for secure downloads
-- **Flexibility**: Support for various S3-compatible storage backends (MinIO, AWS S3, Selectel Cloud)
+**Why S3-compatible storage alongside a shared temporary volume?**
+- **S3/MinIO** is the persistent source of file bytes and enables presigned downloads.
+- **API and Celery share a temporary Docker volume on a single host** so extraction can reuse a local upload without a redundant S3 download.
+- If the temporary copy is missing during extraction, the worker can restore it from S3. Temporary files are removed after terminal processing paths, subject to cleanup-error handling.
+- A multi-host worker deployment with independently mounted temporary storage is **not** part of the current design.
 
 <a id="quick-start"></a>
 ## Quick Start
 
 ### Prerequisites
-- **Docker & Docker Compose** (v2.0+)
-- **Python 3.13** (for local development)
-- **Poetry** (dependency management)
-- **Make** (optional, but recommended)
+- **Docker with Docker Compose v2**
+- **Python 3.13 and Poetry** for `make up` and local development tooling
+- **Make** for the shortcut commands (optional if using Docker Compose directly)
 
-### Installation & Running
+### Installation and startup
 
 1. Clone the repository:
    ```bash
    git clone https://github.com/SadLaboka/DocMind.git
    cd DocMind
    ```
-
-2. Configure environment variables:
+2. Prepare environment settings:
    ```bash
    cp .env.example .env
-   # Edit .env and fill in your API keys, database credentials, etc.
+   # Replace placeholder API keys and secrets, and verify service connection settings.
    ```
-
-3. Start all services:
+3. Start the application:
    ```bash
    make up
-   # Or directly: docker compose up -d --build
    ```
+   `make up` runs `scripts/docker_up.py`: if `STORAGE_BACKEND=local`, it enables the `local-storage` Compose profile for MinIO. The equivalent Docker command in that case is:
+   ```bash
+   docker compose --profile local-storage up -d --build
+   ```
+   With an external S3 backend the script uses `docker compose up -d --build` instead.
+4. The HTTP API is exposed at `http://localhost:8000` when the configured containers start successfully.
 
-4. The application will be available at `http://localhost:8000`
+> [!IMPORTANT]
+> Check `.env.example` before first startup: its current RabbitMQ port/credential entries and some service addresses differ from the application settings and Compose service networking. The example configuration needs to be aligned before it can be treated as a verified one-command setup. This README update does not change application configuration.
 
-> [!TIP]
-> The first run may take 2-3 minutes as Docker builds images and applies migrations.
-
-### API Documentation
-
-Once running, interactive API documentation is available at:
-- **Swagger UI (OpenAPI):** `http://localhost:8000/openapi`
+### API documentation
+- **Swagger UI:** `http://localhost:8000/openapi`
 - **ReDoc:** `http://localhost:8000/redoc`
-
----
 
 <a id="useful-commands"></a>
 ## Useful Commands
 
 | Command | Description |
 |---------|-------------|
-| `make up` | Start all services (`docker compose up -d --build`) |
-| `make down` | Stop all services and remove volumes |
-| `make test` | Run tests in isolated Docker environment |
-| `make cov` | Run tests with coverage report |
-| `make cov-html` | Open interactive HTML coverage report |
-| `make lint` | Run pre-commit hooks (ruff, black, mypy) in Docker |
-| `make format` | Run ruff check + format |
-| `make typecheck` | Run mypy |
-| `make logs` | Follow application logs |
-| `make logs-all` | Follow all service logs |
-
----
+| `make up` | Start Compose through `scripts/docker_up.py` (enables MinIO profile for local storage) |
+| `make down` | Stop the default Compose services and remove volumes |
+| `make down-all` | Stop services including the `local-storage` profile and remove volumes |
+| `make down-soft` | Stop services without deleting volumes |
+| `make test` | Run tests with the dedicated test Compose setup |
+| `make cov` | Run coverage tests and write `coverage/coverage.xml` |
+| `make cov-html` | Generate HTML coverage in `coverage/html`; automatic browser opening currently requires PowerShell |
+| `make lint` | Run pre-commit hooks in Docker |
+| `make format` | Run Ruff lint fixes and formatting on `src/` |
+| `make typecheck` | Run mypy on `src/` |
+| `make logs` / `make logs-worker` | Follow API or Celery worker logs |
+| `make logs-app` / `make logs-all` | Follow app-related services or all services |
 
 <a id="environment-variables"></a>
 ## Environment Variables
 
-The full list of variables is in `.env.example`. Key variables grouped by category:
+Configuration is read via Pydantic settings and Docker Compose. **The values below are examples from `.env.example` unless explicitly noted; they are not necessarily Pydantic defaults or valid inter-container addresses.** See `src/core/config.py` for application defaults and `docker-compose.yaml` for service-level overrides.
+
+The current `.env.example` still requires reconciliation with application settings and Compose networking (notably the RabbitMQ AMQP port/credentials and external-storage endpoint variable names).
 
 ### Server
-| Variable | Description | Default |
+| Variable | Description | Example / configuration note |
 |----------|-------------|---------|
 | `SERVER_HOST` | Application host | `127.0.0.1` |
 | `SERVER_PORT` | Application port | `8000` |
 | `SERVER_RELOAD` | Auto-reload on code changes | `true` |
 
 ### Databases
-| Variable | Description | Default |
+| Variable | Description | Example / configuration note |
 |----------|-------------|---------|
 | `DB_USER` / `DB_PASSWORD` / `DB_NAME` | PostgreSQL credentials | `postgres` / `postgres` / `postgres` |
 | `DB_HOST` / `DB_PORT` | PostgreSQL connection | `localhost` / `5432` |
@@ -257,20 +229,20 @@ The full list of variables is in `.env.example`. Key variables grouped by catego
 | `REDIS_HOST` / `REDIS_PORT` / `REDIS_DB` | Redis connection | `localhost` / `6379` / `0` |
 
 ### Message Broker
-| Variable | Description | Default |
+| Variable | Description | Example / configuration note |
 |----------|-------------|---------|
-| `RABBITMQ_DEFAULT_USER` / `RABBITMQ_DEFAULT_PASSWORD` | RabbitMQ credentials | `guest` / `guest` |
-| `RABBITMQ_HOST` / `RABBITMQ_PORT` | RabbitMQ connection | `127.0.0.1` / `15672` |
+| `RABBITMQ_USER` / `RABBITMQ_PASSWORD` | Broker credentials used by application settings and Compose | `guest` / `guest`; `.env.example` currently uses mismatched names |
+| `RABBITMQ_HOST` / `RABBITMQ_PORT` | AMQP connection (management UI uses a separate port) | `rabbitmq` / `5672` inside Compose; `.env.example` currently specifies `127.0.0.1` / `15672` |
 
 ### JWT Authentication
-| Variable | Description | Default |
+| Variable | Description | Example / configuration note |
 |----------|-------------|---------|
 | `JWT_ALGORITHM` | Signing algorithm | `RS256` |
 | `JWT_TIMEDELTA` | Access token lifetime (minutes) | `15` |
 | `JWT_REFRESH_TIMEDELTA` | Refresh token lifetime (days) | `7` |
 
 ### Antivirus (ClamAV)
-| Variable | Description | Default |
+| Variable | Description | Example / configuration note |
 |----------|-------------|---------|
 | `ANTIVIRUS_ENABLED` | Enable antivirus scanning | `true` |
 | `ANTIVIRUS_HOST` | ClamAV host | `clamav` |
@@ -280,33 +252,35 @@ The full list of variables is in `.env.example`. Key variables grouped by catego
 | `ANTIVIRUS_CHUNK_SIZE` | Stream chunk size (bytes) | `4096` |
 
 ### Storage (S3 / MinIO)
-| Variable | Description | Default |
+| Variable | Description | Example / configuration note |
 |----------|-------------|---------|
 | `STORAGE_BACKEND` | Storage backend (`local` or `s3`) | `local` |
 | `LOCAL_STORAGE_ENDPOINT_URL` | MinIO endpoint URL | `http://minio:9000` |
-| `LOCAL_STORAGE_EXTERNAL_ENDPOINT_URL` | MinIO external URL (for presigned URLs) | `http://localhost:9000` |
-| `LOCAL_STORAGE_ACCESS_KEY` | MinIO access key | `minio` |
-| `LOCAL_STORAGE_SECRET_KEY` | MinIO secret key | `minio` |
+| `LOCAL_STORAGE_EXTERNAL_ENDPOINT_URL` | MinIO external URL (for presigned URLs) | `http://localhost:9000`; `.env.example` uses the wrong prefix (`LOCAL_EXTERNAL_ENDPOINT_URL`) |
+| `LOCAL_STORAGE_ACCESS_KEY` | MinIO access key | `access_key` placeholder |
+| `LOCAL_STORAGE_SECRET_KEY` | MinIO secret key | `secret_key` placeholder |
 | `LOCAL_STORAGE_REGION` | MinIO region | `us-east-1` |
 | `LOCAL_STORAGE_BUCKET` | MinIO bucket name | `docmind` |
 | `LOCAL_STORAGE_PRESIGNED_URL_TTL` | Presigned URL TTL (seconds) | `600` |
+| `LOCAL_STORAGE_LIFECYCLE_DAYS` | Object lifecycle setting (days) | `1` |
 | `LOCAL_STORAGE_SSE_ENABLED` | Enable server-side encryption | `false` |
 | `NONLOCAL_STORAGE_ENDPOINT_URL` | S3 endpoint URL (production) | `https://s3.selcloud.ru` |
-| `NONLOCAL_STORAGE_EXTERNAL_ENDPOINT_URL` | S3 external URL (production) | `https://s3.selcloud.ru` |
+| `NONLOCAL_STORAGE_EXTERNAL_ENDPOINT_URL` | S3 external URL (production) | `https://s3.selcloud.ru`; `.env.example` uses the wrong prefix (`NONLOCAL_EXTERNAL_ENDPOINT_URL`) |
 | `NONLOCAL_STORAGE_ACCESS_KEY` | S3 access key (production) | — |
 | `NONLOCAL_STORAGE_SECRET_KEY` | S3 secret key (production) | — |
-| `NONLOCAL_STORAGE_REGION` | S3 region (production) | `ru-1` |
+| `NONLOCAL_STORAGE_REGION` | S3 region (production) | `us-east-1` in `.env.example`; code default: `ru-1` |
 | `NONLOCAL_STORAGE_BUCKET` | S3 bucket name (production) | `docmind` |
 | `NONLOCAL_STORAGE_PRESIGNED_URL_TTL` | Presigned URL TTL (seconds) | `3600` |
+| `NONLOCAL_STORAGE_LIFECYCLE_DAYS` | Object lifecycle setting (days) | `30` |
 | `NONLOCAL_STORAGE_SSE_ENABLED` | Enable server-side encryption | `true` |
 
 ### LLM Providers
-| Variable | Description | Default |
+| Variable | Description | Example / configuration note |
 |----------|-------------|---------|
 | `LLM_DEFAULT_PROVIDER` | Default provider for analysis | `deepseek` |
 
 #### Kimi (Moonshot AI)
-| Variable | Description | Default |
+| Variable | Description | Example / configuration note |
 |----------|-------------|---------|
 | `KIMI_API_KEY` | Kimi API key | — |
 | `KIMI_MODEL` | Model name | `K-3` |
@@ -316,7 +290,7 @@ The full list of variables is in `.env.example`. Key variables grouped by catego
 | `KIMI_TEMPERATURE` | Sampling temperature | `0.2` |
 
 #### Grok (xAI)
-| Variable | Description | Default |
+| Variable | Description | Example / configuration note |
 |----------|-------------|---------|
 | `GROK_API_KEY` | Grok API key | — |
 | `GROK_MODEL` | Model name | `grok-4.5` |
@@ -326,7 +300,7 @@ The full list of variables is in `.env.example`. Key variables grouped by catego
 | `GROK_TEMPERATURE` | Sampling temperature | `0.2` |
 
 #### GPT (OpenAI)
-| Variable | Description | Default |
+| Variable | Description | Example / configuration note |
 |----------|-------------|---------|
 | `GPT_API_KEY` | OpenAI API key | — |
 | `GPT_MODEL` | Model name | `gpt-5.5-2026-04-23` |
@@ -336,7 +310,7 @@ The full list of variables is in `.env.example`. Key variables grouped by catego
 | `GPT_TEMPERATURE` | Sampling temperature | `0.2` |
 
 #### Qwen (Alibaba)
-| Variable | Description | Default |
+| Variable | Description | Example / configuration note |
 |----------|-------------|---------|
 | `QWEN_API_KEY` | Qwen API key (DashScope) | — |
 | `QWEN_MODEL` | Model name | `qwen3.7-plus` |
@@ -346,7 +320,7 @@ The full list of variables is in `.env.example`. Key variables grouped by catego
 | `QWEN_TEMPERATURE` | Sampling temperature | `0.15` |
 
 #### Mistral AI
-| Variable | Description | Default |
+| Variable | Description | Example / configuration note |
 |----------|-------------|---------|
 | `MISTRAL_API_KEY` | Mistral API key | — |
 | `MISTRAL_MODEL` | Model name | `mistral-small-2603` |
@@ -356,7 +330,7 @@ The full list of variables is in `.env.example`. Key variables grouped by catego
 | `MISTRAL_TEMPERATURE` | Sampling temperature | `0.15` |
 
 #### Gemini (Google)
-| Variable | Description | Default |
+| Variable | Description | Example / configuration note |
 |----------|-------------|---------|
 | `GEMINI_API_KEY` | Google Gemini API key | — |
 | `GEMINI_MODEL` | Model name | `gemini-3.1-flash-lite` |
@@ -365,7 +339,7 @@ The full list of variables is in `.env.example`. Key variables grouped by catego
 | `GEMINI_TEMPERATURE` | Sampling temperature | `0.2` |
 
 #### DeepSeek
-| Variable | Description | Default |
+| Variable | Description | Example / configuration note |
 |----------|-------------|---------|
 | `DEEPSEEK_API_KEY` | DeepSeek API key | — |
 | `DEEPSEEK_MODEL` | Model name | `deepseek-v4-flash` |
@@ -375,16 +349,18 @@ The full list of variables is in `.env.example`. Key variables grouped by catego
 | `DEEPSEEK_TEMPERATURE` | Sampling temperature | `0.2` |
 
 ### Rate Limiting
-| Variable | Description | Default |
+| Variable | Description | Example / configuration note |
 |----------|-------------|---------|
-| `RATE_LIMIT_GLOBAL_LIMIT` / `RATE_LIMIT_GLOBAL_WINDOW` | Global rate limit (requests / seconds) | `60` / `60` |
+| `RATE_LIMIT_GLOBAL_LIMIT` / `RATE_LIMIT_GLOBAL_WINDOW` | Global limit (requests / time window in seconds) | `60` / `60` |
 | `RATE_LIMIT_LOGIN_LIMIT` / `RATE_LIMIT_LOGIN_WINDOW` | Login endpoint limit | `5` / `60` |
 | `RATE_LIMIT_REGISTER_LIMIT` / `RATE_LIMIT_REGISTER_WINDOW` | Register endpoint limit | `3` / `60` |
 | `RATE_LIMIT_DOCUMENTS_POST_LIMIT` / `..._WINDOW` | Upload endpoint limit | `10` / `60` |
-| `RATE_LIMIT_DOCUMENTS_GET_LIMIT` / `..._WINDOW` | List endpoint limit | `20` / `60` |
+| `RATE_LIMIT_DOCUMENTS_GET_LIMIT` / `..._WINDOW` | Document list endpoint limit | `20` / `60` |
+| `RATE_LIMIT_ANALYSES_GET_LIMIT` / `..._WINDOW` | Analysis GET limit | `20` / `60` |
+| `RATE_LIMIT_ANALYSES_POST_LIMIT` / `..._WINDOW` | Analysis POST limit | `10` / `60` |
 
 ### Caching
-| Variable | Description | Default |
+| Variable | Description | Example / configuration note |
 |----------|-------------|---------|
 | `CACHE_PROMPT_TTL` | Prompt cache TTL (seconds) | `3600` |
 | `CACHE_USER_STATUS_TTL` | User status cache TTL (seconds) | `3600` |
@@ -394,27 +370,27 @@ The full list of variables is in `.env.example`. Key variables grouped by catego
 <a id="testing"></a>
 ## Testing
 
-Tests run in an isolated Docker environment with a dedicated test database:
+The project has unit and integration tests and a dedicated test Docker Compose configuration:
 
 ```bash
 make test
 ```
 
-Generate a coverage report (XML + terminal output):
+Generate a terminal/XML coverage report:
+
 ```bash
 make cov
-# Output: ./coverage/coverage.xml
+# XML output: ./coverage/coverage.xml
 ```
 
-Open an interactive HTML coverage report:
+Generate HTML coverage:
+
 ```bash
 make cov-html
+# HTML output: ./coverage/html/index.html
 ```
 
-> [!NOTE]
-> The test database is automatically created and destroyed after each test run.
-
----
+`make cov-html` uses PowerShell to open the result automatically; on other hosts, open the generated `index.html` manually. Some worker and API regression tests are still planned and are not claimed as completed.
 
 <a id="code-quality"></a>
 ## Code Quality
@@ -459,67 +435,54 @@ make migrate-down
 <a id="roadmap"></a>
 ## Roadmap
 
-### Completed
-- [x] Async pipeline: FastAPI + Celery + FastStream
-- [x] Multi-format text extraction (TXT, DOCX, XLSX, PDF)
-- [x] Multi-LLM integration with Factory Pattern (Kimi, Grok, GPT, Qwen, Mistral, Gemini, DeepSeek)
-- [x] Document deduplication by SHA-256 hash
-- [x] Redis caching (prompts, user statuses, token blacklist)
-- [x] Rate limiting with per-endpoint configuration
-- [x] JWT authentication (RS256) with token revocation
-- [x] Prompt versioning with admin panel
-- [x] Dead Letter Queues for failed analysis tasks
-- [x] Structured logging with `structlog` (JSON in prod)
-- [x] Architecture diagrams and detailed documentation
-- [x] Antivirus scanning with ClamAV (two-stage pipeline: scan → extract)
-- [x] **S3 / MinIO integration** — object storage for uploaded documents with presigned URLs for secure downloads
+### Implemented
+- [x] FastAPI + Celery + FastStream asynchronous processing
+- [x] TXT, DOCX, XLSX, and PDF text extraction
+- [x] LLM Factory supporting GPT, Gemini, DeepSeek, Kimi, Qwen, Grok, and Mistral
+- [x] SHA-256 content deduplication with separate user-owned Documents and fresh LLM runs
+- [x] Independent DocumentAnalysis lifecycle and analysis history API
+- [x] Manual retry of analyses that failed for transient reasons
+- [x] Prompt versioning and admin functionality
+- [x] Configurable ClamAV scanning and S3/MinIO storage with presigned downloads
+- [x] Local-first extraction with S3 restore when the temporary file is missing
+- [x] Temporary-file cleanup in implemented terminal paths (additional regression tests pending)
+- [x] JWT RS256, token blacklist, Redis caching, and rate limiting
+- [x] RabbitMQ retry/dead-letter configuration, structlog, and a coverage workflow
 
-### In Progress / Planned
-- [ ] **WebSockets** — real-time document status updates (replace polling)
-- [ ] **Email notifications** — notify users when analysis completes
-- [ ] **Telegram bot** — alternative UI on top of the existing API
-- [ ] **Observability stack** — Grafana + Prometheus + Loki
-- [ ] **CI/CD pipeline** — automated tests, image build, and deployment
-- [ ] **Extended functionality** — document comparison, OCR for scans, custom form parsing
+### Planned / follow-up
+- [ ] Additional worker/API regression and integration tests
+- [ ] Update component and sequence diagrams to match the current analysis lifecycle
+- [ ] Align `.env.example` with application configuration and Compose networking
+- [ ] **WebSockets** for near-real-time Document and Analysis updates
+- [ ] Email notifications and Telegram bot
+- [ ] Prometheus, Grafana, and Loki observability
+- [ ] Extended CI/CD for image builds and deployment
+- [ ] Document comparison, OCR for scanned files, specialized parsing
 
 <a id="usage-examples"></a>
 ## Usage Examples
 
-Basic workflow: register → login → upload a document → check the result.
+Basic flow: register → login → upload → inspect Document and Analysis → optionally start another analysis.
 
-### 1. Register a new user
+### 1. Register
 
 ```bash
 curl -X POST http://localhost:8000/users/register \
   -H "Content-Type: application/json" \
-  -d '{
-    "login": "john_doe",
-    "email": "john@example.com",
-    "password": "SecurePass123!"
-  }'
+  -d '{"login":"john_doe","email":"john@example.com","password":"SecurePass123!"}'
 ```
 
-### 2. Login and get tokens
+### 2. Login
 
 ```bash
 curl -X POST http://localhost:8000/auth/login \
   -H "Content-Type: application/json" \
-  -d '{
-    "login": "john_doe",
-    "password": "SecurePass123!"
-  }'
+  -d '{"login":"john_doe","password":"SecurePass123!"}'
 ```
 
-Response:
-```json
-{
-  "access_token": "eyJ...",
-  "refresh_token": "eyJ...",
-  "token_type": "Bearer"
-}
-```
+The response includes `access_token`, `refresh_token`, and `token_type`. Set `<access_token>` in the following examples to your access token.
 
-### 3. Upload a document for analysis
+### 3. Upload
 
 ```bash
 curl -X POST http://localhost:8000/documents/ \
@@ -529,82 +492,113 @@ curl -X POST http://localhost:8000/documents/ \
   -F "provider=deepseek"
 ```
 
-> [!NOTE]
-> - Supported formats: `.txt`, `.docx`, `.xlsx`, `.pdf`
-> - Max file size: 50 MB
-> - `provider` is optional — defaults to the value of `LLM_DEFAULT_PROVIDER`
-> - If the same file was already analyzed, extraction is skipped and the existing result is reused
+The `provider` form field is optional and defaults to `LLM_DEFAULT_PROVIDER`. Upload size is limited to 50 MB. An identical SHA-256 hash allows stored content to be reused, **not the previous LLM result**; the current user receives a new Document and a new analysis is requested.
 
-### 4. Get the list of your documents
+### 4. List documents
 
 ```bash
 curl -X GET "http://localhost:8000/documents/?page=1&limit=20" \
   -H "Authorization: Bearer <access_token>"
 ```
 
-### 5. Get a specific document with analysis result
+The result includes `items`, `total`, `page`, `limit`, and `has_next`. The document list contains metadata rather than the full analysis history.
+
+### 5. Get a document and its analyses
 
 ```bash
 curl -X GET http://localhost:8000/documents/42 \
   -H "Authorization: Bearer <access_token>"
 ```
 
-Response (once processing is complete):
+Example response **after extraction and a successful LLM run** (illustrative IDs and timestamps):
+
 ```json
 {
   "id": 42,
+  "user_id": 7,
   "filename": "contract.pdf",
   "description": "Q3 supplier contract",
-  "document_status": "success",
-  "provider": "deepseek",
-  "document_text": "Raw extracted text...",
-  "analysis": {
-    "summary": "Supplier contract for Q3...",
-    "keywords": ["contract", "supplier", "Q3"],
-    "document_type": "contract",
-    "entities": {
-      "organizations": ["Acme Corp"],
-      "persons": ["John Doe"],
-      "dates": ["2025-09-01"],
-      "amounts": ["$50,000"]
-    },
-    "confidence": 0.92
-  },
-  "analysis_version": "v1.0.0",
-  "created_at": "2025-01-15T10:30:00Z",
-  "updated_at": "2025-01-15T10:31:45Z"
+  "mime_type": "application/pdf",
+  "file_size": 102400,
+  "document_status": "extracted",
+  "document_text": "Extracted contract text...",
+  "created_at": "2026-10-11T10:30:00Z",
+  "updated_at": "2026-10-11T10:30:20Z",
+  "analyses": [
+    {
+      "id": "68e9f6a01234567890abcdef",
+      "provider": "deepseek",
+      "prompt_version": "v1.0.0",
+      "result": {
+        "summary": "Supplier contract for Q3...",
+        "keywords": ["contract", "supplier"],
+        "document_type": "contract",
+        "entities": {"organizations": ["Example Corp"]},
+        "confidence": 0.92,
+        "raw_response": "{...}"
+      },
+      "status": "success",
+      "failure_kind": null,
+      "error_code": null,
+      "created_at": "2026-10-11T10:30:20Z",
+      "updated_at": "2026-10-11T10:31:20Z",
+      "retry_of_analysis_id": null
+    }
+  ]
 }
 ```
 
-### 6. Refresh the access token
+A Document may be `extracted` while an analysis is still `queued`, `analyzing`, or `failed`.
+
+### 6. Browse analysis history
+
+```bash
+curl -X GET "http://localhost:8000/documents/42/analyses/?page=1&limit=10&statuses=success" \
+  -H "Authorization: Bearer <access_token>"
+```
+
+The paginated response has `analyses`, `page`, `limit`, and `has_next`. You can also filter by `providers` and request a single analysis with `GET /documents/{document_id}/analyses/{analysis_id}`.
+
+### 7. Start a new analysis with another provider
+
+```bash
+curl -X POST http://localhost:8000/documents/42/analyses/ \
+  -H "Authorization: Bearer <access_token>" \
+  -H "Content-Type: application/json" \
+  -d '{"provider":"gpt"}'
+```
+
+Returns `201 Created` with a new `AnalysisResponse`. It requires an extracted Document with raw text; no new antivirus scan or text extraction is triggered.
+
+### 8. Manually retry a transiently failed analysis
+
+```bash
+curl -X POST http://localhost:8000/documents/42/analyses/<analysis_id>/retry \
+  -H "Authorization: Bearer <access_token>"
+```
+
+Only `failed` analyses with `failure_kind=transient` are eligible. Each analysis may have at most one direct retry child. The API returns a new Analysis linked by `retry_of_analysis_id`.
+
+### 9. Get a presigned download URL
+
+```bash
+curl -X GET http://localhost:8000/documents/42/download \
+  -H "Authorization: Bearer <access_token>"
+```
+
+Response: `{"download_url":"http://localhost:9000/docmind/documents/<key>?..."}`. The URL expires after the configured TTL (600 seconds for local storage in `.env.example`; 3600 seconds for nonlocal storage).
+
+### 10. Refresh and revoke tokens
 
 ```bash
 curl -X POST http://localhost:8000/auth/refresh \
   -H "Authorization: Bearer <refresh_token>"
-```
 
-### 7. Logout (revoke the token)
-
-```bash
 curl -X POST http://localhost:8000/auth/logout \
   -H "Authorization: Bearer <access_token>"
 ```
 
-### 8. Download document file
-
-```bash
-curl -X GET http://localhost:8000/documents/42/download \
--H "Authorization: Bearer <access_token>"
-```
-Response:
-```json
-{
-  "download_url": "http://localhost:9000/docmind/documents/42/abc123?X-Amz-Algorithm=AWS4-HMAC-SHA256&..."
-}
-```
-
->[!NOTE]
->The download_url is a presigned URL that expires after the configured TTL (default: 10 minutes for local, 1 hour for production).
+All document and analysis endpoints check document access for the current user.
 
 <a id="license"></a>
 ## License
