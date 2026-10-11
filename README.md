@@ -443,9 +443,7 @@ make migrate-down
 - [x] Prompt versioning and admin functionality
 - [x] Configurable ClamAV scanning and S3/MinIO storage with presigned downloads
 - [x] Local-first extraction with S3 restore when the temporary file is missing
-- [x] Temporary-file cleanup in implemented terminal paths (additional regression tests pending)
 - [x] JWT RS256, token blacklist, Redis caching, and rate limiting
-- [x] RabbitMQ retry/dead-letter configuration, structlog, and a coverage workflow
 
 ### Planned / follow-up
 - [ ] **WebSockets** for near-real-time Document and Analysis updates
