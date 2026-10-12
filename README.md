@@ -102,9 +102,6 @@ DocMind separates a **Document** (user-owned metadata and extracted content) fro
 
 ![Document Lifecycle](docs/images/sequence.svg)
 
-> [!NOTE]
-> These diagrams still depict an earlier document/analysis lifecycle. The diagram sources and SVGs will be updated separately.
-
 <a id="data-flow"></a>
 ## Data Flow
 
