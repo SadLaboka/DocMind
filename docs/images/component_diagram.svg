@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" data-d2-version="v0.9.0"
-     preserveAspectRatio="xMidYMid meet" viewBox="0 0 3028 1128">
-    <svg class="d2-2521546483 d2-svg" width="3028" height="1128" viewBox="-50 -50 3028 1128">
-        <rect x="-50" y="-50" width="3028" height="1128" rx="0" fill="#0B1020" stroke-width="0"/>
+     preserveAspectRatio="xMidYMid meet" viewBox="0 0 1593 2466">
+    <svg class="d2-1054253920 d2-svg" width="1593" height="2466" viewBox="-18 -18 1593 2466">
+        <rect x="-18" y="-18" width="1593" height="2466" rx="0" fill="#0B1020" stroke-width="0"/>
         <style type="text/css"><![CDATA[
-.d2-2521546483 .text-bold {
-	font-family: "d2-2521546483-font-bold";
+.d2-1054253920 .text-bold {
+	font-family: "d2-1054253920-font-bold";
 }
 @font-face {
-	font-family: d2-2521546483-font-bold;
-	src: url("data:application/font-woff;base64,d09GRgABAAAAABLwAAoAAAAAHIQAAguFAAAAAAAAAAAAAAAAAAAAAAAAAABPUy8yAAAA9AAAAGAAAABgXxHXrmNtYXAAAAFUAAAAoAAAANgE6icoZ2x5ZgAAAfQAAAvzAAAQgJ4SdfxoZWFkAAAN6AAAADYAAAA2G38e1GhoZWEAAA4gAAAAJAAAACQKfwX4aG10eAAADkQAAADFAAAA5HWqCgxsb2NhAAAPDAAAAHQAAAB0dah6Hm1heHAAAA+AAAAAIAAAACAAUQD3bmFtZQAAD6AAAAMvAAAIKgjwVkFwb3N0AAAS0AAAACAAAAAg/9EAMgADAioCvAAFAAACigJYAAAASwKKAlgAAAFeADIBKQAAAgsHAwMEAwICBGAAAvcAAAADAAAAAAAAAABBREJPACAAIP//Au7/BgAAA9gBESAAAZ8AAAAAAfAClAAAACAAA3icZMxJLsYAGIDhp/4afoqi5qk1UxTlAE5hbSlOIG7hCg5RW3tnkLiIT1KJjby7d/EgMZAgk/pAITeQKtUarTsPnnTVSwR/99a9x98bX4bS+I73eIsunj9fe+9/iWutSyO9P2rMuAlDk6Zkps2YlZszb0Fh0ZJlK1atWbdh05ZtpcqOXXv2HTh05NiJ2qkz5xoXrtzwAwAA//8DAAPFHSd4nIRXa3Ab13U+92KJFSHwsQAWL+K9xC7AB0hgsVi+QYogSFEAnxZF2XyFI0u0SdGMBFWUS1edsWy3DhQ5BiPTUWI7HmfSh53ao+mMklbpNFM71UQz6dRO0x+NX/WobTxjsSnTiW1y0bkLkILYzvQHcX/w7jnf+e75vnMvlMEIAJ7H66CBcqgCA7AAIuNl/KIgcLQsyjJn0cgCYugRbFC+95oQpIJBqs6z4X58dhalZ/D6ztJD6fn5/55tb1de+uGPlMvo7I8AcP4LANyLs1AODICRFgWeFzitVmMUjZzA0Xeqv1ZVUVNB6W1f3H7r9rcDPw2gwY6O8LIYPa08hbM7mWvXAAA0kAbAHTgLDNjBR7CJEbOZNWlpVl20nEaMxKQoz3GMGFHX9AeJpe7GQKQ3caZ/ti8WjkST4xc6Osdx1pmM149XURVHenofCKJn6jjeo0xO1vsBEITyW7gZb0ANQJmP56VoLCZGzBaa5zmfVsuazGIkJlu0aHrs2fGjl8fiJ7xDNplrOFw/MRCIW4fG9Klvnl56cVT0zVickZlDJ1ZqbVNzgCENgFM4CzpgS9BrOUGMxAhuAvjGiedHR67MNTpaxkOh8RYHziaurKw8338+MDU0dNwPBF8aAN3FWThIOPCyXlZkOdbLptGG8uX776MqnF178vevru3t/XeV+5K9aXRN+d3HH+Ps2gtrOwC7NSfwBrj/r5qLJUucJDJaLTp9/BtHjz13rP+kJ21rqUvNTT1k4vVLn/m+Wiw86p0xu1bmT6zodCurynveUAEHPrqLWWRFSWQ4hmPSuY/W1z/C2S+/3MmgamVzFzN8iLOgUfcy6RzO7mQAQXV+C13HWagGsPh4QTYTVBIjMiat9uPBk74ThmZbIJhrmNa3tw96PeEe9H0lHV/oKsbESzgL+kJM0ShqjJyGZtM56ievvv0f3305hbPKb9FBZVtZRcYTf1H8Bn2Ms1BW+MbLpnMI4+zOJqG2GPMNnCWckYhms0WMxWSjyHCEPpmjaU4QOBdm2fR3H9EZdJSO0Z165Wm6XENJ06PTUYo6QOOs8r6jy+XqciDfTuauZ3jEfe3zz6+5R4Y9d3dzkJ4xFnJYRJ6XCHcagTObWTb9wp91U1RllixlFTir/PVz0T9su7OTQX1fj621/RsAYPVs/wBvQNW+jlZFIxQkox4ymph86siRpyYLv71DQ729Q0P6sRcfXfzm8PDVRx99cexiZn5+eXl+PkPiEmzNKqemEjVqOY7d09+HA+eSyUzf6MBqd0cCZ4Wp4dR806/Q2IJYB0Vsg/gVvAEHgQfwl2Lx8cJ9SGlzUXdaNFGEhuynnuMWniggXpm1DAdZf6Xd0L50boGgXDinvP9wyvyDZwvwn/zzGp+LphbLK4rYx3EWKsFS6iTEkAh6FQeX/rTvTCIurX/vidFUW2dnWwpn/ZNDA9MW5ctPP0Vz4eZmnpwRl9/COrwBdSq7u30Z5QUhhP+XkCwWNZMWmbovRh7gJgKhRrH+qLeDb38k0bJSd8TTLfCNrXUPtCfblvXNoYddvM/pdhpqK5uSTbHJaEPdtK3G7XC5GJ/1gb7YVAsgsAFgI84CTSrhJC/LMbevoy+u4+q1tR0iKUBwOL+Fh1XvJBhV0dxTDxq6+PR6myx3fP1J/dXX0IySm0ul5tBp5dXXrgLKfw6ARZyFCgBRU9Lnmh+//e2hKksVVWmtTF/9O5xV/kE6GYudlFCzqtdKAI0HZ8G777uSCJymMAtozTMXXmjUVmopnVGXfCKpM+oouoJuvJz5YfeBijJKW3GgE2eVn4unotFTIgorPw8vSNKpCArvZFCAT9fWpnnlnwFDXX4LvYe2wQac6hJSNCarvk0L6kGwDEfyycTOVC//cWLkUg5zQXd3rdS02DZ7clVHufsP2PzGoQ63/lh8aLLKK1jZrzhrl88on4gO7ozFeExX77Ra1P7tyW9hM74JpqJzChzNMSJL7xMY5yNDCvV5e52U/myOciZ8HZNNHbOTfGyiIWgK6L0eCd98PWV3dn01dfRCfDWZerrxZ4ZK9exq81voJtoG+35vvmfNRBW2vsd6Bn4vEep39HEeKR5vtoaMbf4Jfee5sfFMp8sy60z1dKfZqjlPDekJDEJ+C23jm2AEzy5XBLVFkMQSlnYb9zdTj7XPRoMtNm1uVUfZk9gqGIz1Ji7WpP/ahdFzXQ5r6k93esN2btVk+5mhsrf/cB9gFftHaBus+yYL0QDtJUqRLVqtRoySLMjdf+ZQ71J7/3QThZVf6pJhKRbmZ751XWjwxfRdmbHRTDy+mDD6y2Oi97jdhdqCUhOpBYEVAGXwLbISDcj7dEfGHvPgoUO1I73uaHVNhV1f4zp+HD1xuqxGmojqtUtlZV7edVZ5EkADvnwjptE2NEE7DKrM8FJUllTsxSUmRiwiyxUNzycQgkTSXiatVlPiYsaik/h4dctv2mZa+o01Hqs92DYjNXj/cpguj07KTrfBFxyZ+kpibdApCE6nIAQj3YJftHn1NZ3v2lsaOgJURcBdE6mmDIn6juGAfvGgz9Q6WKurMhsN7b3iaAjdqgsKwUAgWKfkam2Wao3GanM4C9z0kMNWexTEvd5kGY5RSaeZnhztOBIZPZxzehwBK775+nFb/eK0cht5YwGbRXkL8nmQAeBX+F3MQwwAaJDh2b3YLnxzb67KIm3kBJrtuUJ955Uf/NXLK3F8U1l++7byL3/b/zjZn99CBnwTqlRe93yINMHfp9pzTHkZrTXo/fqHjmBu55cWA0Kny2jyHYDGibZVL2FEYiTkdO+rhN5be4iGk2Gpx+gdDI8cyTk9/mby04Q2u92N9QFfeLe8ZuWt4rLLE9oGU2mOUp5WdZQnvUcU2oy7Gu/jqdDvau/8/7PWHH8skXgsHl9OJJbjjaFQY6ixsajVzsz42LnO8+nunhSRLIHVkx/AZrQNRnABWO6hU9uPFyys8Z7NkPKdh4UHFzpmY54Oe9kwH5uorzMFbuA/Cdu5Pz57dDVeYxv+BqrdMxniBQNoW43vASiTZDXsrohEWWQ0pV6AHtHaDvkKhtBFHO2TPTO48ULK6lYNwekJ70yi2ntuUOwXdAVtg+G+c6T5ewzXpHjWobNW2KodnSa0eSwSLiu7SFHBiPIhIGDzW+hltA3CfXfAKM8XZu1eMDJpXZg1ad8Nn+IP+eJur8sZsrvaA48cbT3mPmSP2ltbeU9ncEHPu6dsNRYjYzbq9LWtwb4JwTppMgtWW+VBrjXUO13QEJPfQss4Q24LZH5KnCTLInGVEgOGqeFEinn8/HnOqbfpLEZZ/+jErdPaS5fO/rTOr6UWtfpCrI78Fvod2gTTPg0wRdv9p9HDOZfHwZtzqwc17kH94jSKKh9IQbsTDSjVff4GQERvKI82izPZUpyosqi5/v31bjI9y426nsuvos1f+9OCkPb/Wqne9Um8iTbBu++7kghc8X1G0+trzzdrdVqKriiXL7aUV9EUXU43/dH51xvpCpqiD9INaPOOf4DnB7k76jrgv6NUv8MlA4Ek946arxIAbaFNckcRjUJJQtpyL0/lxpWXGnRmHXXAcMC38dyLLzXrLXqq3FQuIPzZCFvPsvXsSP4/x9gGlq03j5G4+nwX2kGbUFPaB7J8HxWVeNXsrbLThgP+gI7+m/X+gwYddYAp77j8uqVl+CdaagWV1Trt6F9/4Uv6uX7uF8rBrqPqvRSBOb+FPsDPQHB/n3HSroh3bxT3HqD/lT7NJZzJQFOLY7BvojvA+2TXYMN82/wFWZT7exb1kcC0o1aodQTNC0281++yP8jXPzQeTpqp6nRX+3g9APHaTvgE7qLvYBpaAIBc4BBU5OdQDL9D3kQWo6ipuDV36xXNye1vkf/5YAZ9hmPkbaW+0aRCY/7jm28uvfnmzI2FGzcWbpB9gfxdPI7LyVuwTJC9kleQEYs6k1eVa+jhq0lkZoYvZS4NK7+l9uYGvIc2d99hPTm0qVQDyr+BW2Ecv0vyMT5icAUW/KGQ3x8K4dY6jqsjfyRGZ34L7sIbZK+lZO9VXhR5XhT1khCQpIAgwf8AAAD//wMAveeMngAAAQAAAAILhWy1Ez9fDzz1AAED6AAAAADYXaCEAAAAAN1mLzb+N/7ECG0D8QABAAMAAgAAAAAAAAABAAAD2P7vAAAImP43/jcIbQABAAAAAAAAAAAAAAAAAAAAOXicBMAxSgNBFMbx//sWguIaV4ghNhZxIKKTaRXMFK8RLB4IamFhqeAZBL2BfVrr2Nh6AXtPY0DWnz654htU+7XuCV1Q9EwoEWoJvVD0TticsD86PRIaEFoTWhJaUXRDaEXRA6HMoTL7WnKp3P82c4ba4VgVtx+SKjMNSHbLRGOmOsdtxKkSbgd4c4drgeuEpIqrMrM33L7Ys1d2dcZCW7TNBhOJoTZp1TG2TLVrttUx1RNHNsKh/7BM/QcAAP//AwCA6iIVAAAAAAAALAAsAFAAhACwANQA6gD+AS4BRAFQAW4BiAGYAcoB7AIYAjoCdgKcAtwC7gMMAygDYgOaA8wD+AQqBF4EhATsBQ4FGgUyBU4FgAWiBc4F/gYyBlIGjga0BtYG8gcqB1YHhgfEB84H3AfwCAgIFAgqCEAAAQAAADkAkAAMAGMABwABAAAAAAAAAAAAAAAAAAQAA3icnJTPbhtlFMV/TmzTCsECRVW6ib4FiyK1Y1MlVdusJqRWRkRx8LggJIQ0tie25fHMyDN2Gp6ANW/BW3TFQ/AciDW619euXRAFK4p1Zub+Od+5537AAX+yT6V6H/itnhqucFS/NrzHvfqF4X1a9T3DVR7VfjdcY1BbGK7zea1j+CPeVn8xfI/j6o+G73NYbRn+mKfVA8Of7Dv+MPwpx7xd4go852fDFQ7JDe9xwA+G93mA1axUeUDTcI3PODJc5wjoMqYkYUzKEMcNY4bMmRFTEBIzY8wNMQMcAT4Jpb5NiRQ5hv/4NiKkZEakFUeUOBJCEiIKRlbxJ83KuNaO0memSLr5lIyI6GnGhIgUR8aQjJSYidYpKcl5SYMGBX3lm1NS4FEwJsEjY8aQBm1aXNJlxJgCR0srCbOQjBtKbom0v7MIUaZPTEphrOakDJSnU36xZgdc4miTa+xm5cutCo9xfKvZwk1iHF/i6b/bYLbdd8UmYqF6ioY9EuV5qxMcqeLS1+cbxSUvcTvps83kwxoNlJ3MekyPuc5f5id5wiTFuUN8QnVQ6B7iONPngFAV+Y6ALhe0eU1Xn306dPC5okvAK81t08HxFW2uONeMQPHyW0sdc8X3OL4m0BipHZs+ork8vSE3dwt3cYacY0quWyAzlvOL8+OdJiw7lG25o1BX9HWPJFL2QFSRPYsYmitydcVUtVx5ozD9BuYI+VrqbN99l21Y2O6ttviOTHfYMTdOMrklow9N1XvPM7f65xExIKOnEX0ypjQoudOzXRMxJ8Fxrj6+0C0p8dc50udOXRIzVQYBqdaZketvZL4JjXt/y/fO7hLZvKnu6GR9ql26SOV0Y0avVb3Vt9BUjjcm0LCpZpYjE5bKy5OK9yXa2+IfqvsLvd0ynnBGRsLgbzfAUzyaHHPCKSPtIJVTFnY7NPWGaPKCUz39hFij5L58ozpJhRM8nnHCCS949p6OKybOuLg1l83ePuec0eb0P51iGd/mjFfrd//e9Vdl2tSzOJ6sn57vPMVH/8OtX/B4677s6C0gm7Owau+24oqIqXBxh5tauId4fwEAAP//AwD0t09RAAADAAAAAAAA/84AMgAAAAAAAAAAAAAAAAAAAAAAAAAA");
+	font-family: d2-1054253920-font-bold;
+	src: url("data:application/font-woff;base64,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");
 }
-.d2-2521546483 .text-italic {
-	font-family: "d2-2521546483-font-italic";
+.d2-1054253920 .text-italic {
+	font-family: "d2-1054253920-font-italic";
 }
 @font-face {
-	font-family: d2-2521546483-font-italic;
-	src: url("data:application/font-woff;base64,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");
+	font-family: d2-1054253920-font-italic;
+	src: url("data:application/font-woff;base64,d09GRgABAAAAABRoAAoAAAAAHzAAARhRAAAAAAAAAAAAAAAAAAAAAAAAAABPUy8yAAAA9AAAAGAAAABgW1SVeGNtYXAAAAFUAAAAuQAAAPpIRuaBZ2x5ZgAAAhAAAA0uAAAS3N9l/H1oZWFkAAAPQAAAADYAAAA2G7Ur2mhoZWEAAA94AAAAJAAAACQLeAjjaG10eAAAD5wAAADeAAAA/HRtBvFsb2NhAAAQfAAAAIAAAACAmdaecm1heHAAABD8AAAAIAAAACAAVwD2bmFtZQAAERwAAAMrAAAIMgntVzNwb3N0AAAUSAAAACAAAAAg/8YAMgADAeEBkAAFAAACigJY//EASwKKAlgARAFeADIBIwAAAgsFAwMEAwkCBCAAAHcAAAADAAAAAAAAAABBREJPAAEAIP//Au7/BgAAA9gBESAAAZMAAAAAAeYClAAAACAAA3icdM05MoNxHIDh5++LJRERO7EldoKI2FOpjCOoMkrjBCp3cAo3QMctVGZcwAE0PzNoM2/5FC+STEJRzhcqyjIFVXUNLW0XrnTcuPNUe4jg35razl3quHb7Z/GpJC/Fd7zFa7zHSzzH/cfj76FbyakT+1oOHOqRyenVp9+AvIJBRUNKhpWNGDVm3IRJU6bNOFYxa868BYuqapYsW7FqzboNm7bUbduxq2FP05EzfgAAAP//AwA62yPZAAAAeJx8V31sG+d5f5/3Tjx9UB/UkUeRlkiRR95J5JGSeCRPlERK1PcHqW/Jii3J8ndkK45iR449201iF5mTNi4TeA1WBHOxZkOLAE3hpEOLZWkTF4vazMM2pGu2pQXapErhLEsiaG5aRHfDe6QkysH6D3XQ3T3P8/u9z+/3PIcKkAchfApfRxQqQuWoElkQklkXRcmKwlspWRR5hlFElmU8l2H18jforn2/rfvmHyQn3ff4d4b+e+FFfH1zCR6be/RRdf/Vo0f3fvih6oN//xAhhLD2FkLwc5xBRciEEMvIoiCIvMEAILO8yDPvtdwqpotp2i6r/wRH9qXGKn+3COeXl8MnmmPH1TGc2Vy+fRshCvEI4VqcQSZkJ9cyK4c4i9lgYBhO/8tTcigaCQv8zgV/5aUDS/4uD8i9fReHW+bn9/UM7j95ev5UeuBhnBnsk7qlQtqYbB6Yk+BsnxIIbd7pSYXipG5AMW0DB/DzyIlQgVsQIuEElkOclREE3l2GLWaOk0NRxWowgHvo/mjjvkup5rGqKBsVWg50etyDrXVdtbxnzth1bjh9/ZE+xVdfK8aPnGtrnYvU7gk5A4QbggNHdW7YPES8KIeiWwj+7Mmnp248OD09dbHr+OEozvz5+UdeOdox+fWDc4vZOkmMCpxBJSSCi3ExMsMzLoa/AidK1fd8n5Z9LINQhjPJn3fe7cx7vijveSr3dODT0k/acCb5fqf6iy0OWvHzyK1z8P9QoPCKTBkMIJ291Lj/8bHWMZvCKnWJQz0ePtXuibHeq6X/HPPMG585N3z9kd5tIlrmo1UV3+9Q33d4t3CgDZxBFKlLpvgrw1dwZnOZ3NNUbQNWcQaVI2R1C6KS5Z4laW+0jFvkslh9KFE6OzxfcdSoBP2e+qEk3Fbrph7M4d2LM8iYjSuDzLA8xTD8leEkBQMzd/9i7EtPBnBGfRW6P1eX4NAT727VA8/iDCrIvkcYHT4L5lKc2by5xeOrOINs+n3WKiusTPFsNKrwDMVTpMcZir8yF+Po3ltzV4ZSRXYjPfK6FOdoQ1nhIM6of3X1KhzaXIbT0gn/s+oLMPustCip13Kxj+EMYrdiR3W0O1GHv+6jDWXFPUNX0tf9tKG8uBdn1Nknmx6QYXZzGb71tHwipN7Qe6xN28Dz+HlUgWrzT5GzmMuwGEpg0mfZ0wTnqZXg9Erv4NFwcPrhrsjehHtwmPwOGJ+7OJRZ6em+MDH0zEpPV9uhldjBldZDKy0LZ7f7OKD3oDm/j3mK3ZHiD2dPDz4+uRhOHjh6ItV/FGcGp0ePN6mfQd/oSExGuVrn9VrLkYSQd1dx5Ny3VagXz2wpEPi8Un8/cd42sTcHwz/8QKdpKly+p7TAFWk9fLYlW/Whs79IjbJfO5nD1P/V0wMGv5+m4iU5LCLOoFLE7WAhLbMLzSuzD52aODOxdFrpPjx/ZKh/AWd6J/afMqnvAafeganx3mgDwQTIqG2Aip9HvvzejYQFUYcTjW4rymAgMK1ZN/uga7kuVjOltI0FvClfa2S2tXXBKdt6g95ITZMn1RBuPWZsafH7Q93NnhAXtA8oofFQuC7oqHc27hEauEB1n9KyP4wAzSGEIziDGIKGV1wMT/3tymul8Fbpj1Zwuqtr8+VsnSPaht5zXK5L9I4jJW1LDRxHThroweGhoo6e5n2WsdR49WXj4jFLgw2W1ScD7t707El4Vj157TyJN44QTuo8IpmSWY7LdTE83Tqyp6CQom0R+/cn1e/gjHo98kA08mAYlnS5I0AHEKIknEEuUjNROZN9l+XMllwUngpHFV1jB4pGiymKpq2N3At9RUCb/eZraXX9MIOBLnOZXsYZ9bnwUiSyFIZF9bnwyWj0ZBgWN5fhGc+IKKZE9UGCX3sXIezO6plnKdmaK1iRKZbPzSyG8Xy+NNnMGAspk7v83PhHK5NtTEUhxXpNj8EktH2Xk+xVTdyL6mvqzR/YZLtdsb1CYqMJhLAj61/yrthAfUU+ORooKi+irFLVxQn1f8KAIPMPnh7B2+d5VV3WdF2I2gZ8BuvITLrTuuPEsiJTPGFBDEUVZduWX+5ISYPzshg30WziYHshzc9UCiMeyRKq9nRFnE3G/VO952flOldctfd7GzqCDf8huH0Dc6F2ffZh5NQ24BO8iixkMyBdyzM8KzPkFOTQbufQ5+8dMW6izO3X0iKHPZMBPX3E0xVxNNa7x/igWTbWueJ49bWFGv++aZK6wzcwJyfiPu8HghsB8mobcBPWUfUudDuqyE3ad0aOSOmDEamNC7BCTeN0NNZSG+Xc9rTx2Fz3makGt63Raule7urstZtCZjJWstxhMQ/LDnd/mryWSqpCSGdy7A1772VPrD3w2mbzvfRhHcuPYB3ZkTc/H1E14zJsbw2UHCXOSBC+P70YGJptVJIOY4H6k6LaLl9NzOqoGftLDVOV9Xxk3njiYM/yuBQcDVXLZe2jXptJtjjBW1JVWt3knEKA/AjB0/htZCX9xbfjfFdhyEJA+afaS5IV5cNxu69yT/Eek6u+0HTIeHgKvh0rGBucKC1RmOKQfyKhzpB+A80D67COnCi4a+IqBgOfzyCRJrWLvRebpnlPdU9dYrDMJkw2xEf9A7NNQsJEse3H2DMxfszt55qq+aTsaHhXqIlY3amO+wVpeqrr4ftCpB+pA8fA5ff9i+Cu751pbG0lZwhkB4N38Gpu1u70IaMP3EiYtCHlvJZurKDrx6VEpDCRaqPp/ur+YA9e/TDONySbnR71ZyCZq0qHfEH125pGYqI/4ptYQCSJAbX17+T6CK9u7wss2RdEhnFeSy/gP8y8sTI8t2zHq2oNwFvqbz86fQEBkrQN9Ee8iioJW5Gw7pwGizl31A8kDRfSlwBMlIGBYs7YbrLhk5vPMEVUJeBWmt7Oi+/AOpkTBGMWojUH1LALaT7og+0MLUwILU0FDTPeeJSmE+k4TfdZ+qUewkEv1+/vgbUBT5NSJ8nJZpPDnM/DztU29ndgHVXl13AvzSRj/XhwF8t6hntJ3tYf/Beso3JUk68HMsHF3JqbFfnbI/PS4Hxo5IA0NO8LjMnREPkx3r+/58xUMPvb0bnc3dnXtdzd2Utia3c1GT6B9ay2mbyKyzCvuxbD7vKp4qfaDZR3KqgbVEhoY3Gl82/yfeo2frnDGcgJ3Hn/DYCcUQm/87q28Mi6F+s5CxSF/4ImdisCXC4H9s4E8z35qRv5hnL7xiNCw7Ylb6YBdhuy3htwEdZRRd65WBlh6zxK6JpUwGbZU2H3pJxxWJuT4kXdhe2t6m0E2ufaBlyCdSTeu3/cu36Q7SO7fHyrac7WaO0QfPH65mBMGpCCg9VBVnYJTdHaRLhx3BiuE5x1Qd4uOu2Jen/S63HUme0Bp0OodLdJgW4vqblN24AZvLTt6VGF5duxrLtRnqf/sCNMQ6yvJOVJ7rlgvBSjqt1l9hJTRYOxPVBuL4XKWMETTyTUO5WVDkdxgcKUk9jN2gZ8DGvIthN7R3FsztZf3FZDf02f1JMig7Bu0tipmJwsRNW3WRtpU5hR7YO8vn8CcQL4Nax9cWe53Jfy0AaaNnnYr6XVTVhTP+CHeM+AB2yqPftuL0L4TVhDrnve3bmieCq3R1CLfKoCAOjyPRWPDZkw2VTsFY/2//JAmf7fmvKzsKb+xt3tdne7wZF3ZYdivt/j6efVuwi0txGCf8vywLNi3l7BWHd2Fuk/9w/7CssYury2fGpi9fCIVGgqpivc7Dzg95c40WKutyz976enuSDHSdYzZBd6Q2uA92AN2RFi9O8twquyi5EybCiuLbNVVnqTtsqJlEA2OpO38qsp9Te21v5/ZZhYUTzEwwfqx640z6fcYNr8tCEtZbmyIwSP4S/p36wK2UqjikzJjL30KwsPFU8prQ9fNnbAr0JG9+YbHaSeuwjBT/BTpB5eSVA5QYvbYmdcTHHhwrX5BjlSm3SL0t7G8Rnf+MUJMBuDYxcO3ReU2lzORqH+vu7I/MJyfyeJ+XttA36Kn0J19+iCV7ZdiRG33NeSFcbfJ486ZOtgU/feyaPGkf1iSK7pqhEn5kb3Dg1GWuOLxmSgzh0eismdLfVxhy9abZXbRzvjsxba1B+K39eENE37tTaLVuGXWERx1AEPIQNKIKRpaASM6MfwZcygOGqGKsKT9q72Zfie9nfkm5hRXIynBH5afDEU0u/9QFuAv8b/qN8DGfrhZrOa/iZ17PNvZDluRMfhZ9hHOFYifESOyBbZwlt+9d2X2l763vE3Y7duxd4kz5m1T3ACF6AihApExRVxiQpYoFm8pXbAj2+JYKjwvd7+uk/9rGB7TqHbsLb1ne48mD4Ea7oIAPXhIXQT3yQ5WbIn5Og7xzp4q7mGx0NWzuaq4my1CJBV20BX0RJ51pr3bC9nE6u5Kq+xmrNLNZxNIlgJZxm0RPyPEckXdt4L5pKGGIM5B19jr973QrCyzWPnbKLHMbCMEPo/AAAA//8DADwHAfIAAAABAAAAARhRIJ6S518PPPUAAQPoAAAAANhdoMwAAAAA3WYvN/69/t0IHQPJAAIAAwACAAAAAAAAAAEAAAPY/u8AAAhA/r39vAgdA+gAwv/RAAAAAAAAAAAAAAA/eJwEwC1LQ1EAxvH/8yyqICjMrZxw3G6YoNHhqq4I8w2bWAWrZV/D72GyGKeWgWiyCAv3Yp7IRTaRcY8/37DJGFSlF/eJbtP1EVFzoj6IPqTLgqhxqrxN1BvRj0RfEz2k5zbRQ3ruEPXHsioufMVA35z4h0t9pYleOXWDzBsE3dNynUwFLTXpeA15icCUoAmBX7ZqgeAVgmtkrqeZG2Q6J+g2LbRPz6vsasSenznQXXrXKD0pp6k8zZSnOWUqKBnoM010lh6Us+Nj1pkSgD4ldcpU/AMAAP//AwCgRkSWAAAAAAAuAC4AUgCKALwA3gD2AQwBQgFQAW4BigGaAcgB7gIgAkQChgKuAu4DAgMqA0gDggOwA9AECARABG4EpgTgBQgFUAV6BYYFoAXCBgQGLgZcBpYG0AbuByoHWAeEB6IH3AgICDgIUAh6CLYIwgjMCNoI6gj+CRYJJAk6CVAJbgABAAAAPwCMAAwAZgAHAAEAAAAAAAAAAAAAAAAABAADeJyclN1uGlcUhT9ioE3/Liorcm6sc5lKzuBGcZTEV+M6VkZFkDKkP1JVaYAxIGBmxAw4zhP0um/Rt8hVH6NPUfW62psNYSKrVlAUaw1n/6yz9toH2Odf9qhU7wJ/1ZeGKxzWfzZ8hy/qTcN7nNU/M1zlqPa34RqD2lvDdR7UOoY/4V31D8Of8rj6m+G7HFQvDH/Oo+q+4S/3HP8Y/orHvFvhCjzld8MVDsgM32GfXw3vcQ+rWalyj2PDNb7m0HCdQ6DLmIIpYxKGOC4ZM2TBnJickJg5Yy6JGeAI8JlS6K8JkSLH8MZfI0IK5kRacUSBY0rIlIickVV8q1kpr7Sj9Jkrkm4+BSMiepoxISLBkTIkJSFmonUKCjKe06BBTl/5ZhTkeOSMmeKRMmdIgzYXNOkyYkyO40IrCbOQlEsKroi0v7MIUaZPTEJurBYkDJSnU36xZgc0cbTJNHa7crNU4QjHj5ot3CTG8S2e/ndbzMp912wilqqnaNhjqjyvdIIjVVz6+vyguOA5bid9ykxu12ig7GTWY3osdP4yP8kTJgnOHeATqoNCdx/HmX4HhKrITwR0eUmb13T126dDB58WXQJeaG6bDo7vaNPiXDMCxauzC3VMi19wfE+gMVI7Nn1Ec/l6Q2buFu7iDLnHjEy3QGYs9xfnxztNWHYoLbkjV1f0dY8kUvZAVJE9ixiaKzJ1xUy1XHsjN/0G5gg5LXS2789lG5a2e+stvibVHXYsjJNMbsXotql6H3jmSv95RAxI6WlEn5QZDQqu9W6viFgwxXGuPn6pW1Lgb3Kkz7W6JGamDAISrTMn07+R+SY07v2S7529JbJ5M93RyeZWu3SRysnWjF6reuuz0FSOtybQsKmmliMTlsqrm4r3Jdor8Q/V/bm+bikPCbSuTLJ/4ytwzDNOOGWkXaR6wnJzJq+ERJyqAhNijZI3841q9QiPEzyecMIJz3jygZZrNs74uBKf7f4+55zR5vTW26xi25zxolTt/zv/qWyP9T6Oh5uvpztP88FHuPYbjkrvZkdfA9mgpVV7vx0tImbCxR1sa+Hu4/0HAAD//wMAcqFRQAAAAwAA//UAAP/OADIAAAAAAAAAAAAAAAAAAAAAAAAAAA==");
 }]]></style>
         <style type="text/css"><![CDATA[.shape {
   shape-rendering: geometricPrecision;
@@ -31,323 +31,324 @@
   opacity: 0.5;
 }
 
-		.d2-2521546483 .stroke-B2{stroke:#0000E4;}.appendix text.text{fill:#000410}.md{--color-fg-default:#000410;--color-fg-muted:#0000B8;--color-fg-subtle:#9499AB;--color-canvas-default:#FFFFFF;--color-canvas-subtle:#EEF1F8;--color-border-default:#000410;--color-border-muted:#0000E4;--color-neutral-muted:#EEF1F8;--color-accent-fg:#0000E4;--color-accent-emphasis:#0000E4;--color-attention-subtle:#0000B8;--color-danger-fg:red;}.light-code{display: block}.dark-code{display: none}]]></style>
+		.d2-1054253920 .stroke-B2{stroke:#0000E4;}.appendix text.text{fill:#000410}.md{--color-fg-default:#000410;--color-fg-muted:#0000B8;--color-fg-subtle:#9499AB;--color-canvas-default:#FFFFFF;--color-canvas-subtle:#EEF1F8;--color-border-default:#000410;--color-border-muted:#0000E4;--color-neutral-muted:#EEF1F8;--color-accent-fg:#0000E4;--color-accent-emphasis:#0000E4;--color-attention-subtle:#0000B8;--color-danger-fg:red;}.light-code{display: block}.dark-code{display: none}]]></style>
         <g class="Y2xpZW50">
             <g class="shape">
-                <path d="M 80 657 H 12 V 656 C 12 644 19 633 31 628 C 25 624 21 617 21 609 C 21 596 32 586 46 586 C 60 586 71 596 71 609 C 71 617 67 623 61 628 C 73 633 80 644 80 656 V 657 H 80 Z"
-                      stroke="#4CCFEA" fill="#123E52" style="stroke-width:3;"/>
+                <path d="M 1005 81 H 940 V 80 C 940 68 947 58 958 53 C 952 48 948 42 948 34 C 948 22 959 12 972 12 C 985 12 996 22 996 34 C 996 41 992 48 986 52 C 997 57 1004 68 1004 79 V 80 H 1005 Z"
+                      stroke="#64D9F2" fill="#15556A" style="stroke-width:3;"/>
             </g>
-            <text x="46" y="682" fill="#F3F8FF" class="text-bold" style="text-anchor:middle;font-size:20px">Client
+            <text x="972.5" y="105" fill="#F1F6FF" class="text-bold" style="text-anchor:middle;font-size:19px">Client
             </text>
         </g>
         <g class="YXBp">
             <g class="shape">
-                <rect x="299" y="517" width="278" height="240" rx="8" stroke="#4CCFEA" fill="#123E52"
+                <rect x="819" y="269" width="307" height="107" rx="8" stroke="#64D9F2" fill="#15556A"
                       style="stroke-width:3;"/>
             </g>
-            <text x="438" y="634" fill="#F3F8FF" class="text-bold" style="text-anchor:middle;font-size:20px">
-                <tspan x="438" dy="0">FastAPI</tspan>
-                <tspan x="438" dy="23">REST · JWT · deduplication</tspan>
+            <text x="972.5" y="310.5" fill="#F1F6FF" class="text-bold" style="text-anchor:middle;font-size:19px">
+                <tspan x="972.5" dy="0">FastAPI · REST API</tspan>
+                <tspan x="972.5" dy="20.666667">JWT / upload / dedup</tspan>
+                <tspan x="972.5" dy="20.666667">Document + Analysis endpoints</tspan>
             </text>
         </g>
-        <g class="YnJva2Vy">
+        <g class="ZmlsZV9xdWV1ZQ==">
             <g class="shape">
-                <path d="M 980 478 H 1286 C 1310 478 1310 519 1310 524 C 1310 528 1310 569 1286 569 H 980 C 956 569 956 528 956 524 C 956 519 956 478 980 478 Z"
-                      stroke="#BD96FA" fill="#41305F" style="stroke-width:3;"/>
-                <path d="M 1286 478 C 1262 478 1262 519 1262 524 C 1262 528 1262 569 1286 569" stroke="#BD96FA"
-                      fill="#41305F" style="stroke-width:3;"/>
+                <path d="M 849 628 H 1096 C 1120 628 1120 659 1120 663 C 1120 666 1120 697 1096 697 H 849 C 825 697 825 666 825 663 C 825 659 825 628 849 628 Z"
+                      stroke="#C2A1FA" fill="#392854" style="stroke-width:3;"/>
+                <path d="M 1096 628 C 1072 628 1072 659 1072 663 C 1072 666 1072 697 1096 697" stroke="#C2A1FA"
+                      fill="#392854" style="stroke-width:3;"/>
             </g>
-            <text x="1121" y="520.5" fill="#F3F8FF" class="text-bold" style="text-anchor:middle;font-size:20px">
-                <tspan x="1121" dy="0">RabbitMQ</tspan>
-                <tspan x="1121" dy="23">Celery tasks · analysis events</tspan>
+            <text x="960.5" y="669.5" fill="#F1F6FF" class="text-bold" style="text-anchor:middle;font-size:19px">
+                RabbitMQ · Celery tasks
             </text>
         </g>
-        <g class="d29ya2Vycw==">
+        <g class="c2Nhbg==">
             <g class="shape">
-                <rect x="1683" y="414" width="295" height="240" rx="8" stroke="#7AA8FF" fill="#213C64"
+                <rect x="837" y="890" width="270" height="88" rx="8" stroke="#84B1FF" fill="#193A67"
                       style="stroke-width:3;"/>
             </g>
-            <text x="1830.5" y="531" fill="#F3F8FF" class="text-bold" style="text-anchor:middle;font-size:20px">
-                <tspan x="1830.5" dy="0">Celery workers</tspan>
-                <tspan x="1830.5" dy="23">Scan · S3 upload · extraction</tspan>
+            <text x="972" y="931.5" fill="#F1F6FF" class="text-bold" style="text-anchor:middle;font-size:19px">
+                <tspan x="972" dy="0">1 · Celery / Antivirus</tspan>
+                <tspan x="972" dy="21.5">ClamAV → clean or infected</tspan>
+            </text>
+        </g>
+        <g class="dXBsb2Fk">
+            <g class="shape">
+                <rect x="804" y="1137" width="337" height="88" rx="8" stroke="#84B1FF" fill="#193A67"
+                      style="stroke-width:3;"/>
+            </g>
+            <text x="972.5" y="1178.5" fill="#F1F6FF" class="text-bold" style="text-anchor:middle;font-size:19px">
+                <tspan x="972.5" dy="0">2 · Celery / S3 Upload</tspan>
+                <tspan x="972.5" dy="21.5">Binary → S3; file_key → PostgreSQL</tspan>
+            </text>
+        </g>
+        <g class="ZXh0cmFjdA==">
+            <g class="shape">
+                <rect x="686" y="1394" width="290" height="107" rx="8" stroke="#84B1FF" fill="#193A67"
+                      style="stroke-width:3;"/>
+            </g>
+            <text x="831" y="1435.5" fill="#F1F6FF" class="text-bold" style="text-anchor:middle;font-size:19px">
+                <tspan x="831" dy="0">3 · Celery / Extraction</tspan>
+                <tspan x="831" dy="20.666667">Temp / S3 fallback → raw text</tspan>
+                <tspan x="831" dy="20.666667">Document → extracted</tspan>
+            </text>
+        </g>
+        <g class="YW5hbHlzaXNfcXVldWU=">
+            <g class="shape">
+                <path d="M 285 1709 H 637 C 661 1709 661 1740 661 1744 C 661 1747 661 1778 637 1778 H 285 C 261 1778 261 1747 261 1744 C 261 1740 261 1709 285 1709 Z"
+                      stroke="#C2A1FA" fill="#392854" style="stroke-width:3;"/>
+                <path d="M 637 1709 C 613 1709 613 1740 613 1744 C 613 1747 613 1778 637 1778" stroke="#C2A1FA"
+                      fill="#392854" style="stroke-width:3;"/>
+            </g>
+            <text x="449" y="1750.5" fill="#F1F6FF" class="text-bold" style="text-anchor:middle;font-size:19px">RabbitMQ
+                · AnalysisRequestedEvent
             </text>
         </g>
         <g class="Y29uc3VtZXI=">
             <g class="shape">
-                <rect x="1746" y="238" width="211" height="120" rx="8" stroke="#BD96FA" fill="#41305F"
+                <rect x="289" y="1995" width="344" height="88" rx="8" stroke="#C2A1FA" fill="#392854"
                       style="stroke-width:3;"/>
             </g>
-            <text x="1851.5" y="295" fill="#F3F8FF" class="text-bold" style="text-anchor:middle;font-size:20px">
-                <tspan x="1851.5" dy="0">FastStream</tspan>
-                <tspan x="1851.5" dy="23">Analysis consumer</tspan>
+            <text x="461" y="2036.5" fill="#F1F6FF" class="text-bold" style="text-anchor:middle;font-size:19px">
+                <tspan x="461" dy="0">FastStream · Analysis Consumer</tspan>
+                <tspan x="461" dy="21.5">Read text / prompt; update Analysis</tspan>
             </text>
         </g>
         <g class="bGxt">
             <g class="shape">
-                <rect x="2404" y="343" width="512" height="91" rx="8" stroke="#F29AC3" fill="#59314B"
+                <rect x="311" y="2262" width="301" height="107" rx="8" stroke="#F1A1C9" fill="#563049"
                       style="stroke-width:3;"/>
             </g>
-            <text x="2660" y="385.5" fill="#F3F8FF" class="text-bold" style="text-anchor:middle;font-size:20px">
-                <tspan x="2660" dy="0">LLM providers</tspan>
-                <tspan x="2660" dy="23">GPT · Gemini · DeepSeek · Kimi · Qwen · Grok · Mistral</tspan>
-            </text>
-        </g>
-        <g class="dGVtcA==">
-            <g class="shape">
-                <path d="M 2419 762 H 2685 C 2681 762 2670 787 2670 808 C 2670 828 2681 853 2685 853 H 2419 C 2415 853 2404 828 2404 808 C 2404 787 2415 762 2419 762 Z"
-                      stroke="#B0C3DE" fill="#243249" style="stroke-width:3;"/>
-            </g>
-            <text x="2544.5" y="804.5" fill="#F3F8FF" class="text-bold" style="text-anchor:middle;font-size:20px">
-                <tspan x="2544.5" dy="0">Shared temp volume</tspan>
-                <tspan x="2544.5" dy="23">API + Celery · single host</tspan>
-            </text>
-        </g>
-        <g class="Y2xhbQ==">
-            <g class="shape">
-                <rect x="2404" y="454" width="170" height="91" rx="8" stroke="#F5B85B" fill="#564026"
-                      style="stroke-width:3;"/>
-            </g>
-            <text x="2489" y="496.5" fill="#F3F8FF" class="text-bold" style="text-anchor:middle;font-size:20px">
-                <tspan x="2489" dy="0">ClamAV</tspan>
-                <tspan x="2489" dy="23">Antivirus scan</tspan>
+            <text x="461.5" y="2303.5" fill="#F1F6FF" class="text-bold" style="text-anchor:middle;font-size:19px">
+                <tspan x="461.5" dy="0">LLM Factory / Providers</tspan>
+                <tspan x="461.5" dy="20.666667">GPT · Gemini · DeepSeek · Kimi</tspan>
+                <tspan x="461.5" dy="20.666667">Qwen · Grok · Mistral</tspan>
             </text>
         </g>
         <g class="cGc=">
             <g class="shape">
-                <path d="M 2404 897 C 2404 873 2513 873 2526 873 C 2538 873 2647 873 2647 897 V 992 C 2647 1016 2538 1016 2526 1016 C 2513 1016 2404 1016 2404 992 V 897 Z"
-                      stroke="#55DCB0" fill="#163E35" style="stroke-width:3;"/>
-                <path d="M 2404 897 C 2404 921 2513 921 2526 921 C 2538 921 2647 921 2647 897" stroke="#55DCB0"
-                      fill="#163E35" style="stroke-width:3;"/>
+                <path d="M 1237 619 C 1237 595 1376 595 1391 595 C 1406 595 1545 595 1545 619 V 707 C 1545 731 1406 731 1391 731 C 1376 731 1237 731 1237 707 V 619 Z"
+                      stroke="#66DAB6" fill="#163F35" style="stroke-width:3;"/>
+                <path d="M 1237 619 C 1237 643 1376 643 1391 643 C 1406 643 1545 643 1545 619" stroke="#66DAB6"
+                      fill="#163F35" style="stroke-width:3;"/>
             </g>
-            <text x="2525.5" y="953.5" fill="#F3F8FF" class="text-bold" style="text-anchor:middle;font-size:20px">
-                <tspan x="2525.5" dy="0">PostgreSQL</tspan>
-                <tspan x="2525.5" dy="23">Document → extracted</tspan>
+            <text x="1391" y="672.5" fill="#F1F6FF" class="text-bold" style="text-anchor:middle;font-size:17px">
+                <tspan x="1391" dy="0">PostgreSQL</tspan>
+                <tspan x="1391" dy="19.5">Users / Document / file_key / status</tspan>
             </text>
         </g>
         <g class="bW9uZ28=">
             <g class="shape">
-                <path d="M 2404 204 C 2404 180 2580 180 2599 180 C 2619 180 2794 180 2794 204 V 299 C 2794 323 2619 323 2599 323 C 2580 323 2404 323 2404 299 V 204 Z"
-                      stroke="#55DCB0" fill="#163E35" style="stroke-width:3;"/>
-                <path d="M 2404 204 C 2404 228 2580 228 2599 228 C 2619 228 2794 228 2794 204" stroke="#55DCB0"
-                      fill="#163E35" style="stroke-width:3;"/>
+                <path d="M 632 2286 C 632 2262 785 2262 802 2262 C 819 2262 972 2262 972 2286 V 2374 C 972 2398 819 2398 802 2398 C 785 2398 632 2398 632 2374 V 2286 Z"
+                      stroke="#66DAB6" fill="#163F35" style="stroke-width:3;"/>
+                <path d="M 632 2286 C 632 2310 785 2310 802 2310 C 819 2310 972 2310 972 2286" stroke="#66DAB6"
+                      fill="#163F35" style="stroke-width:3;"/>
             </g>
-            <text x="2599" y="260.5" fill="#F3F8FF" class="text-bold" style="text-anchor:middle;font-size:20px">
-                <tspan x="2599" dy="0">MongoDB</tspan>
-                <tspan x="2599" dy="23">Raw text · prompts · DocumentAnalysis</tspan>
-            </text>
-        </g>
-        <g class="czM=">
-            <g class="shape">
-                <path d="M 2404 623 C 2404 599 2503 599 2514 599 C 2524 599 2623 599 2623 623 V 718 C 2623 742 2524 742 2514 742 C 2503 742 2404 742 2404 718 V 623 Z"
-                      stroke="#55DCB0" fill="#163E35" style="stroke-width:3;"/>
-                <path d="M 2404 623 C 2404 647 2503 647 2514 647 C 2524 647 2623 647 2623 623" stroke="#55DCB0"
-                      fill="#163E35" style="stroke-width:3;"/>
-            </g>
-            <text x="2513.5" y="679.5" fill="#F3F8FF" class="text-bold" style="text-anchor:middle;font-size:20px">
-                <tspan x="2513.5" dy="0">S3 / MinIO</tspan>
-                <tspan x="2513.5" dy="23">Durable file storage</tspan>
+            <text x="802" y="2339.5" fill="#F1F6FF" class="text-bold" style="text-anchor:middle;font-size:17px">
+                <tspan x="802" dy="0">MongoDB</tspan>
+                <tspan x="802" dy="19.5">Raw text / prompts / DocumentAnalysis</tspan>
             </text>
         </g>
         <g class="cmVkaXM=">
             <g class="shape">
-                <path d="M 2404 36 C 2404 12 2570 12 2588 12 C 2606 12 2772 12 2772 36 V 131 C 2772 155 2606 155 2588 155 C 2570 155 2404 155 2404 131 V 36 Z"
-                      stroke="#F5B85B" fill="#564026" style="stroke-width:3;"/>
-                <path d="M 2404 36 C 2404 60 2570 60 2588 60 C 2606 60 2772 60 2772 36" stroke="#F5B85B" fill="#564026"
-                      style="stroke-width:3;"/>
+                <path d="M 12 2286 C 12 2262 138 2262 152 2262 C 165 2262 291 2262 291 2286 V 2394 C 291 2418 165 2418 152 2418 C 138 2418 12 2418 12 2394 V 2286 Z"
+                      stroke="#FB8686" fill="#512C32" style="stroke-width:3;"/>
+                <path d="M 12 2286 C 12 2310 138 2310 152 2310 C 165 2310 291 2310 291 2286" stroke="#FB8686"
+                      fill="#512C32" style="stroke-width:3;"/>
             </g>
-            <text x="2588" y="92.5" fill="#F3F8FF" class="text-bold" style="text-anchor:middle;font-size:20px">
-                <tspan x="2588" dy="0">Redis</tspan>
-                <tspan x="2588" dy="23">Cache · token blacklist · rate limiting</tspan>
+            <text x="151.5" y="2340.5" fill="#F1F6FF" class="text-bold" style="text-anchor:middle;font-size:18px">
+                <tspan x="151.5" dy="0">Redis</tspan>
+                <tspan x="151.5" dy="19.666667">Prompt / user caches</tspan>
+                <tspan x="151.5" dy="19.666667">Token blacklist / rate limiting</tspan>
+            </text>
+        </g>
+        <g class="czM=">
+            <g class="shape">
+                <path d="M 1007 1704 C 1007 1680 1083 1680 1092 1680 C 1100 1680 1176 1680 1176 1704 V 1812 C 1176 1836 1100 1836 1092 1836 C 1083 1836 1007 1836 1007 1812 V 1704 Z"
+                      stroke="#F9C66E" fill="#55401F" style="stroke-width:3;"/>
+                <path d="M 1007 1704 C 1007 1728 1083 1728 1092 1728 C 1100 1728 1176 1728 1176 1704" stroke="#F9C66E"
+                      fill="#55401F" style="stroke-width:3;"/>
+            </g>
+            <text x="1091.5" y="1758.5" fill="#F1F6FF" class="text-bold" style="text-anchor:middle;font-size:18px">
+                <tspan x="1091.5" dy="0">S3 / MinIO</tspan>
+                <tspan x="1091.5" dy="19.666667">Binary files</tspan>
+                <tspan x="1091.5" dy="19.666667">Presigned URLs</tspan>
             </text>
         </g>
         <g class="KGNsaWVudCAtJmd0OyBhcGkpWzBd">
-            <marker id="mk-d2-2521546483-804077883" markerWidth="13" markerHeight="16" refX="8.5" refY="8"
+            <marker id="mk-d2-1054253920-1131409394" markerWidth="13" markerHeight="16" refX="8.5" refY="8"
                     viewBox="0 0 13 16" orient="auto" markerUnits="userSpaceOnUse">
-                <polygon points="0,0 13,8 0,16" fill="#4CCFEA" class="connection" stroke-width="3"/>
+                <polygon points="0,0 13,8 0,16" fill="#64D9F2" class="connection" stroke-width="3"/>
             </marker>
-            <path d="M 76 637 L 293 637" stroke="#4CCFEA" fill="none" class="connection" style="stroke-width:3;"
-                  marker-end="url(#mk-d2-2521546483-804077883)" mask="url(#d2-2521546483)"/>
-            <text x="186.5" y="643" fill="#D6E5F5" class="text-italic" style="text-anchor:middle;font-size:15px">HTTPS /
-                JWT
+            <path d="M 972.666016 113 L 972.666016 263" stroke="#64D9F2" fill="none" class="connection"
+                  style="stroke-width:3;" marker-end="url(#mk-d2-1054253920-1131409394)" mask="url(#d2-1054253920)"/>
+            <text x="972.5" y="195" fill="#F1F6FF" class="text-italic" style="text-anchor:middle;font-size:15px">REST
             </text>
         </g>
-        <g class="KGFwaSAtJmd0OyBicm9rZXIpWzBd">
-            <marker id="mk-d2-2521546483-1968251865" markerWidth="13" markerHeight="16" refX="8.5" refY="8"
+        <g class="KGFwaSAtJmd0OyBmaWxlX3F1ZXVlKVswXQ==">
+            <marker id="mk-d2-1054253920-3517903707" markerWidth="13" markerHeight="16" refX="8.5" refY="8"
                     viewBox="0 0 13 16" orient="auto" markerUnits="userSpaceOnUse">
-                <polygon points="0,0 13,8 0,16" fill="#BD96FA" class="connection" stroke-width="3"/>
+                <polygon points="0,0 13,8 0,16" fill="#C2A1FA" class="connection" stroke-width="3"/>
             </marker>
-            <path d="M 580 619.856995 L 707 619.856995 S 717 619.856995 717 609.856995 L 717 533.541016 S 717 523.541016 726.999982 523.56022 L 950.000011 523.988477"
-                  stroke="#BD96FA" fill="none" class="connection" style="stroke-width:3;"
-                  marker-end="url(#mk-d2-2521546483-1968251865)" mask="url(#d2-2521546483)"/>
-            <text x="718.5" y="529" fill="#D6E5F5" class="text-italic" style="text-anchor:middle;font-size:15px">Enqueue
-                task / event
+            <path d="M 972.669968 378.499997 L 972.992095 623.000005" stroke="#C2A1FA" fill="none" class="connection"
+                  style="stroke-width:3;" marker-end="url(#mk-d2-1054253920-3517903707)" mask="url(#d2-1054253920)"/>
+            <text x="973" y="508" fill="#F1F6FF" class="text-italic" style="text-anchor:middle;font-size:15px">FULL /
+                EXTRACTION
             </text>
         </g>
-        <g class="KGJyb2tlciAtJmd0OyB3b3JrZXJzKVswXQ==">
-            <marker id="mk-d2-2521546483-1476243146" markerWidth="13" markerHeight="16" refX="8.5" refY="8"
+        <g class="KGZpbGVfcXVldWUgLSZndDsgc2NhbilbMF0=">
+            <marker id="mk-d2-1054253920-2807767310" markerWidth="13" markerHeight="16" refX="8.5" refY="8"
                     viewBox="0 0 13 16" orient="auto" markerUnits="userSpaceOnUse">
-                <polygon points="0,0 13,8 0,16" fill="#7AA8FF" class="connection" stroke-width="3"/>
+                <polygon points="0,0 13,8 0,16" fill="#84B1FF" class="connection" stroke-width="3"/>
             </marker>
-            <path d="M 1312.999961 523.984701 L 1398.187524 523.550259 C 1401.812476 523.531772 1398.1875 519.916016 1401.8125 519.916016 L 1677 519.916016"
-                  stroke="#7AA8FF" fill="none" class="connection" style="stroke-width:3;"
-                  marker-end="url(#mk-d2-2521546483-1476243146)" mask="url(#d2-2521546483)"/>
-            <text x="1495" y="525" fill="#D6E5F5" class="text-italic" style="text-anchor:middle;font-size:15px">Celery
-                tasks
+            <path d="M 973 701 L 973 884" stroke="#84B1FF" fill="none" class="connection" style="stroke-width:3;"
+                  marker-end="url(#mk-d2-1054253920-2807767310)" mask="url(#d2-1054253920)"/>
+            <text x="973.5" y="800" fill="#F1F6FF" class="text-italic" style="text-anchor:middle;font-size:15px">new
+                content; AV optional
             </text>
         </g>
-        <g class="KHdvcmtlcnMgLSZndDsgYnJva2VyKVswXQ==">
-            <path d="M 1680.000001 546.288694 L 1312.999998 546.004644" stroke="#BD96FA" fill="none" class="connection"
-                  style="stroke-width:3;" marker-end="url(#mk-d2-2521546483-1968251865)" mask="url(#d2-2521546483)"/>
-            <text x="1495.5" y="552" fill="#D6E5F5" class="text-italic" style="text-anchor:middle;font-size:15px">Next
-                tasks / analysis event
+        <g class="KHNjYW4gLSZndDsgdXBsb2FkKVswXQ==">
+            <path d="M 972.666016 981 L 972.666016 1131" stroke="#84B1FF" fill="none" class="connection"
+                  style="stroke-width:3;" marker-end="url(#mk-d2-1054253920-2807767310)" mask="url(#d2-1054253920)"/>
+            <text x="972.5" y="1063" fill="#F1F6FF" class="text-italic" style="text-anchor:middle;font-size:15px">clean;
+                via RabbitMQ
             </text>
         </g>
-        <g class="KGJyb2tlciAtJmd0OyBjb25zdW1lcilbMF0=">
-            <path d="M 1309.999965 500.985418 L 1340.000118 500.839593 S 1350 500.790985 1350 490.790985 L 1350 308.125 S 1350 298.125 1360 298.125 L 1740 298.125"
-                  stroke="#BD96FA" fill="none" class="connection" style="stroke-width:3;"
-                  marker-end="url(#mk-d2-2521546483-1968251865)" mask="url(#d2-2521546483)"/>
-            <text x="1425.5" y="304" fill="#D6E5F5" class="text-italic" style="text-anchor:middle;font-size:15px">
-                AnalysisRequestedEvent
+        <g class="KHVwbG9hZCAtJmd0OyBleHRyYWN0KVswXQ==">
+            <path d="M 831.833008 1228 L 831.833008 1388" stroke="#84B1FF" fill="none" class="connection"
+                  style="stroke-width:3;" marker-end="url(#mk-d2-1054253920-2807767310)" mask="url(#d2-1054253920)"/>
+            <text x="831.5" y="1315" fill="#F1F6FF" class="text-italic" style="text-anchor:middle;font-size:15px">
+                uploaded; via RabbitMQ
+            </text>
+        </g>
+        <g class="KGV4dHJhY3QgLSZndDsgYW5hbHlzaXNfcXVldWUpWzBd">
+            <path d="M 759.333008 1504 L 759.333008 1531 S 759.333008 1541 749.333008 1541 L 539.5 1541 S 529.5 1541 529.529762 1550.999956 L 529.982143 1703.000027"
+                  stroke="#C2A1FA" fill="none" class="connection" style="stroke-width:3;"
+                  marker-end="url(#mk-d2-1054253920-3517903707)" mask="url(#d2-1054253920)"/>
+            <text x="580" y="1547" fill="#F1F6FF" class="text-italic" style="text-anchor:middle;font-size:15px">create
+                queued Analysis + event
+            </text>
+        </g>
+        <g class="KGFuYWx5c2lzX3F1ZXVlIC0mZ3Q7IGNvbnN1bWVyKVswXQ==">
+            <path d="M 461.013825 1780.999968 L 461.972351 1989.000064" stroke="#C2A1FA" fill="none" class="connection"
+                  style="stroke-width:3;" marker-end="url(#mk-d2-1054253920-3517903707)" mask="url(#d2-1054253920)"/>
+            <text x="462" y="1892" fill="#F1F6FF" class="text-italic" style="text-anchor:middle;font-size:15px">consume
+                event
             </text>
         </g>
         <g class="KGNvbnN1bWVyIC0mZ3Q7IGxsbSlbMF0=">
-            <marker id="mk-d2-2521546483-4219156053" markerWidth="13" markerHeight="16" refX="8.5" refY="8"
+            <marker id="mk-d2-1054253920-1779716280" markerWidth="13" markerHeight="16" refX="8.5" refY="8"
                     viewBox="0 0 13 16" orient="auto" markerUnits="userSpaceOnUse">
-                <polygon points="0,0 13,8 0,16" fill="#F29AC3" class="connection" stroke-width="3"/>
+                <polygon points="0,0 13,8 0,16" fill="#F1A1C9" class="connection" stroke-width="3"/>
             </marker>
-            <path d="M 1960 328.125 L 2008 328.125 S 2018 328.125 2018 338.125 L 2018 379.415985 S 2018 389.415985 2028 389.415985 L 2398 389.415985"
-                  stroke="#F29AC3" fill="none" class="connection" style="stroke-width:3;"
-                  marker-end="url(#mk-d2-2521546483-4219156053)" mask="url(#d2-2521546483)"/>
-            <text x="2150" y="395" fill="#D6E5F5" class="text-italic" style="text-anchor:middle;font-size:15px">Text +
+            <path d="M 461.5 2086 L 461.5 2256" stroke="#F1A1C9" fill="none" class="connection" style="stroke-width:3;"
+                  marker-end="url(#mk-d2-1054253920-1779716280)" mask="url(#d2-1054253920)"/>
+            <text x="462" y="2178" fill="#F1F6FF" class="text-italic" style="text-anchor:middle;font-size:15px">text +
                 prompt
             </text>
         </g>
-        <g class="KGFwaSAtJmd0OyB0ZW1wKVswXQ==">
-            <marker id="mk-d2-2521546483-743962676" markerWidth="13" markerHeight="16" refX="8.5" refY="8"
-                    viewBox="0 0 13 16" orient="auto" markerUnits="userSpaceOnUse">
-                <polygon points="0,0 13,8 0,16" fill="#B0C3DE" class="connection" stroke-width="3"/>
-            </marker>
-            <path d="M 580 688.427979 L 657 688.427979 S 667 688.427979 667 698.427979 L 667 823.083008 S 667 833.083008 677 833.083008 L 2359.083496 833.083008 C 2368.916504 833.083008 2359.083583 823.279264 2368.916417 823.220736 L 2400.000106 823.035714"
-                  stroke="#B0C3DE" fill="none" class="connection" style="stroke-width:3;"
-                  marker-end="url(#mk-d2-2521546483-743962676)" mask="url(#d2-2521546483)"/>
-            <text x="1424" y="839" fill="#D6E5F5" class="text-italic" style="text-anchor:middle;font-size:15px">Save
-                upload
-            </text>
-        </g>
-        <g class="KHdvcmtlcnMgLSZndDsgdGVtcClbMF0=">
-            <path d="M 1981 574.916016 L 2058 574.916016 S 2068 574.916016 2068 584.916016 L 2068 773.083008 S 2068 783.083008 2078 783.080566 L 2402 783.001465"
-                  stroke="#B0C3DE" fill="none" class="connection" style="stroke-width:3;"
-                  marker-end="url(#mk-d2-2521546483-743962676)" mask="url(#d2-2521546483)"/>
-            <text x="2088.5" y="789" fill="#D6E5F5" class="text-italic" style="text-anchor:middle;font-size:15px">Read /
-                cleanup
-            </text>
-        </g>
-        <g class="KHdvcmtlcnMgLSZndDsgY2xhbSlbMF0=">
-            <marker id="mk-d2-2521546483-2515327449" markerWidth="13" markerHeight="16" refX="8.5" refY="8"
-                    viewBox="0 0 13 16" orient="auto" markerUnits="userSpaceOnUse">
-                <polygon points="0,0 13,8 0,16" fill="#F5B85B" class="connection" stroke-width="3"/>
-            </marker>
-            <path d="M 1981 500.415985 L 2398 500.415985" stroke="#F5B85B" fill="none" class="connection"
-                  style="stroke-width:3;" marker-end="url(#mk-d2-2521546483-2515327449)" mask="url(#d2-2521546483)"/>
-            <text x="2191.5" y="506" fill="#D6E5F5" class="text-italic" style="text-anchor:middle;font-size:15px">Scan
-            </text>
-        </g>
-        <g class="KHdvcmtlcnMgLSZndDsgczMpWzBd">
-            <marker id="mk-d2-2521546483-1159972002" markerWidth="13" markerHeight="16" refX="8.5" refY="8"
-                    viewBox="0 0 13 16" orient="auto" markerUnits="userSpaceOnUse">
-                <polygon points="0,0 13,8 0,16" fill="#55DCB0" class="connection" stroke-width="3"/>
-            </marker>
-            <path d="M 1981 534.916016 L 2354 534.916016 S 2364 534.916016 2364 544.916016 L 2364 637.249023 S 2364 647.249023 2373.999806 647.186769 L 2398.000116 647.037353"
-                  stroke="#55DCB0" fill="none" class="connection" style="stroke-width:3;"
-                  marker-end="url(#mk-d2-2521546483-1159972002)" mask="url(#d2-2521546483)"/>
-            <text x="2247" y="540" fill="#D6E5F5" class="text-italic" style="text-anchor:middle;font-size:15px">Upload /
-                restore
-            </text>
-        </g>
-        <g class="KGFwaSAtJmd0OyBzMylbMF0=">
-            <path d="M 580 654.142029 L 707 654.142029 S 717 654.142029 717 664.142029 L 717 686.083008 S 717 696.083008 727 696.082516 L 2398 696.000295"
-                  stroke="#55DCB0" fill="none" class="connection" style="stroke-width:3;"
-                  marker-end="url(#mk-d2-2521546483-1159972002)" mask="url(#d2-2521546483)"/>
-            <text x="1469.5" y="702" fill="#D6E5F5" class="text-italic" style="text-anchor:middle;font-size:15px">
-                Presigned URL
-            </text>
-        </g>
         <g class="KGFwaSAtJmd0OyBwZylbMF0=">
-            <path d="M 580 722.713989 L 607 722.713989 S 617 722.713989 617 732.713989 L 617 960.083008 S 617 970.083008 627 970.082543 L 2398 970.000279"
-                  stroke="#55DCB0" fill="none" class="connection" style="stroke-width:3;"
-                  marker-end="url(#mk-d2-2521546483-1159972002)" mask="url(#d2-2521546483)"/>
-            <text x="1367" y="976" fill="#D6E5F5" class="text-italic" style="text-anchor:middle;font-size:15px">
-                Metadata
+            <marker id="mk-d2-1054253920-2597757676" markerWidth="13" markerHeight="16" refX="8.5" refY="8"
+                    viewBox="0 0 13 16" orient="auto" markerUnits="userSpaceOnUse">
+                <polygon points="0,0 13,8 0,16" fill="#66DAB6" class="connection" stroke-width="3"/>
+            </marker>
+            <path d="M 1075 379 L 1075 406 S 1075 416 1085 416 L 1381.166016 416 S 1391.166016 416 1391.156741 425.999996 L 1391.005565 589.000003"
+                  stroke="#66DAB6" fill="none" class="connection" style="stroke-width:3;"
+                  marker-end="url(#mk-d2-1054253920-2597757676)" mask="url(#d2-1054253920)"/>
+            <text x="1303" y="422" fill="#F1F6FF" class="text-italic" style="text-anchor:middle;font-size:15px">
+                metadata
             </text>
         </g>
-        <g class="KHdvcmtlcnMgLSZndDsgcGcpWzBd">
-            <path d="M 1981 614.916016 L 2008 614.916016 S 2018 614.916016 2018 624.916016 L 2018 911.25 S 2018 921.25 2027.999998 921.243523 L 2398.000001 921.003886"
-                  stroke="#55DCB0" fill="none" class="connection" style="stroke-width:3;"
-                  marker-end="url(#mk-d2-2521546483-1159972002)" mask="url(#d2-2521546483)"/>
-            <text x="2038" y="927" fill="#D6E5F5" class="text-italic" style="text-anchor:middle;font-size:15px">Document
-                status
-            </text>
-        </g>
-        <g class="KGFwaSAtJmd0OyBtb25nbylbMF0=">
-            <path d="M 580 585.570984 L 657 585.570984 S 667 585.570984 667 575.570984 L 667 184.498993 S 667 174.498993 677 174.498993 L 2354 174.498993 S 2364 174.498993 2364 184.498993 L 2364 206.666 S 2364 216.666 2373.999651 216.749497 L 2398.000209 216.949902"
-                  stroke="#55DCB0" fill="none" class="connection" style="stroke-width:3;"
-                  marker-end="url(#mk-d2-2521546483-1159972002)" mask="url(#d2-2521546483)"/>
-            <text x="1306" y="180" fill="#D6E5F5" class="text-italic" style="text-anchor:middle;font-size:15px">Analysis
-                API
-            </text>
-        </g>
-        <g class="KHdvcmtlcnMgLSZndDsgbW9uZ28pWzBd">
-            <path d="M 1981 454.915985 L 2354 454.915985 S 2364 454.915985 2364 444.915985 L 2364 298.165985 S 2364 288.165985 2373.999914 288.124489 L 2398.000052 288.024898"
-                  stroke="#55DCB0" fill="none" class="connection" style="stroke-width:3;"
-                  marker-end="url(#mk-d2-2521546483-1159972002)" mask="url(#d2-2521546483)"/>
-            <text x="2274" y="460" fill="#D6E5F5" class="text-italic" style="text-anchor:middle;font-size:15px">Raw text
-                + queued Analysis
+        <g class="KGV4dHJhY3QgLSZndDsgbW9uZ28pWzBd">
+            <path d="M 856.501969 1503.999999 L 856.996063 2257.000001" stroke="#66DAB6" fill="none" class="connection"
+                  style="stroke-width:3;" marker-end="url(#mk-d2-1054253920-2597757676)" mask="url(#d2-1054253920)"/>
+            <text x="857" y="1888" fill="#F1F6FF" class="text-italic" style="text-anchor:middle;font-size:15px">save raw
+                text
             </text>
         </g>
         <g class="KGNvbnN1bWVyIC0mZ3Q7IG1vbmdvKVswXQ==">
-            <path d="M 1960 298.125 L 2058 298.125 S 2068 298.125 2068 288.125 L 2068 262.416 S 2068 252.416 2077.999992 252.403619 L 2398.000005 252.007429"
-                  stroke="#55DCB0" fill="none" class="connection" style="stroke-width:3;"
-                  marker-end="url(#mk-d2-2521546483-1159972002)" mask="url(#d2-2521546483)"/>
-            <text x="2157.5" y="258" fill="#D6E5F5" class="text-italic" style="text-anchor:middle;font-size:15px">
-                Analysis status + result
+            <path d="M 547.5 2086 L 547.5 2113 S 547.5 2123 557.5 2123 L 735.333008 2123 S 745.333008 2123 745.309222 2132.999972 L 745.014272 2257.000017"
+                  stroke="#66DAB6" fill="none" class="connection" style="stroke-width:3;"
+                  marker-end="url(#mk-d2-1054253920-2597757676)" mask="url(#d2-1054253920)"/>
+            <text x="696" y="2129" fill="#F1F6FF" class="text-italic" style="text-anchor:middle;font-size:15px">analysis
+                status / result
+            </text>
+        </g>
+        <g class="KGFwaSAtJmd0OyBhbmFseXNpc19xdWV1ZSlbMF0=">
+            <path d="M 921.5 379 L 921.5 456 S 921.5 466 911.5 466 L 403.5 466 S 393.5 466 393.504023 475.999999 L 393.997586 1703"
+                  stroke="#C2A1FA" fill="none" class="connection" style="stroke-width:3;"
+                  marker-end="url(#mk-d2-1054253920-3517903707)" mask="url(#d2-1054253920)"/>
+            <text x="394" y="784" fill="#F1F6FF" class="text-italic" style="text-anchor:middle;font-size:15px">
+                ANALYSIS_ONLY · bypass Celery
             </text>
         </g>
         <g class="KGFwaSAtJmd0OyByZWRpcylbMF0=">
-            <path d="M 580 551.284973 L 607 551.284973 S 617 551.284973 617 541.284973 L 617 68 S 617 58 627 58 L 2398 58"
-                  stroke="#F5B85B" fill="none" class="connection" style="stroke-width:3;"
-                  marker-end="url(#mk-d2-2521546483-2515327449)" mask="url(#d2-2521546483)"/>
-            <text x="1244" y="64" fill="#D6E5F5" class="text-italic" style="text-anchor:middle;font-size:15px">Tokens +
-                limits
+            <marker id="mk-d2-1054253920-3445814093" markerWidth="13" markerHeight="16" refX="8.5" refY="8"
+                    viewBox="0 0 13 16" orient="auto" markerUnits="userSpaceOnUse">
+                <polygon points="0,0 13,8 0,16" fill="#FB8686" class="connection" stroke-width="3"/>
+            </marker>
+            <path d="M 870.333008 379 L 870.333008 406 S 870.333008 416 860.333008 416 L 111.75 416 S 101.75 416 101.751354 426 L 101.999188 2257"
+                  stroke="#FB8686" fill="none" class="connection" style="stroke-width:3;"
+                  marker-end="url(#mk-d2-1054253920-3445814093)" mask="url(#d2-1054253920)"/>
+            <text x="101.5" y="940" fill="#F1F6FF" class="text-italic" style="text-anchor:middle;font-size:14px">cache /
+                blacklist / limits
             </text>
         </g>
         <g class="KGNvbnN1bWVyIC0mZ3Q7IHJlZGlzKVswXQ==">
-            <path d="M 1960 268.125 L 2008 268.125 S 2018 268.125 2018 258.125 L 2018 117.333 S 2018 107.333 2027.999996 107.324373 L 2398.000002 107.005176"
-                  stroke="#F5B85B" fill="none" class="connection" style="stroke-width:3;"
-                  marker-end="url(#mk-d2-2521546483-2515327449)" mask="url(#d2-2521546483)"/>
-            <text x="2100.5" y="113" fill="#D6E5F5" class="text-italic" style="text-anchor:middle;font-size:15px">Prompt
-                cache
+            <path d="M 375.5 2086 L 375.5 2113 S 375.5 2123 365.5 2123 L 211.25 2123 S 201.25 2123 201.232143 2132.999984 L 201.010714 2257.00001"
+                  stroke="#FB8686" fill="none" class="connection" style="stroke-width:3;"
+                  marker-end="url(#mk-d2-1054253920-3445814093)" mask="url(#d2-1054253920)"/>
+            <text x="238.5" y="2128" fill="#F1F6FF" class="text-italic" style="text-anchor:middle;font-size:14px">active
+                prompt cache
             </text>
         </g>
-        <mask id="d2-2521546483" maskUnits="userSpaceOnUse" x="-50" y="-50" width="3028" height="1128">
-            <rect x="-50" y="-50" width="3028" height="1128" fill="white"></rect>
-            <rect x="145" y="628" width="83" height="19" fill="black"></rect>
-            <rect x="652" y="514" width="133" height="19" fill="black"></rect>
-            <rect x="1456" y="510" width="78" height="19" fill="black"></rect>
-            <rect x="1412" y="537" width="167" height="19" fill="black"></rect>
-            <rect x="1348" y="289" width="155" height="19" fill="black"></rect>
-            <rect x="2105" y="380" width="90" height="19" fill="black"></rect>
-            <rect x="1383" y="824" width="82" height="19" fill="black"></rect>
-            <rect x="2040" y="774" width="97" height="19" fill="black"></rect>
-            <rect x="2174" y="491" width="35" height="19" fill="black"></rect>
-            <rect x="2196" y="525" width="102" height="19" fill="black"></rect>
-            <rect x="1423" y="687" width="93" height="19" fill="black"></rect>
-            <rect x="1335" y="961" width="64" height="19" fill="black"></rect>
-            <rect x="1984" y="912" width="108" height="19" fill="black"></rect>
-            <rect x="1267" y="165" width="78" height="19" fill="black"></rect>
-            <rect x="2189" y="445" width="170" height="19" fill="black"></rect>
-            <rect x="2085" y="243" width="145" height="19" fill="black"></rect>
-            <rect x="1197" y="49" width="94" height="19" fill="black"></rect>
-            <rect x="2056" y="98" width="89" height="19" fill="black"></rect>
+        <g class="KGFwaSAtJmd0OyBzMylbMF0=">
+            <marker id="mk-d2-1054253920-67953970" markerWidth="13" markerHeight="16" refX="8.5" refY="8"
+                    viewBox="0 0 13 16" orient="auto" markerUnits="userSpaceOnUse">
+                <polygon points="0,0 13,8 0,16" fill="#F9C66E" class="connection" stroke-width="3"/>
+            </marker>
+            <path d="M 1023.833008 379 L 1023.833008 456 S 1023.833008 466 1033.833008 466 L 1186.166016 466 S 1196.166016 466 1196.166016 476 L 1196.166016 1630 S 1196.166016 1640 1186.166016 1640 L 1143.958008 1640 S 1133.958008 1640 1133.967773 1649.999995 L 1133.994141 1677.000003"
+                  stroke="#F9C66E" fill="none" class="connection" style="stroke-width:3;"
+                  marker-end="url(#mk-d2-1054253920-67953970)" mask="url(#d2-1054253920)"/>
+            <text x="1196" y="979" fill="#F1F6FF" class="text-italic" style="text-anchor:middle;font-size:14px">
+                presigned URL
+            </text>
+        </g>
+        <g class="KHVwbG9hZCAtJmd0OyBzMylbMF0=">
+            <path d="M 1084.503297 1227.999998 L 1084.993407 1674.000004" stroke="#F9C66E" fill="none"
+                  class="connection" style="stroke-width:3;" marker-end="url(#mk-d2-1054253920-67953970)"
+                  mask="url(#d2-1054253920)"/>
+            <text x="1085" y="1458" fill="#F1F6FF" class="text-italic" style="text-anchor:middle;font-size:14px">upload
+                file
+            </text>
+        </g>
+        <g class="KGV4dHJhY3QgLSZndDsgczMpWzBd">
+            <path d="M 904.333008 1504 L 904.333008 1630 S 904.333008 1640 914.333008 1640 L 1039.458008 1640 S 1049.458008 1640 1049.3515 1649.999433 L 1049.063904 1677.00034"
+                  stroke="#F9C66E" fill="none" class="connection" style="stroke-width:3;"
+                  marker-end="url(#mk-d2-1054253920-67953970)" mask="url(#d2-1054253920)"/>
+            <text x="928.5" y="1645" fill="#F1F6FF" class="text-italic" style="text-anchor:middle;font-size:14px">
+                fallback if temp is missing
+            </text>
+        </g>
+        <mask id="d2-1054253920" maskUnits="userSpaceOnUse" x="-18" y="-18" width="1593" height="2466">
+            <rect x="-18" y="-18" width="1593" height="2466" fill="white"></rect>
+            <rect x="954" y="180" width="37" height="19" fill="black"></rect>
+            <rect x="911" y="493" width="124" height="19" fill="black"></rect>
+            <rect x="895" y="785" width="157" height="19" fill="black"></rect>
+            <rect x="909" y="1048" width="127" height="19" fill="black"></rect>
+            <rect x="755" y="1300" width="153" height="19" fill="black"></rect>
+            <rect x="483" y="1532" width="194" height="19" fill="black"></rect>
+            <rect x="413" y="1877" width="98" height="19" fill="black"></rect>
+            <rect x="418" y="2163" width="88" height="19" fill="black"></rect>
+            <rect x="1270" y="407" width="66" height="19" fill="black"></rect>
+            <rect x="813" y="1873" width="88" height="19" fill="black"></rect>
+            <rect x="625" y="2114" width="142" height="19" fill="black"></rect>
+            <rect x="295" y="769" width="198" height="19" fill="black"></rect>
+            <rect x="32" y="926" width="139" height="18" fill="black"></rect>
+            <rect x="178" y="2114" width="121" height="18" fill="black"></rect>
+            <rect x="1152" y="965" width="88" height="18" fill="black"></rect>
+            <rect x="1052" y="1444" width="66" height="18" fill="black"></rect>
+            <rect x="853" y="1631" width="151" height="18" fill="black"></rect>
         </mask>
     </svg>
 </svg>

@@ -1,331 +1,338 @@
-# Dark, high-contrast component diagram. No external theme required.
-# ELK keeps the multi-service flow readable; the background is explicitly set.
+# DocMind component boundaries. Vertical reading order is intentional.
+# Detailed individual I/O calls are in the sequence diagrams.
 vars: {
   d2-config: {
-    layout-engine: elk
-    pad: 60
+    layout-engine: dagre
+    pad: 28
   }
 }
-direction: right
-style: {
-  fill: "#0B1020"
-}
+direction: down
+style: { fill: "#0B1020" }
 
 client: "Client" {
   shape: person
   style: {
-    fill: "#123E52"
-    stroke: "#4CCFEA"
+    fill: "#15556A"
+    stroke: "#64D9F2"
     stroke-width: 3
-    font-color: "#F3F8FF"
-    font-size: 20
+    font-color: "#F1F6FF"
+    font-size: 19
     bold: true
     border-radius: 8
   }
 }
 
-api: "FastAPI\nREST · JWT · deduplication" {
+api: "FastAPI · REST API\nJWT / upload / dedup\nDocument + Analysis endpoints" {
   shape: rectangle
   style: {
-    fill: "#123E52"
-    stroke: "#4CCFEA"
+    fill: "#15556A"
+    stroke: "#64D9F2"
     stroke-width: 3
-    font-color: "#F3F8FF"
-    font-size: 20
+    font-color: "#F1F6FF"
+    font-size: 19
     bold: true
     border-radius: 8
   }
 }
 
-broker: "RabbitMQ\nCelery tasks · analysis events" {
+file_queue: "RabbitMQ · Celery tasks" {
   shape: queue
   style: {
-    fill: "#41305F"
-    stroke: "#BD96FA"
+    fill: "#392854"
+    stroke: "#C2A1FA"
     stroke-width: 3
-    font-color: "#F3F8FF"
-    font-size: 20
+    font-color: "#F1F6FF"
+    font-size: 19
     bold: true
     border-radius: 8
   }
 }
 
-workers: "Celery workers\nScan · S3 upload · extraction" {
+scan: "1 · Celery / Antivirus\nClamAV → clean or infected" {
   shape: rectangle
   style: {
-    fill: "#213C64"
-    stroke: "#7AA8FF"
+    fill: "#193A67"
+    stroke: "#84B1FF"
     stroke-width: 3
-    font-color: "#F3F8FF"
-    font-size: 20
+    font-color: "#F1F6FF"
+    font-size: 19
     bold: true
     border-radius: 8
   }
 }
 
-consumer: "FastStream\nAnalysis consumer" {
+upload: "2 · Celery / S3 Upload\nBinary → S3; file_key → PostgreSQL" {
   shape: rectangle
   style: {
-    fill: "#41305F"
-    stroke: "#BD96FA"
+    fill: "#193A67"
+    stroke: "#84B1FF"
     stroke-width: 3
-    font-color: "#F3F8FF"
-    font-size: 20
+    font-color: "#F1F6FF"
+    font-size: 19
     bold: true
     border-radius: 8
   }
 }
 
-llm: "LLM providers\nGPT · Gemini · DeepSeek · Kimi · Qwen · Grok · Mistral" {
+extract: "3 · Celery / Extraction\nTemp / S3 fallback → raw text\nDocument → extracted" {
   shape: rectangle
   style: {
-    fill: "#59314B"
-    stroke: "#F29AC3"
+    fill: "#193A67"
+    stroke: "#84B1FF"
     stroke-width: 3
-    font-color: "#F3F8FF"
-    font-size: 20
+    font-color: "#F1F6FF"
+    font-size: 19
     bold: true
     border-radius: 8
   }
 }
 
-temp: "Shared temp volume\nAPI + Celery · single host" {
-  shape: stored_data
+analysis_queue: "RabbitMQ · AnalysisRequestedEvent" {
+  shape: queue
   style: {
-    fill: "#243249"
-    stroke: "#B0C3DE"
+    fill: "#392854"
+    stroke: "#C2A1FA"
     stroke-width: 3
-    font-color: "#F3F8FF"
-    font-size: 20
+    font-color: "#F1F6FF"
+    font-size: 19
     bold: true
     border-radius: 8
   }
 }
 
-clam: "ClamAV\nAntivirus scan" {
+consumer: "FastStream · Analysis Consumer\nRead text / prompt; update Analysis" {
   shape: rectangle
   style: {
-    fill: "#564026"
-    stroke: "#F5B85B"
+    fill: "#392854"
+    stroke: "#C2A1FA"
     stroke-width: 3
-    font-color: "#F3F8FF"
-    font-size: 20
+    font-color: "#F1F6FF"
+    font-size: 19
     bold: true
     border-radius: 8
   }
 }
 
-pg: "PostgreSQL\nDocument → extracted" {
+llm: "LLM Factory / Providers\nGPT · Gemini · DeepSeek · Kimi\nQwen · Grok · Mistral" {
+  shape: rectangle
+  style: {
+    fill: "#563049"
+    stroke: "#F1A1C9"
+    stroke-width: 3
+    font-color: "#F1F6FF"
+    font-size: 19
+    bold: true
+    border-radius: 8
+  }
+}
+
+pg: "PostgreSQL\nUsers / Document / file_key / status" {
   shape: cylinder
   style: {
-    fill: "#163E35"
-    stroke: "#55DCB0"
+    fill: "#163F35"
+    stroke: "#66DAB6"
     stroke-width: 3
-    font-color: "#F3F8FF"
-    font-size: 20
+    font-color: "#F1F6FF"
+    font-size: 17
     bold: true
     border-radius: 8
   }
 }
 
-mongo: "MongoDB\nRaw text · prompts · DocumentAnalysis" {
+mongo: "MongoDB\nRaw text / prompts / DocumentAnalysis" {
   shape: cylinder
   style: {
-    fill: "#163E35"
-    stroke: "#55DCB0"
+    fill: "#163F35"
+    stroke: "#66DAB6"
     stroke-width: 3
-    font-color: "#F3F8FF"
-    font-size: 20
+    font-color: "#F1F6FF"
+    font-size: 17
     bold: true
     border-radius: 8
   }
 }
 
-s3: "S3 / MinIO\nDurable file storage" {
+
+# Separate infrastructure services: keep them visible, as in the original diagram.
+redis: "Redis\nPrompt / user caches\nToken blacklist / rate limiting" {
   shape: cylinder
   style: {
-    fill: "#163E35"
-    stroke: "#55DCB0"
+    fill: "#512C32"
+    stroke: "#FB8686"
     stroke-width: 3
-    font-color: "#F3F8FF"
-    font-size: 20
+    font-color: "#F1F6FF"
+    font-size: 18
     bold: true
     border-radius: 8
   }
 }
 
-redis: "Redis\nCache · token blacklist · rate limiting" {
+s3: "S3 / MinIO\nBinary files\nPresigned URLs" {
   shape: cylinder
   style: {
-    fill: "#564026"
-    stroke: "#F5B85B"
+    fill: "#55401F"
+    stroke: "#F9C66E"
     stroke-width: 3
-    font-color: "#F3F8FF"
-    font-size: 20
+    font-color: "#F1F6FF"
+    font-size: 18
     bold: true
     border-radius: 8
   }
 }
 
-# Colored connections; short labels prevent overcrowding.
-client -> api: "HTTPS / JWT" {
+client -> api: "REST" {
   style: {
-    stroke: "#4CCFEA"
+    stroke: "#64D9F2"
     stroke-width: 3
-    font-color: "#D6E5F5"
+    font-color: "#F1F6FF"
     font-size: 15
   }
 }
 
-api -> broker: "Enqueue task / event" {
+api -> file_queue: "FULL / EXTRACTION" {
   style: {
-    stroke: "#BD96FA"
+    stroke: "#C2A1FA"
     stroke-width: 3
-    font-color: "#D6E5F5"
+    font-color: "#F1F6FF"
     font-size: 15
   }
 }
 
-broker -> workers: "Celery tasks" {
+file_queue -> scan: "new content; AV optional" {
   style: {
-    stroke: "#7AA8FF"
+    stroke: "#84B1FF"
     stroke-width: 3
-    font-color: "#D6E5F5"
+    font-color: "#F1F6FF"
     font-size: 15
   }
 }
 
-workers -> broker: "Next tasks / analysis event" {
+scan -> upload: "clean; via RabbitMQ" {
   style: {
-    stroke: "#BD96FA"
+    stroke: "#84B1FF"
     stroke-width: 3
-    font-color: "#D6E5F5"
+    font-color: "#F1F6FF"
     font-size: 15
   }
 }
 
-broker -> consumer: "AnalysisRequestedEvent" {
+upload -> extract: "uploaded; via RabbitMQ" {
   style: {
-    stroke: "#BD96FA"
+    stroke: "#84B1FF"
     stroke-width: 3
-    font-color: "#D6E5F5"
+    font-color: "#F1F6FF"
     font-size: 15
   }
 }
 
-consumer -> llm: "Text + prompt" {
+extract -> analysis_queue: "create queued Analysis + event" {
   style: {
-    stroke: "#F29AC3"
+    stroke: "#C2A1FA"
     stroke-width: 3
-    font-color: "#D6E5F5"
+    font-color: "#F1F6FF"
     font-size: 15
   }
 }
 
-api -> temp: "Save upload" {
+analysis_queue -> consumer: "consume event" {
   style: {
-    stroke: "#B0C3DE"
+    stroke: "#C2A1FA"
     stroke-width: 3
-    font-color: "#D6E5F5"
+    font-color: "#F1F6FF"
     font-size: 15
   }
 }
 
-workers -> temp: "Read / cleanup" {
+consumer -> llm: "text + prompt" {
   style: {
-    stroke: "#B0C3DE"
+    stroke: "#F1A1C9"
     stroke-width: 3
-    font-color: "#D6E5F5"
+    font-color: "#F1F6FF"
     font-size: 15
   }
 }
 
-workers -> clam: "Scan" {
+api -> pg: "metadata" {
   style: {
-    stroke: "#F5B85B"
+    stroke: "#66DAB6"
     stroke-width: 3
-    font-color: "#D6E5F5"
+    font-color: "#F1F6FF"
     font-size: 15
   }
 }
 
-workers -> s3: "Upload / restore" {
+extract -> mongo: "save raw text" {
   style: {
-    stroke: "#55DCB0"
+    stroke: "#66DAB6"
     stroke-width: 3
-    font-color: "#D6E5F5"
+    font-color: "#F1F6FF"
     font-size: 15
   }
 }
 
-api -> s3: "Presigned URL" {
+consumer -> mongo: "analysis status / result" {
   style: {
-    stroke: "#55DCB0"
+    stroke: "#66DAB6"
     stroke-width: 3
-    font-color: "#D6E5F5"
+    font-color: "#F1F6FF"
     font-size: 15
   }
 }
 
-api -> pg: "Metadata" {
+api -> analysis_queue: "ANALYSIS_ONLY · bypass Celery" {
   style: {
-    stroke: "#55DCB0"
+    stroke: "#C2A1FA"
     stroke-width: 3
-    font-color: "#D6E5F5"
+    font-color: "#F1F6FF"
     font-size: 15
   }
 }
 
-workers -> pg: "Document status" {
+
+# PostgreSQL owns Document state; MongoDB owns raw text and Analysis.
+# Infrastructure connections (independent nodes, not text inside worker blocks).
+api -> redis: "cache / blacklist / limits" {
   style: {
-    stroke: "#55DCB0"
+    stroke: "#FB8686"
     stroke-width: 3
-    font-color: "#D6E5F5"
-    font-size: 15
+    font-color: "#F1F6FF"
+    font-size: 14
   }
 }
 
-api -> mongo: "Analysis API" {
+consumer -> redis: "active prompt cache" {
   style: {
-    stroke: "#55DCB0"
+    stroke: "#FB8686"
     stroke-width: 3
-    font-color: "#D6E5F5"
-    font-size: 15
+    font-color: "#F1F6FF"
+    font-size: 14
   }
 }
 
-workers -> mongo: "Raw text + queued Analysis" {
+api -> s3: "presigned URL" {
   style: {
-    stroke: "#55DCB0"
+    stroke: "#F9C66E"
     stroke-width: 3
-    font-color: "#D6E5F5"
-    font-size: 15
+    font-color: "#F1F6FF"
+    font-size: 14
   }
 }
 
-consumer -> mongo: "Analysis status + result" {
+upload -> s3: "upload file" {
   style: {
-    stroke: "#55DCB0"
+    stroke: "#F9C66E"
     stroke-width: 3
-    font-color: "#D6E5F5"
-    font-size: 15
+    font-color: "#F1F6FF"
+    font-size: 14
   }
 }
 
-api -> redis: "Tokens + limits" {
+extract -> s3: "fallback if temp is missing" {
   style: {
-    stroke: "#F5B85B"
+    stroke: "#F9C66E"
     stroke-width: 3
-    font-color: "#D6E5F5"
-    font-size: 15
+    font-color: "#F1F6FF"
+    font-size: 14
   }
 }
 
-consumer -> redis: "Prompt cache" {
-  style: {
-    stroke: "#F5B85B"
-    stroke-width: 3
-    font-color: "#D6E5F5"
-    font-size: 15
-  }
-}
