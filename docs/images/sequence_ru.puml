@@ -1,145 +1,188 @@
 @startuml
-!theme cyborg
-skinparam backgroundColor #1A1A2E
-skinparam shadowing false
-skinparam roundcorner 8
+' Единая диаграмма с участниками, сообщениями и этапами обработки.
+skinparam backgroundColor #0B1020
+skinparam DefaultFontName "DejaVu Sans"
+skinparam DefaultFontColor #F1F6FF
+skinparam DefaultFontSize 14
+skinparam TitleFontColor #F5F9FF
+skinparam TitleFontSize 20
+skinparam Shadowing false
+skinparam RoundCorner 9
 skinparam sequenceArrowThickness 2
-skinparam sequenceParticipantBorderThickness 2
-skinparam sequenceLifeLineBorderColor #555555
 skinparam sequence {
-  ArrowColor #F8F8F2
-  ArrowFontColor #F8F8F2
+  ParticipantBackgroundColor #1F3654
+  ParticipantBorderColor #8DBAFF
+  ParticipantFontColor #F1F6FF
+  ParticipantFontSize 13
+  ActorBackgroundColor #15556A
+  ActorBorderColor #64D9F2
+  ActorFontColor #F1F6FF
+  ArrowColor #A4C4F3
+  ArrowFontColor #F1F6FF
   ArrowFontSize 12
-  LifeLineBorderColor #666666
-  LifeLineBackgroundColor #2A2A3E
-  BoxBorderColor #44475A
-  BoxBackgroundColor #282A36
-  BoxFontColor #F8F8F2
-  BoxFontSize 12
-  NoteBorderColor #FFB86C
-  NoteBackgroundColor #44475A
-  NoteFontColor #F8F8F2
-  NoteFontSize 11
-  DividerBorderColor #6272A4
-  DividerBackgroundColor #44475A
-  DividerFontColor #F8F8F2
-  DividerFontSize 13
+  LifeLineBorderColor #6583A8
+  LifeLineBackgroundColor #19283E
+  GroupBorderColor #8769BE
+  GroupFontColor #F1F6FF
+  GroupHeaderFontColor #FFFFFF
+  GroupHeaderBackgroundColor #392854
+  GroupBackgroundColor #101D30
+  NoteBackgroundColor #25334B
+  NoteBorderColor #83A1C8
+  NoteFontColor #F1F6FF
+  NoteFontSize 12
+  DividerBackgroundColor #213B5B
+  DividerBorderColor #718FBA
+  DividerFontColor #F1F6FF
+  DividerFontSize 14
 }
 
-actor "Пользователь" as User #6272A4
-participant "FastAPI" as API #009688
-participant "PostgreSQL" as PG #336791
-participant "RabbitMQ" as RMQ #FF6600
-participant "Celery Worker" as Worker #37814A
-participant "ClamAV" as AV #B91C1C
-participant "S3 / MinIO" as S3 #FF9900
-participant "MongoDB" as Mongo #47A248
-participant "FastStream" as Stream #6B46C1
-participant "LLM" as LLM #44475A
+title DocMind — Обработка документа и LLM-анализ
 
-== Загрузка и валидация ==
-User -> API: POST /documents (Загрузка файла)
+actor "Клиент" as Client #15556A
+participant "FastAPI" as API #15556A
+database "PostgreSQL" as PG #163F35
+queue "RabbitMQ" as MQ #392854
+participant "Celery" as Worker #193A67
+participant "ClamAV" as AV #622C39
+database "S3 / MinIO" as S3 #57401F
+database "MongoDB" as Mongo #163F35
+database "Redis" as Redis #512C32
+participant "FastStream" as Stream #392854
+participant "LLM" as LLM #563049
+
+== 1. Загрузка и SHA-256-дедупликация ==
+Client -> API: POST /documents/\nфайл, провайдер
 activate API
-API -> PG: Сохранение метаданных (статус: created)
-activate PG
-deactivate PG
-API -> RMQ: Публикация задачи сканирования
-activate RMQ
-deactivate RMQ
-API --> User: 201 Created (DocumentResponse)
+API -> API: Валидация, сохранение temp-файла\nВычисление SHA-256
+API -> PG: Поиск сохранённого файла по хэшу
+PG --> API: Кандидаты на переиспользование
+opt Найдены кандидаты
+  API -> Mongo: Поиск готового raw text
+  Mongo --> API: Текст, если доступен
+end
+API -> PG: Создание НОВОГО Document пользователя
+
+alt FULL_PIPELINE: нет сохранённого файла
+  API -> MQ: Задача ClamAV\n(или загрузка в S3, если AV выключен)
+else EXTRACTION_ONLY: файл существует
+  API -> PG: Переиспользовать file_key\nDocument status = uploaded
+  API -> MQ: Задача извлечения текста
+else ANALYSIS_ONLY: есть файл и текст
+  API -> Mongo: Копировать raw text новому Document
+  alt Копирование успешно
+    API -> PG: Document status = extracted
+    API -> Mongo: Создать DocumentAnalysis (queued)
+    API -> MQ: Публиковать AnalysisRequestedEvent
+  else Копирование не удалось
+    API -> PG: Document status = uploaded
+    API -> MQ: Задача извлечения текста
+  end
+end
+API --> Client: 201 Created (DocumentResponse)
 deactivate API
 
-== Асинхронно: Антивирусная проверка ==
-note over Worker: Асинхронная обработка
-RMQ -> Worker: Получение задачи сканирования
-activate Worker
-Worker -> AV: Сканирование файла (INSTREAM)
-activate AV
-AV --> Worker: Результат проверки
-deactivate AV
-alt Файл чист
-  Worker -> PG: Обновление статуса (uploading)
-  activate PG
-  deactivate PG
-else Файл заражён
-  Worker -> PG: Обновление статуса (infected)
-  activate PG
-  deactivate PG
-  note over Worker: Удаление файла
+note over API,Mongo
+Каждая загрузка создаёт новый Document.\nСовпадение хэша НЕ переиспользует LLM-результат.
+end note
+
+== 2. Антивирус (FULL_PIPELINE, если включён) ==
+opt Антивирус включён
+  MQ -> Worker: Получить задачу ClamAV
+  activate Worker
+  Worker -> PG: Document status = scanning
+  Worker -> AV: Проверить локальный файл (INSTREAM)
+  AV --> Worker: Результат проверки
+  alt Чисто или разрешён fail-open
+    Worker -> MQ: Задача загрузки в S3
+  else Заражённый файл
+    Worker -> PG: Document status = infected
+    Worker -> Worker: Удалить temp-файл
+  else Недоступен, fail-closed
+    Worker -> PG: Document status = failed
+    Worker -> Worker: Удалить temp-файл
+  end
   deactivate Worker
-else Антивирус недоступен
-  Worker -> PG: Обновление статуса (uploading / failed)
-  activate PG
-  deactivate PG
 end
 
-== Асинхронно: Загрузка в S3 ==
-note over Worker: Асинхронная обработка
-RMQ -> Worker: Получение задачи загрузки
-activate Worker
-Worker -> S3: Загрузка файла
-activate S3
-S3 --> Worker: Результат загрузки
-deactivate S3
-Worker -> PG: Обновление file_key
-Worker -> PG: Обновление статуса (extracting)
-activate PG
-deactivate PG
-Worker -> RMQ: Публикация задачи извлечения
-deactivate Worker
+== 3. Объектное хранилище (если обработка продолжается) ==
+opt Поставлена задача загрузки
+  MQ -> Worker: Получить задачу загрузки
+  activate Worker
+  Worker -> PG: Document status = uploading
+  Worker -> S3: Загрузить бинарный файл
+  S3 --> Worker: Успешная загрузка
+  Worker -> PG: Сохранить file_key\nDocument status = uploaded
+  Worker -> MQ: Задача извлечения текста
+  deactivate Worker
+end
 
-== Асинхронно: Извлечение текста ==
-note over Worker: Асинхронная обработка
-RMQ -> Worker: Получение задачи извлечения
-activate Worker
-Worker -> Worker: Извлечение текста (txt/docx/xlsx/pdf)
-Worker -> Mongo: Сохранение raw_text
-activate Mongo
-deactivate Mongo
-Worker -> PG: Обновление статуса (extracted)
-activate PG
-deactivate PG
-Worker -> RMQ: Публикация события "documents.text.extracted"
-deactivate Worker
+== 4. Извлечение текста ==
+opt Поставлена задача извлечения
+  MQ -> Worker: Получить задачу извлечения
+  activate Worker
+  Worker -> PG: Document status = extracting
+  Worker -> Worker: Прочитать общий локальный temp-файл
+  opt Локальный файл отсутствует (file_not_found)
+    Worker -> S3: Восстановить файл по file_key
+    S3 --> Worker: Файл скачан
+    Worker -> Worker: Повторить extraction из восстановленного файла
+  end
+  Worker -> Mongo: Upsert raw text документа
+  Worker -> PG: Document status = extracted\nСбросить temp_filename
+  Worker -> Worker: Удалить temp-файл
+  Worker -> Mongo: Создать/найти DocumentAnalysis (queued)
+  Worker -> MQ: Публиковать AnalysisRequestedEvent\n(analysis_id, document_id, user_id, request_id)
+  deactivate Worker
+end
 
-== Асинхронно: Анализ через LLM ==
-note over Stream: Асинхронная обработка
-RMQ -> Stream: Получение события
-activate Stream
-Stream -> Mongo: Получение raw_text
-activate Mongo
-deactivate Mongo
-Stream -> Stream: Получение активного промпта
-Stream -> LLM: Анализ текста (текст + промпт)
-activate LLM
-LLM --> Stream: JSON-результат анализа
-deactivate LLM
-Stream -> Mongo: Сохранение анализа и версии
-activate Mongo
-deactivate Mongo
-Stream -> PG: Обновление статуса (success)
-activate PG
-deactivate PG
-deactivate Stream
+note over PG,Mongo
+Подготовка файла завершается на Document.extracted.\nОшибка анализа не изменяет статус документа.
+end note
 
-== Скачивание ==
-User -> API: GET /documents/{id}/download
+== 5. Независимый LLM-анализ ==
+opt Опубликован AnalysisRequestedEvent
+  MQ -> Stream: Доставить событие анализа
+  activate Stream
+  Stream -> Mongo: Получить DocumentAnalysis и raw text
+  Stream -> Redis: Прочитать кэш активного промпта
+  alt Промпт не найден в кэше
+    Stream -> Mongo: Получить активный промпт
+    Stream -> Redis: Сохранить промпт в кэше
+  end
+  Stream -> Mongo: Analysis status = analyzing
+  Stream -> LLM: Анализ текста выбранным провайдером
+  alt Успешный ответ
+    LLM --> Stream: Результат LLM
+    Stream -> Mongo: Сохранить результат и версию промпта\nAnalysis status = success
+  else Постоянная ошибка
+    Stream -> Mongo: Analysis status = failed\nfailure_kind = permanent
+  else Временная ошибка
+    Stream -> Stream: Повторить тот же Analysis\n(в пределах лимита)
+    opt Попытки исчерпаны
+      Stream -> Mongo: Analysis status = failed\nfailure_kind = transient
+    end
+  end
+  deactivate Stream
+end
+note over Mongo
+Ручной retry анализа failed/transient создаёт НОВЫЙ\nDocumentAnalysis со ссылкой retry_of_analysis_id.
+end note
+
+== 6. Получение результата / скачивание ==
+Client -> API: GET /documents/{id}
 activate API
-API -> PG: Получение метаданных документа
-activate PG
-PG --> API: file_key, filename
-deactivate PG
-API -> S3: Генерация presigned URL
-activate S3
-S3 --> API: Presigned URL
-deactivate S3
-API --> User: { download_url: "..." }
+API -> PG: Метаданные Document
+API -> Mongo: Текст и история анализов
+API --> Client: DocumentResponse с analyses
 deactivate API
 
-== Получение результата ==
-User -> API: GET /documents/{id}
+Client -> API: GET /documents/{id}/download
 activate API
-API --> User: DocumentResponse (метаданные + текст + анализ)
+API -> PG: Проверить права и получить file_key
+API -> S3: Сгенерировать presigned URL
+S3 --> API: Ссылка на скачивание
+API --> Client: download_url
 deactivate API
 
 @enduml
