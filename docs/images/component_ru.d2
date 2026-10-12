@@ -1,256 +1,331 @@
-# === Клиент ===
-Клиент: {
+# Dark, high-contrast component diagram. No external theme required.
+# ELK keeps the multi-service flow readable; the background is explicitly set.
+vars: {
+  d2-config: {
+    layout-engine: elk
+    pad: 60
+  }
+}
+direction: right
+style: {
+  fill: "#0B1020"
+}
+
+client: "Клиент" {
   shape: person
-  style.fill: "#E8E8E8"
-  style.stroke: "#555"
-  style.font-color: "#333"
-  label: "Клиент"
+  style: {
+    fill: "#123E52"
+    stroke: "#4CCFEA"
+    stroke-width: 3
+    font-color: "#F3F8FF"
+    font-size: 20
+    bold: true
+    border-radius: 8
+  }
 }
 
-# === FastAPI (контейнер) ===
-FastAPI: {
+api: "FastAPI\nREST · JWT · дедупликация" {
   shape: rectangle
-  style.fill: "#009688"
-  style.font-color: "#fff"
-  style.bold: true
-  style.border-radius: 8
-  API: API Роутеры {
-    style.fill: "#4DB6AC"
-    style.font-color: "#fff"
-  }
-  Services: Бизнес-логика {
-    style.fill: "#4DB6AC"
-    style.font-color: "#fff"
+  style: {
+    fill: "#123E52"
+    stroke: "#4CCFEA"
+    stroke-width: 3
+    font-color: "#F3F8FF"
+    font-size: 20
+    bold: true
+    border-radius: 8
   }
 }
 
-# === Асинхронные воркеры (контейнер для Celery + FastStream) ===
-AsyncWorkers: {
-  style.fill: "#F5F5F5"
-  style.stroke: "#999"
-  style.border-radius: 12
-  style.bold: true
-  label: "Асинхронные воркеры"
-  CeleryWorker: {
-    shape: rectangle
-    style.fill: "#37814A"
-    style.font-color: "#fff"
-    style.bold: true
-    style.border-radius: 8
-    ScanTask: Задача сканирования {
-      style.fill: "#5CA86D"
-      style.font-color: "#fff"
-    }
-    UploadTask: Задача загрузки {
-      style.fill: "#5CA86D"
-      style.font-color: "#fff"
-    }
-    ExtractTask: Задача извлечения {
-      style.fill: "#5CA86D"
-      style.font-color: "#fff"
-    }
-  }
-  FastStream: {
-    shape: rectangle
-    style.fill: "#6B46C1"
-    style.font-color: "#fff"
-    style.bold: true
-    style.border-radius: 8
-    Consumer: Консьюмер анализа {
-      style.fill: "#9F7AEA"
-      style.font-color: "#fff"
-    }
-    Factory: LLM Factory {
-      style.fill: "#9F7AEA"
-      style.font-color: "#fff"
-    }
+broker: "RabbitMQ\nЗадачи Celery · события анализа" {
+  shape: queue
+  style: {
+    fill: "#41305F"
+    stroke: "#BD96FA"
+    stroke-width: 3
+    font-color: "#F3F8FF"
+    font-size: 20
+    bold: true
+    border-radius: 8
   }
 }
 
-# === Антивирус ===
-ClamAV: {
+workers: "Celery workers\nАнтивирус · S3 · извлечение текста" {
   shape: rectangle
-  style.fill: "#B91C1C"
-  style.font-color: "#fff"
-  style.bold: true
-  style.border-radius: 8
-  label: "ClamAV"
-}
-
-# === Брокер очередей ===
-RabbitMQ: {
-  shape: hexagon
-  style.fill: "#FF6600"
-  style.font-color: "#fff"
-  style.bold: true
-}
-
-# === Хранилища данных (контейнер) ===
-DataStores: {
-  style.fill: "#F5F5F5"
-  style.stroke: "#999"
-  style.border-radius: 12
-  style.bold: true
-  label: "Хранилища данных"
-  PostgreSQL: {
-    shape: cylinder
-    style.fill: "#336791"
-    style.font-color: "#fff"
-    style.bold: true
-  }
-  MongoDB: {
-    shape: cylinder
-    style.fill: "#47A248"
-    style.font-color: "#fff"
-    style.bold: true
-  }
-  Redis: {
-    shape: cylinder
-    style.fill: "#DC382D"
-    style.font-color: "#fff"
-    style.bold: true
-  }
-  S3Storage: S3 / MinIO {
-    shape: cylinder
-    style.fill: "#FF9900"
-    style.font-color: "#fff"
-    style.bold: true
+  style: {
+    fill: "#213C64"
+    stroke: "#7AA8FF"
+    stroke-width: 3
+    font-color: "#F3F8FF"
+    font-size: 20
+    bold: true
+    border-radius: 8
   }
 }
 
-# === LLM ===
-LLM: {
-  shape: cloud
-  style.fill: "#1A1A2E"
-  style.font-color: "#fff"
-  style.bold: true
-  label: "LLM"
+consumer: "FastStream\nКонсьюмер анализа" {
+  shape: rectangle
+  style: {
+    fill: "#41305F"
+    stroke: "#BD96FA"
+    stroke-width: 3
+    font-color: "#F3F8FF"
+    font-size: 20
+    bold: true
+    border-radius: 8
+  }
 }
 
-# === Связи ===
-Клиент -> FastAPI.API: REST API {
-  style.stroke: "#888"
-  style.bold: true
-  style.stroke-width: 2
+llm: "LLM-провайдеры\nGPT · Gemini · DeepSeek · Kimi · Qwen · Grok · Mistral" {
+  shape: rectangle
+  style: {
+    fill: "#59314B"
+    stroke: "#F29AC3"
+    stroke-width: 3
+    font-color: "#F3F8FF"
+    font-size: 20
+    bold: true
+    border-radius: 8
+  }
 }
 
-FastAPI.API -> DataStores.PostgreSQL: Метаданные {
-  style.stroke: "#5A9FD4"
-  style.stroke-width: 2
+temp: "Общий temp volume\nAPI + Celery · один хост" {
+  shape: stored_data
+  style: {
+    fill: "#243249"
+    stroke: "#B0C3DE"
+    stroke-width: 3
+    font-color: "#F3F8FF"
+    font-size: 20
+    bold: true
+    border-radius: 8
+  }
 }
 
-FastAPI.Services -> DataStores.Redis: Кэш {
-  style.stroke: "#FF6B6B"
-  style.stroke-width: 2
+clam: "ClamAV\nАнтивирусная проверка" {
+  shape: rectangle
+  style: {
+    fill: "#564026"
+    stroke: "#F5B85B"
+    stroke-width: 3
+    font-color: "#F3F8FF"
+    font-size: 20
+    bold: true
+    border-radius: 8
+  }
 }
 
-FastAPI.Services -> DataStores.S3Storage: Presigned URL {
-  style.stroke: "#FF9900"
-  style.stroke-width: 2
+pg: "PostgreSQL\nDocument → extracted" {
+  shape: cylinder
+  style: {
+    fill: "#163E35"
+    stroke: "#55DCB0"
+    stroke-width: 3
+    font-color: "#F3F8FF"
+    font-size: 20
+    bold: true
+    border-radius: 8
+  }
 }
 
-FastAPI.Services -> RabbitMQ: 1. Публикация задачи сканирования {
-  style.stroke: "#FF8C42"
-  style.bold: true
-  style.stroke-width: 2
+mongo: "MongoDB\nТекст · промпты · DocumentAnalysis" {
+  shape: cylinder
+  style: {
+    fill: "#163E35"
+    stroke: "#55DCB0"
+    stroke-width: 3
+    font-color: "#F3F8FF"
+    font-size: 20
+    bold: true
+    border-radius: 8
+  }
 }
 
-RabbitMQ -> AsyncWorkers.CeleryWorker.ScanTask: 2. Получение {
-  style.stroke: "#6BCB77"
-  style.bold: true
-  style.stroke-width: 2
+s3: "S3 / MinIO\nДолговременное хранение" {
+  shape: cylinder
+  style: {
+    fill: "#163E35"
+    stroke: "#55DCB0"
+    stroke-width: 3
+    font-color: "#F3F8FF"
+    font-size: 20
+    bold: true
+    border-radius: 8
+  }
 }
 
-AsyncWorkers.CeleryWorker.ScanTask -> ClamAV: 3. Сканирование файла {
-  style.stroke: "#E53E3E"
-  style.bold: true
-  style.stroke-width: 2
+redis: "Redis\nКэш · blacklist · rate limiting" {
+  shape: cylinder
+  style: {
+    fill: "#564026"
+    stroke: "#F5B85B"
+    stroke-width: 3
+    font-color: "#F3F8FF"
+    font-size: 20
+    bold: true
+    border-radius: 8
+  }
 }
 
-ClamAV -> AsyncWorkers.CeleryWorker.ScanTask: 4. Результат {
-  style.stroke: "#E53E3E"
-  style.stroke-dash: 3
-  style.stroke-width: 2
+# Colored connections; short labels prevent overcrowding.
+client -> api: "HTTPS / JWT" {
+  style: {
+    stroke: "#4CCFEA"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
 }
 
-AsyncWorkers.CeleryWorker.ScanTask -> RabbitMQ: 5. Публикация задачи загрузки {
-  style.stroke: "#FF8C42"
-  style.bold: true
-  style.stroke-width: 2
+api -> broker: "Задачи / события" {
+  style: {
+    stroke: "#BD96FA"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
 }
 
-RabbitMQ -> AsyncWorkers.CeleryWorker.UploadTask: 6. Получение {
-  style.stroke: "#6BCB77"
-  style.bold: true
-  style.stroke-width: 2
+broker -> workers: "Задачи Celery" {
+  style: {
+    stroke: "#7AA8FF"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
 }
 
-AsyncWorkers.CeleryWorker.UploadTask -> DataStores.S3Storage: 7. Загрузка файла {
-  style.stroke: "#FF9900"
-  style.bold: true
-  style.stroke-width: 2
+workers -> broker: "След. задача / событие" {
+  style: {
+    stroke: "#BD96FA"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
 }
 
-AsyncWorkers.CeleryWorker.UploadTask -> RabbitMQ: 8. Публикация задачи извлечения {
-  style.stroke: "#FF8C42"
-  style.bold: true
-  style.stroke-width: 2
+broker -> consumer: "AnalysisRequestedEvent" {
+  style: {
+    stroke: "#BD96FA"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
 }
 
-RabbitMQ -> AsyncWorkers.CeleryWorker.ExtractTask: 9. Получение {
-  style.stroke: "#6BCB77"
-  style.bold: true
-  style.stroke-width: 2
+consumer -> llm: "Текст + промпт" {
+  style: {
+    stroke: "#F29AC3"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
 }
 
-AsyncWorkers.CeleryWorker.ExtractTask -> DataStores.MongoDB: 10. Сохранение текста {
-  style.stroke: "#4ECDC4"
-  style.bold: true
-  style.stroke-width: 2
+api -> temp: "Сохранение файла" {
+  style: {
+    stroke: "#B0C3DE"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
 }
 
-AsyncWorkers.CeleryWorker.ExtractTask -> RabbitMQ: 11. Публикация события {
-  style.stroke: "#FF8C42"
-  style.bold: true
-  style.stroke-width: 2
+workers -> temp: "Чтение / удаление" {
+  style: {
+    stroke: "#B0C3DE"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
 }
 
-RabbitMQ -> AsyncWorkers.FastStream.Consumer: 12. Получение {
-  style.stroke: "#A78BFA"
-  style.bold: true
-  style.stroke-width: 2
+workers -> clam: "Проверка" {
+  style: {
+    stroke: "#F5B85B"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
 }
 
-AsyncWorkers.FastStream.Consumer -> DataStores.MongoDB: 13. Получение текста {
-  style.stroke: "#4ECDC4"
-  style.stroke-width: 2
+workers -> s3: "Загрузка / fallback" {
+  style: {
+    stroke: "#55DCB0"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
 }
 
-AsyncWorkers.FastStream.Factory -> DataStores.Redis: 14. Получение промпта {
-  style.stroke: "#FF6B6B"
-  style.stroke-width: 2
+api -> s3: "Presigned URL" {
+  style: {
+    stroke: "#55DCB0"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
 }
 
-AsyncWorkers.FastStream.Consumer -> LLM: 15. Анализ {
-  style.stroke: "#667"
-  style.bold: true
-  style.stroke-width: 2
+api -> pg: "Метаданные" {
+  style: {
+    stroke: "#55DCB0"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
 }
 
-LLM -> AsyncWorkers.FastStream.Consumer: 16. Возврат результата {
-  style.stroke: "#999"
-  style.stroke-dash: 3
-  style.stroke-width: 2
+workers -> pg: "Статус Document" {
+  style: {
+    stroke: "#55DCB0"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
 }
 
-AsyncWorkers.FastStream.Consumer -> DataStores.MongoDB: 17. Сохранение анализа {
-  style.stroke: "#4ECDC4"
-  style.bold: true
-  style.stroke-width: 2
+api -> mongo: "API анализов" {
+  style: {
+    stroke: "#55DCB0"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
 }
 
-AsyncWorkers.FastStream.Consumer -> DataStores.PostgreSQL: 18. Обновление статуса {
-  style.stroke: "#5A9FD4"
-  style.bold: true
-  style.stroke-width: 2
+workers -> mongo: "Текст + queued Analysis" {
+  style: {
+    stroke: "#55DCB0"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
+}
+
+consumer -> mongo: "Статус + результат Analysis" {
+  style: {
+    stroke: "#55DCB0"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
+}
+
+api -> redis: "Токены + лимиты" {
+  style: {
+    stroke: "#F5B85B"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
+}
+
+consumer -> redis: "Кэш промптов" {
+  style: {
+    stroke: "#F5B85B"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
 }

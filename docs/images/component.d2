@@ -1,255 +1,331 @@
-# === Client ===
-Client: {
+# Dark, high-contrast component diagram. No external theme required.
+# ELK keeps the multi-service flow readable; the background is explicitly set.
+vars: {
+  d2-config: {
+    layout-engine: elk
+    pad: 60
+  }
+}
+direction: right
+style: {
+  fill: "#0B1020"
+}
+
+client: "Client" {
   shape: person
-  style.fill: "#E8E8E8"
-  style.stroke: "#555"
-  style.font-color: "#333"
+  style: {
+    fill: "#123E52"
+    stroke: "#4CCFEA"
+    stroke-width: 3
+    font-color: "#F3F8FF"
+    font-size: 20
+    bold: true
+    border-radius: 8
+  }
 }
 
-# === FastAPI (container) ===
-FastAPI: {
+api: "FastAPI\nREST · JWT · deduplication" {
   shape: rectangle
-  style.fill: "#009688"
-  style.font-color: "#fff"
-  style.bold: true
-  style.border-radius: 8
-  API: API Routers {
-    style.fill: "#4DB6AC"
-    style.font-color: "#fff"
-  }
-  Services: Business Logic {
-    style.fill: "#4DB6AC"
-    style.font-color: "#fff"
+  style: {
+    fill: "#123E52"
+    stroke: "#4CCFEA"
+    stroke-width: 3
+    font-color: "#F3F8FF"
+    font-size: 20
+    bold: true
+    border-radius: 8
   }
 }
 
-# === Async Workers (container for Celery + FastStream) ===
-AsyncWorkers: {
-  style.fill: "#F5F5F5"
-  style.stroke: "#999"
-  style.border-radius: 12
-  style.bold: true
-  label: "Async Workers"
-  CeleryWorker: {
-    shape: rectangle
-    style.fill: "#37814A"
-    style.font-color: "#fff"
-    style.bold: true
-    style.border-radius: 8
-    ScanTask: Scan Task {
-      style.fill: "#5CA86D"
-      style.font-color: "#fff"
-    }
-    UploadTask: Upload Task {
-      style.fill: "#5CA86D"
-      style.font-color: "#fff"
-    }
-    ExtractTask: Extract Task {
-      style.fill: "#5CA86D"
-      style.font-color: "#fff"
-    }
-  }
-  FastStream: {
-    shape: rectangle
-    style.fill: "#6B46C1"
-    style.font-color: "#fff"
-    style.bold: true
-    style.border-radius: 8
-    Consumer: Analysis Consumer {
-      style.fill: "#9F7AEA"
-      style.font-color: "#fff"
-    }
-    Factory: LLM Factory {
-      style.fill: "#9F7AEA"
-      style.font-color: "#fff"
-    }
+broker: "RabbitMQ\nCelery tasks · analysis events" {
+  shape: queue
+  style: {
+    fill: "#41305F"
+    stroke: "#BD96FA"
+    stroke-width: 3
+    font-color: "#F3F8FF"
+    font-size: 20
+    bold: true
+    border-radius: 8
   }
 }
 
-# === Antivirus ===
-ClamAV: {
+workers: "Celery workers\nScan · S3 upload · extraction" {
   shape: rectangle
-  style.fill: "#B91C1C"
-  style.font-color: "#fff"
-  style.bold: true
-  style.border-radius: 8
-  label: "ClamAV"
-}
-
-# === Message Broker ===
-RabbitMQ: {
-  shape: hexagon
-  style.fill: "#FF6600"
-  style.font-color: "#fff"
-  style.bold: true
-}
-
-# === Data Stores (container) ===
-DataStores: {
-  style.fill: "#F5F5F5"
-  style.stroke: "#999"
-  style.border-radius: 12
-  style.bold: true
-  label: "Data Stores"
-  PostgreSQL: {
-    shape: cylinder
-    style.fill: "#336791"
-    style.font-color: "#fff"
-    style.bold: true
-  }
-  MongoDB: {
-    shape: cylinder
-    style.fill: "#47A248"
-    style.font-color: "#fff"
-    style.bold: true
-  }
-  Redis: {
-    shape: cylinder
-    style.fill: "#DC382D"
-    style.font-color: "#fff"
-    style.bold: true
-  }
-  S3Storage: S3 / MinIO {
-    shape: cylinder
-    style.fill: "#FF9900"
-    style.font-color: "#fff"
-    style.bold: true
+  style: {
+    fill: "#213C64"
+    stroke: "#7AA8FF"
+    stroke-width: 3
+    font-color: "#F3F8FF"
+    font-size: 20
+    bold: true
+    border-radius: 8
   }
 }
 
-# === LLM ===
-LLM: {
-  shape: cloud
-  style.fill: "#1A1A2E"
-  style.font-color: "#fff"
-  style.bold: true
-  label: "LLM"
+consumer: "FastStream\nAnalysis consumer" {
+  shape: rectangle
+  style: {
+    fill: "#41305F"
+    stroke: "#BD96FA"
+    stroke-width: 3
+    font-color: "#F3F8FF"
+    font-size: 20
+    bold: true
+    border-radius: 8
+  }
 }
 
-# === Connections ===
-Client -> FastAPI.API: REST API {
-  style.stroke: "#888"
-  style.bold: true
-  style.stroke-width: 2
+llm: "LLM providers\nGPT · Gemini · DeepSeek · Kimi · Qwen · Grok · Mistral" {
+  shape: rectangle
+  style: {
+    fill: "#59314B"
+    stroke: "#F29AC3"
+    stroke-width: 3
+    font-color: "#F3F8FF"
+    font-size: 20
+    bold: true
+    border-radius: 8
+  }
 }
 
-FastAPI.API -> DataStores.PostgreSQL: Metadata {
-  style.stroke: "#5A9FD4"
-  style.stroke-width: 2
+temp: "Shared temp volume\nAPI + Celery · single host" {
+  shape: stored_data
+  style: {
+    fill: "#243249"
+    stroke: "#B0C3DE"
+    stroke-width: 3
+    font-color: "#F3F8FF"
+    font-size: 20
+    bold: true
+    border-radius: 8
+  }
 }
 
-FastAPI.Services -> DataStores.Redis: Cache {
-  style.stroke: "#FF6B6B"
-  style.stroke-width: 2
+clam: "ClamAV\nAntivirus scan" {
+  shape: rectangle
+  style: {
+    fill: "#564026"
+    stroke: "#F5B85B"
+    stroke-width: 3
+    font-color: "#F3F8FF"
+    font-size: 20
+    bold: true
+    border-radius: 8
+  }
 }
 
-FastAPI.Services -> DataStores.S3Storage: Presigned URL {
-  style.stroke: "#FF9900"
-  style.stroke-width: 2
+pg: "PostgreSQL\nDocument → extracted" {
+  shape: cylinder
+  style: {
+    fill: "#163E35"
+    stroke: "#55DCB0"
+    stroke-width: 3
+    font-color: "#F3F8FF"
+    font-size: 20
+    bold: true
+    border-radius: 8
+  }
 }
 
-FastAPI.Services -> RabbitMQ: 1. Publish scan task {
-  style.stroke: "#FF8C42"
-  style.bold: true
-  style.stroke-width: 2
+mongo: "MongoDB\nRaw text · prompts · DocumentAnalysis" {
+  shape: cylinder
+  style: {
+    fill: "#163E35"
+    stroke: "#55DCB0"
+    stroke-width: 3
+    font-color: "#F3F8FF"
+    font-size: 20
+    bold: true
+    border-radius: 8
+  }
 }
 
-RabbitMQ -> AsyncWorkers.CeleryWorker.ScanTask: 2. Consume {
-  style.stroke: "#6BCB77"
-  style.bold: true
-  style.stroke-width: 2
+s3: "S3 / MinIO\nDurable file storage" {
+  shape: cylinder
+  style: {
+    fill: "#163E35"
+    stroke: "#55DCB0"
+    stroke-width: 3
+    font-color: "#F3F8FF"
+    font-size: 20
+    bold: true
+    border-radius: 8
+  }
 }
 
-AsyncWorkers.CeleryWorker.ScanTask -> ClamAV: 3. Scan file {
-  style.stroke: "#E53E3E"
-  style.bold: true
-  style.stroke-width: 2
+redis: "Redis\nCache · token blacklist · rate limiting" {
+  shape: cylinder
+  style: {
+    fill: "#564026"
+    stroke: "#F5B85B"
+    stroke-width: 3
+    font-color: "#F3F8FF"
+    font-size: 20
+    bold: true
+    border-radius: 8
+  }
 }
 
-ClamAV -> AsyncWorkers.CeleryWorker.ScanTask: 4. Result {
-  style.stroke: "#E53E3E"
-  style.stroke-dash: 3
-  style.stroke-width: 2
+# Colored connections; short labels prevent overcrowding.
+client -> api: "HTTPS / JWT" {
+  style: {
+    stroke: "#4CCFEA"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
 }
 
-AsyncWorkers.CeleryWorker.ScanTask -> RabbitMQ: 5. Publish upload task {
-  style.stroke: "#FF8C42"
-  style.bold: true
-  style.stroke-width: 2
+api -> broker: "Enqueue task / event" {
+  style: {
+    stroke: "#BD96FA"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
 }
 
-RabbitMQ -> AsyncWorkers.CeleryWorker.UploadTask: 6. Consume {
-  style.stroke: "#6BCB77"
-  style.bold: true
-  style.stroke-width: 2
+broker -> workers: "Celery tasks" {
+  style: {
+    stroke: "#7AA8FF"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
 }
 
-AsyncWorkers.CeleryWorker.UploadTask -> DataStores.S3Storage: 7. Upload file {
-  style.stroke: "#FF9900"
-  style.bold: true
-  style.stroke-width: 2
+workers -> broker: "Next tasks / analysis event" {
+  style: {
+    stroke: "#BD96FA"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
 }
 
-AsyncWorkers.CeleryWorker.UploadTask -> RabbitMQ: 8. Publish extract task {
-  style.stroke: "#FF8C42"
-  style.bold: true
-  style.stroke-width: 2
+broker -> consumer: "AnalysisRequestedEvent" {
+  style: {
+    stroke: "#BD96FA"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
 }
 
-RabbitMQ -> AsyncWorkers.CeleryWorker.ExtractTask: 9. Consume {
-  style.stroke: "#6BCB77"
-  style.bold: true
-  style.stroke-width: 2
+consumer -> llm: "Text + prompt" {
+  style: {
+    stroke: "#F29AC3"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
 }
 
-AsyncWorkers.CeleryWorker.ExtractTask -> DataStores.MongoDB: 10. Save text {
-  style.stroke: "#4ECDC4"
-  style.bold: true
-  style.stroke-width: 2
+api -> temp: "Save upload" {
+  style: {
+    stroke: "#B0C3DE"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
 }
 
-AsyncWorkers.CeleryWorker.ExtractTask -> RabbitMQ: 11. Publish event {
-  style.stroke: "#FF8C42"
-  style.bold: true
-  style.stroke-width: 2
+workers -> temp: "Read / cleanup" {
+  style: {
+    stroke: "#B0C3DE"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
 }
 
-RabbitMQ -> AsyncWorkers.FastStream.Consumer: 12. Consume {
-  style.stroke: "#A78BFA"
-  style.bold: true
-  style.stroke-width: 2
+workers -> clam: "Scan" {
+  style: {
+    stroke: "#F5B85B"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
 }
 
-AsyncWorkers.FastStream.Consumer -> DataStores.MongoDB: 13. Get text {
-  style.stroke: "#4ECDC4"
-  style.stroke-width: 2
+workers -> s3: "Upload / restore" {
+  style: {
+    stroke: "#55DCB0"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
 }
 
-AsyncWorkers.FastStream.Factory -> DataStores.Redis: 14. Get prompt {
-  style.stroke: "#FF6B6B"
-  style.stroke-width: 2
+api -> s3: "Presigned URL" {
+  style: {
+    stroke: "#55DCB0"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
 }
 
-AsyncWorkers.FastStream.Consumer -> LLM: 15. Analyze {
-  style.stroke: "#667"
-  style.bold: true
-  style.stroke-width: 2
+api -> pg: "Metadata" {
+  style: {
+    stroke: "#55DCB0"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
 }
 
-LLM -> AsyncWorkers.FastStream.Consumer: 16. Return result {
-  style.stroke: "#999"
-  style.stroke-dash: 3
-  style.stroke-width: 2
+workers -> pg: "Document status" {
+  style: {
+    stroke: "#55DCB0"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
 }
 
-AsyncWorkers.FastStream.Consumer -> DataStores.MongoDB: 17. Save analysis {
-  style.stroke: "#4ECDC4"
-  style.bold: true
-  style.stroke-width: 2
+api -> mongo: "Analysis API" {
+  style: {
+    stroke: "#55DCB0"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
 }
 
-AsyncWorkers.FastStream.Consumer -> DataStores.PostgreSQL: 18. Update status {
-  style.stroke: "#5A9FD4"
-  style.bold: true
-  style.stroke-width: 2
+workers -> mongo: "Raw text + queued Analysis" {
+  style: {
+    stroke: "#55DCB0"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
+}
+
+consumer -> mongo: "Analysis status + result" {
+  style: {
+    stroke: "#55DCB0"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
+}
+
+api -> redis: "Tokens + limits" {
+  style: {
+    stroke: "#F5B85B"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
+}
+
+consumer -> redis: "Prompt cache" {
+  style: {
+    stroke: "#F5B85B"
+    stroke-width: 3
+    font-color: "#D6E5F5"
+    font-size: 15
+  }
 }
