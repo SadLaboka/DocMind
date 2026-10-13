@@ -47,51 +47,9 @@ def get_current_token_payload(
 
 async def get_current_user(
     payload: dict = Depends(get_current_token_payload),
-    token_blacklist: TokenBlackList = Depends(get_token_blacklist),
-    user_active_cache: UserActiveStatusCache = Depends(get_user_active_cache),
-    user_repository: UserRepository = Depends(get_user_repository),
+    auth_service: AuthService = Depends(get_auth_service),
 ) -> User:
-    jti = payload.get("jti")
-    user_id = int(payload["sub"])
-
-    if jti and await token_blacklist.is_blacklisted(jti):
-        raise AuthenticationError(
-            error_code="token_revoked",
-            message="Token has been revoked",
-            log_context={
-                "event_name": "token_blacklisted",
-                "jti": jti,
-                "user_id": user_id,
-            },
-        )
-
-    is_active = await user_active_cache.get_active(user_id)
-
-    if is_active is None:
-        user = await user_repository.get_user_by_id(user_id)
-        if not user:
-            raise AuthenticationError(
-                error_code="user_not_found",
-                message="User not found",
-                log_context={
-                    "event_name": "user_not_found_in_database",
-                    "user_id": user_id,
-                },
-            )
-        await user_active_cache.set_active(user_id, user.is_active)
-        is_active = user.is_active
-
-    if not is_active:
-        raise AuthenticationError(
-            error_code="user_deactivated",
-            message="User has been deactivated",
-            log_context={
-                "event_name": "user_deactivated",
-                "user_id": user_id,
-            },
-        )
-
-    return User(id=user_id, login=payload["login"], is_admin=payload["is_admin"])
+    return await auth_service.get_current_user_from_token_payload(payload)
 
 
 async def get_current_admin_user(current_user: User = Depends(get_current_user)) -> User:

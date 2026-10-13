@@ -144,3 +144,47 @@ class AuthService(BaseService[UserRepository]):
             )
 
         return await self.load_user_profile(user_id)
+
+
+    async def get_current_user_from_token_payload(self, payload: dict) -> User:
+        jti = payload.get("jti")
+        user_id = int(payload["sub"])
+
+        if jti and await self.token_blacklist.is_blacklisted(jti):
+            raise AuthenticationError(
+                error_code="token_revoked",
+                message="Token has been revoked",
+                log_context={
+                    "event_name": "token_blacklisted",
+                    "jti": jti,
+                    "user_id": user_id,
+                },
+            )
+
+        is_active = await self.user_active_cache.get_active(user_id)
+
+        if is_active is None:
+            user = await self.repository.get_user_by_id(user_id)
+            if not user:
+                raise AuthenticationError(
+                    error_code="user_not_found",
+                    message="User not found",
+                    log_context={
+                        "event_name": "user_not_found_in_database",
+                        "user_id": user_id,
+                    },
+                )
+            await self.user_active_cache.set_active(user_id, user.is_active)
+            is_active = user.is_active
+
+        if not is_active:
+            raise AuthenticationError(
+                error_code="user_deactivated",
+                message="User has been deactivated",
+                log_context={
+                    "event_name": "user_deactivated",
+                    "user_id": user_id,
+                },
+            )
+
+        return User(id=user_id, login=payload["login"], is_admin=payload["is_admin"])
