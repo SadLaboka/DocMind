@@ -101,8 +101,7 @@ class JWTManager:
 
             raise AuthenticationError(**authentication_error_payload)
 
-        elif (not isinstance(payload["sub"], str) or not set(c for c in payload["sub"])
-                .issubset(set(str(c) for c in range(10)))):
+        elif not (isinstance(payload["sub"], str) and payload["sub"].isdigit()):
 
             authentication_error_payload["log_context"]["reason"] = "invalid_sub_field"
 
