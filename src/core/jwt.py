@@ -131,6 +131,20 @@ class JWTManager:
         try:
             payload = jwt.decode(token, self.public_key, algorithms=[self.algorithm])
             received_token_type = payload.get("type")
+
+            if not payload.get("exp"):
+                raise AuthenticationError(
+                    error_code="invalid_token_expire_time",
+                    message="Invalid token expire time",
+                    log_context={
+                        "event_name": "token_verification_failed",
+                        "reason": "token expire time is invalid",
+                        "token_prefix": token[:10],
+                        "subject_id": payload.get("sub"),
+                        "exp_field": payload.get("exp"),
+                    },
+                )
+
             if received_token_type != token_type:
                 raise AuthenticationError(
                     error_code="invalid_token_type",
@@ -141,7 +155,7 @@ class JWTManager:
                         "expected_token_type": token_type,
                         "received_token_type": received_token_type,
                         "token_prefix": token[:10],
-                        "subject_id": payload["sub"],
+                        "subject_id": payload.get("sub"),
                         "expired_at": datetime.fromtimestamp(payload["exp"], UTC).isoformat(),
                     },
                 )
