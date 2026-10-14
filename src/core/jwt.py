@@ -90,7 +90,7 @@ class JWTManager:
             }
         }
 
-        if not payload.get("jti"):
+        if not (payload.get("jti") and isinstance(payload.get("jti"), str)):
             authentication_error_payload["log_context"]["reason"] = "invalid_or_empty_jti_field"
 
             raise AuthenticationError(**authentication_error_payload)
@@ -101,13 +101,13 @@ class JWTManager:
 
             raise AuthenticationError(**authentication_error_payload)
 
-        elif not set(c for c in payload["sub"]).issubset(set(range(10))):
+        elif not isinstance(payload["sub"], str) or set(c for c in payload["sub"]).issubset(set(range(10))):
 
             authentication_error_payload["log_context"]["reason"] = "invalid_sub_field"
 
             raise AuthenticationError(**authentication_error_payload)
 
-        elif not payload.get("login"):
+        elif not (payload.get("login") and isinstance(payload.get("login"), str)):
 
             authentication_error_payload["log_context"]["reason"] = "empty_login_field"
 
