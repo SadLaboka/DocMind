@@ -95,13 +95,13 @@ class JWTManager:
 
             raise AuthenticationError(**authentication_error_payload)
 
-        elif not payload.get("user_id"):
+        elif not payload.get("sub"):
 
             authentication_error_payload["log_context"]["reason"] = "empty_sub_field"
 
             raise AuthenticationError(**authentication_error_payload)
 
-        elif not set(c for c in payload["user_id"]).issubset(set(range(10))):
+        elif not set(c for c in payload["sub"]).issubset(set(range(10))):
 
             authentication_error_payload["log_context"]["reason"] = "invalid_sub_field"
 
