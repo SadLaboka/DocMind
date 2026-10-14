@@ -77,6 +77,8 @@ class JWTManager:
         """Gets payload from access token"""
         payload = self.verify_token(token=access_token, token_type=ACCESS_TOKEN_TYPE)
 
+        sub = payload.get("sub")
+
         authentication_error_payload = {
             "error_code": "invalid_token_payload",
             "message": "Invalid token payload",
@@ -95,13 +97,13 @@ class JWTManager:
 
             raise AuthenticationError(**authentication_error_payload)
 
-        elif not payload.get("sub"):
+        elif not sub:
 
             authentication_error_payload["log_context"]["reason"] = "empty_sub_field"
 
             raise AuthenticationError(**authentication_error_payload)
 
-        elif not (isinstance(payload["sub"], str) and payload["sub"].isdigit()):
+        elif not (isinstance(sub, str) and sub.isascii() and sub.isdigit() and int(sub) > 0):
 
             authentication_error_payload["log_context"]["reason"] = "invalid_sub_field"
 
