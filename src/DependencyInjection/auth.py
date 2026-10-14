@@ -43,16 +43,7 @@ def get_current_token_payload(
         )
     token = credentials.credentials
     payload = jwt_manager.get_payload_from_access_token(token)
-    if not payload.get("sub") and not payload.get("jti"):
-        raise AuthenticationError(
-            error_code="invalid_token_payload",
-            message="Invalid token payload",
-            log_context={
-                "event_name": "invalid_token_payload",
-                "jti": payload.get("jti"),
-                "user_id": payload.get("sub"),
-            },
-        )
+
     return payload
 
 

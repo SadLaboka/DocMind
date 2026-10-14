@@ -76,6 +76,49 @@ class JWTManager:
     def get_payload_from_access_token(self, access_token: str) -> dict:
         """Gets payload from access token"""
         payload = self.verify_token(token=access_token, token_type=ACCESS_TOKEN_TYPE)
+
+        authentication_error_payload = {
+            "error_code": "invalid_token_payload",
+            "message": "Invalid token payload",
+            "log_context": {
+                "event_name": "invalid_token_payload",
+                "reason": "",
+                "jti": payload.get("jti"),
+                "user_id": payload.get("sub"),
+                "login": payload.get("login"),
+                "is_admin": payload.get("is_admin"),
+            }
+        }
+
+        if not payload.get("jti"):
+            authentication_error_payload["log_context"]["reason"] = "invalid_or_empty_jti_field"
+
+            raise AuthenticationError(**authentication_error_payload)
+
+        elif not payload.get("user_id"):
+
+            authentication_error_payload["log_context"]["reason"] = "empty_sub_field"
+
+            raise AuthenticationError(**authentication_error_payload)
+
+        elif not set(c for c in payload["user_id"]).issubset(set(range(10))):
+
+            authentication_error_payload["log_context"]["reason"] = "invalid_sub_field"
+
+            raise AuthenticationError(**authentication_error_payload)
+
+        elif not payload.get("login"):
+
+            authentication_error_payload["log_context"]["reason"] = "empty_login_field"
+
+            raise AuthenticationError(**authentication_error_payload)
+
+        elif not isinstance(payload.get("is_admin"), bool):
+
+            authentication_error_payload["log_context"]["reason"] = "invalid_or_empty_is_admin_field"
+
+            raise AuthenticationError(**authentication_error_payload)
+
         return payload
 
     def get_sub_from_refresh_token(self, refresh_token: str) -> int:
