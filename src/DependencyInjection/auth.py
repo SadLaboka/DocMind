@@ -42,13 +42,7 @@ def get_current_token_payload(
             log_context={"event_name": "no_credentials"},
         )
     token = credentials.credentials
-    return jwt_manager.get_payload_from_access_token(token)
-
-
-async def get_current_user(
-    payload: dict = Depends(get_current_token_payload),
-    auth_service: AuthService = Depends(get_auth_service),
-) -> User:
+    payload = jwt_manager.get_payload_from_access_token(token)
     if not payload.get("sub") and not payload.get("jti"):
         raise AuthenticationError(
             error_code="invalid_token_payload",
@@ -59,6 +53,14 @@ async def get_current_user(
                 "user_id": payload.get("sub"),
             },
         )
+    return payload
+
+
+async def get_current_user(
+    payload: dict = Depends(get_current_token_payload),
+    auth_service: AuthService = Depends(get_auth_service),
+) -> User:
+
     return await auth_service.get_current_user_from_token_payload(payload)
 
 
