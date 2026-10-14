@@ -147,7 +147,7 @@ class AuthService(BaseService[UserRepository]):
 
 
     async def get_current_user_from_token_payload(self, payload: dict) -> User:
-        jti = payload.get("jti")
+        jti = payload["jti"]
         user_id = int(payload["sub"])
 
         if jti and await self.token_blacklist.is_blacklisted(jti):
