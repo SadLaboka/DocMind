@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 
 class Auth(BaseModel):
-    type: Literal["auth"] = "auth"
+    type: Literal["auth"]
     access_token: str = Field(description="access token", min_length=1)
 
 
