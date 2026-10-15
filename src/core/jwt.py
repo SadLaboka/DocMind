@@ -158,7 +158,7 @@ class JWTManager:
                         "received_token_type": received_token_type,
                         "token_prefix": token[:10],
                         "subject_id": payload.get("sub"),
-                        "expired_at": datetime.fromtimestamp(payload["exp"], UTC).isoformat(),
+                        "exp_field": payload.get("exp"),
                     },
                 )
             return payload
