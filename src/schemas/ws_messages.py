@@ -15,6 +15,10 @@ class Ready(BaseModel):
     type: Literal["ready"] = "ready"
 
 
+class SyncRequired(BaseModel):
+    type: Literal["sync_required"] = "sync_required"
+
+
 class DocumentStatusChanged(BaseModel):
     type: Literal["document.status_changed"] = "document.status_changed"
     document_id: int
