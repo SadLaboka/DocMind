@@ -27,7 +27,7 @@ class SyncRequired(BaseModel):
 
 class DocumentStatusChanged(BaseModel):
     type: Literal["document.status_changed"] = "document.status_changed"
-    document_id: int
+    document_id: int = Field(gt=0)
     status: DocumentStatus
     updated_at: datetime
 
@@ -36,8 +36,8 @@ class DocumentStatusChanged(BaseModel):
 
 class AnalysisStatusChanged(BaseModel):
     type: Literal["analysis.status_changed"] = "analysis.status_changed"
-    document_id: int
-    analysis_id: str
+    document_id: int = Field(gt=0)
+    analysis_id: str = Field(min_length=1)
     status: AnalysisStatus
     updated_at: datetime
 
