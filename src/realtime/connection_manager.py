@@ -46,6 +46,9 @@ class WSConnectionManager:
     ) -> None:
         """Send event to user in his ws-connections"""
 
+        if not self.connections.get(user_id):
+            return
+
         json_event = event.model_dump(mode="json")
 
         for ws, state in self.connections[user_id].items():
