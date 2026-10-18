@@ -65,22 +65,24 @@ class WSConnectionManager:
                     except asyncio.TimeoutError:
                         logger.warning(
                             "Ws-connection timed out",
-                            current_user_id=user_id,
+                            user_id=user_id,
                             websocket_id=id(ws),
-                            event=json_event,
+                            event_type=event.type,
                         )
                         unregister_necessary = True
+                        await ws.close()
                         state.closing = True
                     except Exception as e:
                         logger.warning(
                             "Ws-connection failed",
-                            current_user_id=user_id,
+                            user_id=user_id,
                             websocket_id=id(ws),
                             error_msg=str(e),
                             error_type=type(e).__name__,
-                            event=json_event,
+                            event_type=event.type,
                         )
                         unregister_necessary = True
+                        await ws.close()
                         state.closing = True
 
             if unregister_necessary:
