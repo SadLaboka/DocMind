@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from fastapi import WebSocket
 from structlog import get_logger
 
-from src.schemas.ws_messages import Ready, SyncRequired, DocumentStatusChanged, AnalysisStatusChanged
+from src.schemas.ws_messages import SyncRequired, DocumentStatusChanged, AnalysisStatusChanged
 
 logger = get_logger(__name__)
 
