@@ -42,7 +42,7 @@ class WSConnectionManager:
     async def send_to_user(
             self,
             user_id: int,
-            event: Ready | SyncRequired | DocumentStatusChanged | AnalysisStatusChanged
+            event: SyncRequired | DocumentStatusChanged | AnalysisStatusChanged
     ) -> None:
         """Send event to user in his ws-connections"""
 
