@@ -45,10 +45,13 @@ class WSConnectionManager:
             event: Ready | SyncRequired | DocumentStatusChanged | AnalysisStatusChanged
     ) -> None:
         """Send event to user in his ws-connections"""
+
+        json_event = event.model_dump(mode="json")
+
         for ws, state in self.connections[user_id].items():
             if not state.closing:
                 async with state.send_lock:
-                    await ws.send_json(event.model_dump())
+                    await ws.send_json(json_event)
 
     async def unregister(self, user_id: int, websocket: WebSocket) -> None:
         """Unregister a ws-connection"""
