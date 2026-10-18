@@ -53,7 +53,7 @@ class WSConnectionManager:
 
         json_event = event.model_dump(mode="json")
 
-        for ws, state in user_connections.items():
+        for ws, state in list(user_connections.items()):
 
             unregister_necessary = False
 
