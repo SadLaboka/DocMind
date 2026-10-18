@@ -54,8 +54,9 @@ class WSConnectionManager:
         json_event = event.model_dump(mode="json")
 
         for ws, state in user_connections.items():
-            if not state.closing:
-                async with state.send_lock:
+            async with state.send_lock:
+
+                if not state.closing:
                     await ws.send_json(json_event)
 
     async def unregister(self, user_id: int, websocket: WebSocket) -> None:
