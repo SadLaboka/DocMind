@@ -70,6 +70,7 @@ class WSConnectionManager:
                             event=json_event,
                         )
                         unregister_necessary = True
+                        state.closing = True
                     except Exception as e:
                         logger.warning(
                             "Ws-connection failed",
@@ -80,6 +81,7 @@ class WSConnectionManager:
                             event=json_event,
                         )
                         unregister_necessary = True
+                        state.closing = True
 
             if unregister_necessary:
                 await self.unregister(user_id, ws)
