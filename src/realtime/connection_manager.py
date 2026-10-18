@@ -69,6 +69,7 @@ class WSConnectionManager:
                             websocket_id=id(ws),
                             event=json_event,
                         )
+                        unregister_necessary = True
                     except Exception as e:
                         logger.warning(
                             "Ws-connection failed",
