@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 from fastapi import WebSocket
 from structlog import get_logger
 
+from src.schemas.ws_messages import Ready, SyncRequired, DocumentStatusChanged, AnalysisStatusChanged
+
 logger = get_logger(__name__)
 
 
@@ -17,7 +19,7 @@ class WSConnectionManager:
     def __init__(self):
         self.connections: dict[int, dict[WebSocket, ConnectionState]] = {}
 
-    async def register(self, user_id: int, websocket: WebSocket):
+    async def register(self, user_id: int, websocket: WebSocket) -> None:
         """Register a ws-connection"""
 
         for user in self.connections:
@@ -37,10 +39,22 @@ class WSConnectionManager:
         if user_connections.get(websocket) is None:
             user_connections[websocket] = ConnectionState()
 
-    async def unregister(self, user_id: int, websocket: WebSocket):
-        """Unregister a ws-connection"""
-        try:
+    async def send_to_user(
+            self,
+            user_id: int,
+            event: Ready | SyncRequired | DocumentStatusChanged | AnalysisStatusChanged
+    ) -> None:
+        """Send event to user in his ws-connections"""
+        for ws, state in self.connections[user_id].items():
+            if not state.closing:
+                async with state.send_lock:
+                    await ws.send_json(event.model_dump())
 
+    async def unregister(self, user_id: int, websocket: WebSocket) -> None:
+        """Unregister a ws-connection"""
+
+        try:
+            self.connections[user_id][websocket].closing = True
             self.connections[user_id].pop(websocket)
         except KeyError:
             return
