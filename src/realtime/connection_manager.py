@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+import asyncio
+from dataclasses import dataclass, field
 
 from fastapi import WebSocket
 from structlog import get_logger
@@ -8,7 +9,8 @@ logger = get_logger(__name__)
 
 @dataclass
 class ConnectionState:
-    pass
+    send_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
+    closing: bool = False
 
 
 class WSConnectionManager:
