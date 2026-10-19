@@ -51,7 +51,7 @@ class WSConnectionManager:
         if not user_connections:
             return
 
-        json_event = event.model_dump(mode="json")
+        json_event = event.model_dump_json()
 
         await asyncio.gather(
             *(self._send_one(json_event, event.type, user_id, ws, state) for ws, state in user_connections.items()))
@@ -71,7 +71,7 @@ class WSConnectionManager:
 
             if not state.closing:
                 try:
-                    await asyncio.wait_for(ws.send_json(event), 5)
+                    await asyncio.wait_for(ws.send_text(event), 5)
                 except asyncio.TimeoutError:
                     logger.warning(
                         "Ws-connection timed out",
@@ -96,13 +96,13 @@ class WSConnectionManager:
         if unregister_necessary:
             try:
                 await asyncio.wait_for(ws.close(), 5)
-            except asyncio.TimeoutError:
+            except Exception as e:
                 logger.warning(
                     "Ws-connection was not closed",
                     user_id=user_id,
                     websocket_id=id(ws),
                     event_type=event_type,
-                    reason="Timeout",
+                    error_type=type(e).__name__,
                 )
             await self.unregister(user_id, ws)
 
