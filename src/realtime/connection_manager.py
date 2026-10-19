@@ -71,7 +71,6 @@ class WSConnectionManager:
                         )
                         unregister_necessary = True
                         state.closing = True
-                        await ws.close()
                     except Exception as e:
                         logger.warning(
                             "Ws-connection failed",
@@ -83,9 +82,18 @@ class WSConnectionManager:
                         )
                         unregister_necessary = True
                         state.closing = True
-                        await ws.close()
 
             if unregister_necessary:
+                try:
+                    await asyncio.wait_for(ws.close(), 5)
+                except asyncio.TimeoutError:
+                    logger.warning(
+                        "Ws-connection was not closed",
+                        user_id=user_id,
+                        websocket_id=id(ws),
+                        event_type=event.type,
+                        reason="Timeout",
+                    )
                 await self.unregister(user_id, ws)
 
 
