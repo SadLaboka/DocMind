@@ -70,8 +70,8 @@ class WSConnectionManager:
                             event_type=event.type,
                         )
                         unregister_necessary = True
-                        await ws.close()
                         state.closing = True
+                        await ws.close()
                     except Exception as e:
                         logger.warning(
                             "Ws-connection failed",
@@ -82,8 +82,8 @@ class WSConnectionManager:
                             event_type=event.type,
                         )
                         unregister_necessary = True
-                        await ws.close()
                         state.closing = True
+                        await ws.close()
 
             if unregister_necessary:
                 await self.unregister(user_id, ws)
