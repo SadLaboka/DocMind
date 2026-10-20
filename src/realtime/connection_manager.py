@@ -92,19 +92,33 @@ class WSConnectionManager:
                     )
                     unregister_necessary = True
                     state.closing = True
+                except asyncio.CancelledError:
+                    logger.warning(
+                        "Calling code cancelled. Ws-connection will close",
+                        user_id=user_id,
+                        websocket_id=id(ws),
+                        event_type=event_type,
+                    )
+                    state.closing = True
+                    await self._close_ws(ws, user_id, event_type)
+                    raise
 
         if unregister_necessary:
-            try:
-                await asyncio.wait_for(ws.close(), 5)
-            except Exception as e:
-                logger.warning(
-                    "Ws-connection was not closed",
-                    user_id=user_id,
-                    websocket_id=id(ws),
-                    event_type=event_type,
-                    error_type=type(e).__name__,
-                )
-            await self.unregister(user_id, ws)
+           await self._close_ws(ws, user_id, event_type)
+
+    async def _close_ws(self, ws: WebSocket, user_id: int, event_type: str) -> None:
+        """Close the ws-connection"""
+        try:
+            await asyncio.wait_for(ws.close(), 5)
+        except Exception as e:
+            logger.warning(
+                "Ws-connection was not closed",
+                user_id=user_id,
+                websocket_id=id(ws),
+                event_type=event_type,
+                error_type=type(e).__name__,
+            )
+        await self.unregister(user_id, ws)
 
     async def unregister(self, user_id: int, websocket: WebSocket) -> None:
         """Unregister a ws-connection"""
