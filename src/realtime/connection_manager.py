@@ -118,7 +118,8 @@ class WSConnectionManager:
                 event_type=event_type,
                 error_type=type(e).__name__,
             )
-        await self.unregister(user_id, ws)
+        finally:
+            await self.unregister(user_id, ws)
 
     async def unregister(self, user_id: int, websocket: WebSocket) -> None:
         """Unregister a ws-connection"""
