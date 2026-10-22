@@ -100,13 +100,32 @@ class WSConnectionManager:
                         event_type=event_type,
                     )
                     state.closing = True
-                    await self._close_ws(ws, user_id, event_type)
+                    await self._close_ws(ws, user_id)
                     raise
 
             if unregister_necessary:
-               await self._close_ws(ws, user_id, event_type)
+               await self._close_ws(ws, user_id)
 
-    async def _close_ws(self, ws: WebSocket, user_id: int, event_type: str) -> None:
+    async def close_user(self, user_id: int) -> None:
+        """Close all user ws-connections"""
+
+        logger.info(
+            "Closing all user ws-connections",
+            user_id=user_id,
+        )
+
+        user_connections = self.connections.get(user_id)
+        if not user_connections:
+            return
+
+        for connection, state in [user_connections.items()]:
+            if not state.closing:
+                async with state.send_lock:
+                    await self._close_ws(connection, user_id)
+
+                await self.unregister(user_id, connection)
+
+    async def _close_ws(self, ws: WebSocket, user_id: int) -> None:
         """Close the ws-connection"""
         try:
             await asyncio.wait_for(ws.close(), 5)
@@ -115,7 +134,6 @@ class WSConnectionManager:
                 "Ws-connection was not closed",
                 user_id=user_id,
                 websocket_id=id(ws),
-                event_type=event_type,
                 error_type=type(e).__name__,
             )
         finally:
