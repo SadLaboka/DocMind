@@ -118,7 +118,7 @@ class WSConnectionManager:
         if not user_connections:
             return
 
-        for connection, state in [user_connections.items()]:
+        for connection, state in list(user_connections.items()):
             if not state.closing:
                 async with state.send_lock:
                     await self._close_ws(connection, user_id)
