@@ -93,7 +93,7 @@ class WSConnectionManager:
                     unregister_necessary = True
                     state.closing = True
                 except asyncio.CancelledError:
-                    logger.warning(
+                    logger.info(
                         "Calling code cancelled. Ws-connection will close",
                         user_id=user_id,
                         websocket_id=id(ws),
