@@ -103,8 +103,8 @@ class WSConnectionManager:
                     await self._close_ws(ws, user_id, event_type)
                     raise
 
-        if unregister_necessary:
-           await self._close_ws(ws, user_id, event_type)
+            if unregister_necessary:
+               await self._close_ws(ws, user_id, event_type)
 
     async def _close_ws(self, ws: WebSocket, user_id: int, event_type: str) -> None:
         """Close the ws-connection"""
