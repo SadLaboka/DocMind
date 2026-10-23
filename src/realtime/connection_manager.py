@@ -123,12 +123,12 @@ class WSConnectionManager:
         async def close_one(ws: WebSocket, state: ConnectionState) -> None:
             if not state.closing:
                 try:
+                    state.closing = True
                     async with state.send_lock:
-                        state.closing = True
                         await self._close_ws(ws, user_id)
                 except asyncio.CancelledError:
+                    state.closing = True
                     async with state.send_lock:
-                        state.closing = True
                         await self._close_ws(ws, user_id)
                     raise
 
