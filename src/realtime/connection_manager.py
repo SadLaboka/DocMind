@@ -122,8 +122,8 @@ class WSConnectionManager:
         snapshot = list(user_connections.items())
 
         async def close_one(ws: WebSocket, state: ConnectionState) -> None:
-            async with state.send_lock:
-                if not state.closing:
+            if not state.closing:
+                async with state.send_lock:
                     state.closing = True
                     await self._close_ws(ws, user_id)
 
