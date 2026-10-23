@@ -120,6 +120,7 @@ class WSConnectionManager:
 
         for connection, state in list(user_connections.items()):
             if not state.closing:
+                state.closing = True
                 async with state.send_lock:
                     await self._close_ws(connection, user_id)
 
