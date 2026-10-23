@@ -1,7 +1,6 @@
 import asyncio
 from dataclasses import dataclass, field
 
-from celery.events import snapshot
 from fastapi import WebSocket
 from structlog import get_logger
 
