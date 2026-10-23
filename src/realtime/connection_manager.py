@@ -124,10 +124,13 @@ class WSConnectionManager:
                 async with state.send_lock:
                     await self._close_ws(connection, user_id)
 
-    async def _close_ws(self, ws: WebSocket, user_id: int) -> None:
+    async def _close_ws(self, ws: WebSocket, user_id: int, code: int | None) -> None:
         """Close the ws-connection"""
         try:
-            await asyncio.wait_for(ws.close(), 5)
+            if code:
+                await asyncio.wait_for(ws.close(code), 5)
+            else:
+                await asyncio.wait_for(ws.close(), 5)
         except Exception as e:
             logger.warning(
                 "Ws-connection was not closed",
