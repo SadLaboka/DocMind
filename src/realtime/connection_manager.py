@@ -124,8 +124,6 @@ class WSConnectionManager:
                 async with state.send_lock:
                     await self._close_ws(connection, user_id)
 
-                await self.unregister(user_id, connection)
-
     async def _close_ws(self, ws: WebSocket, user_id: int) -> None:
         """Close the ws-connection"""
         try:
