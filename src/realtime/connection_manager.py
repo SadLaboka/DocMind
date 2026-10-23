@@ -1,6 +1,7 @@
 import asyncio
 from dataclasses import dataclass, field
 
+from celery.events import snapshot
 from fastapi import WebSocket
 from structlog import get_logger
 
@@ -118,11 +119,17 @@ class WSConnectionManager:
         if not user_connections:
             return
 
-        for connection, state in list(user_connections.items()):
-            if not state.closing:
-                state.closing = True
-                async with state.send_lock:
-                    await self._close_ws(connection, user_id)
+        snapshot = list(user_connections.items())
+
+        async def close_one(ws: WebSocket, state: ConnectionState) -> None:
+            async with state.send_lock:
+                if not state.closing:
+                    state.closing = True
+                    await self._close_ws(ws, user_id)
+
+        await asyncio.gather(
+            *(close_one(ws, state) for ws, state in snapshot),
+        )
 
     async def _close_ws(self, ws: WebSocket, user_id: int, code: int | None = None) -> None:
         """Close the ws-connection"""
