@@ -126,11 +126,8 @@ class WSConnectionManager:
                     state.closing = True
                     async with state.send_lock:
                         await self._close_ws(ws, user_id)
-                except asyncio.CancelledError:
-                    state.closing = True
-                    async with state.send_lock:
-                        await self._close_ws(ws, user_id)
-                    raise
+                finally:
+                    await self.unregister(user_id, ws)
 
         await asyncio.gather(
             *(close_one(ws, state) for ws, state in snapshot),
