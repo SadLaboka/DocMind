@@ -124,7 +124,9 @@ class WSConnectionManager:
             try:
                 state.closing = True
                 async with state.send_lock:
-                    await self._close_ws(ws, user_id)
+
+                    if self.connections.get(user_id, {}).get(ws) is state:
+                        await self._close_ws(ws, user_id)
             finally:
                 await self.unregister(user_id, ws)
 
