@@ -139,6 +139,18 @@ class WSConnectionManager:
             for ws, _ in snapshot:
                 await self.unregister(user_id, ws)
 
+    async def close_all(self) -> None:
+        """Close all ws-connections"""
+        logger.info(
+            "Closing all ws-connections",
+        )
+
+        snapshot = list(self.connections.keys())
+
+        await asyncio.gather(
+            *(self.close_user(user_id) for user_id in snapshot),
+        )
+
     async def _close_ws(self, ws: WebSocket, user_id: int, code: int | None = None) -> None:
         """Close the ws-connection"""
         try:
