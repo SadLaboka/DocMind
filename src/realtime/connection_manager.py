@@ -122,7 +122,6 @@ class WSConnectionManager:
 
         async def close_one(ws: WebSocket, state: ConnectionState) -> None:
             try:
-                state.closing = True
                 async with state.send_lock:
 
                     if self.connections.get(user_id, {}).get(ws) is state:
@@ -133,10 +132,13 @@ class WSConnectionManager:
         for web_sock, ws_state in snapshot:
             if not ws_state.closing:
                 ws_state.closing = True
-
-        await asyncio.gather(
-            *(close_one(ws, state) for ws, state in snapshot),
-        )
+        try:
+            await asyncio.gather(
+                *(close_one(ws, state) for ws, state in snapshot),
+            )
+        finally:
+            for ws, _ in snapshot:
+                await self.unregister(user_id, ws)
 
     async def _close_ws(self, ws: WebSocket, user_id: int, code: int | None = None) -> None:
         """Close the ws-connection"""
