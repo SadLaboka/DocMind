@@ -130,8 +130,7 @@ class WSConnectionManager:
                 await self.unregister(user_id, ws)
 
         for web_sock, ws_state in snapshot:
-            if not ws_state.closing:
-                ws_state.closing = True
+            ws_state.closing = True
         try:
             await asyncio.gather(
                 *(close_one(ws, state) for ws, state in snapshot),
